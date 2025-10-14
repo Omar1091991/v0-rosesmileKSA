@@ -3,26 +3,24 @@ import { SiteFooter } from "@/components/site-footer"
 import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { createClient } from "@/lib/supabase/server"
+import { db } from "@/lib/db"
 import { AnimatedSection } from "@/components/animated-section"
 import { notFound } from "next/navigation"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 export default async function DoctorDetailPage({ params }: { params: { id: string } }) {
-  const supabase = await createClient()
+  const doctorResult = await db.query("SELECT * FROM doctors WHERE id = $1", [params.id])
 
-  const { data: doctor } = await supabase.from("doctors").select("*").eq("id", params.id).single()
-
-  if (!doctor) {
+  if (doctorResult.rows.length === 0) {
     notFound()
   }
 
-  const { data: cases } = await supabase
-    .from("doctor_cases")
-    .select("*")
-    .eq("doctor_id", params.id)
-    .order("order_index")
+  const doctor = doctorResult.rows[0]
+  const casesResult = await db.query("SELECT * FROM doctor_cases WHERE doctor_id = $1 ORDER BY order_index", [
+    params.id,
+  ])
+  const cases = casesResult.rows
 
   return (
     <div className="flex min-h-screen flex-col">

@@ -2,16 +2,11 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
-import { createClient } from "@/lib/supabase/server"
+import { db } from "@/lib/db"
 
 export default async function DepartmentsPage() {
-  const supabase = await createClient()
-
-  const { data: departments } = await supabase
-    .from("departments")
-    .select("*")
-    .eq("is_active", true)
-    .order("order_index")
+  const result = await db.query("SELECT * FROM departments WHERE is_active = true ORDER BY order_index")
+  const departments = result.rows
 
   return (
     <div className="flex min-h-screen flex-col">

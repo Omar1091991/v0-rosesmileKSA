@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin"
+import { db } from "@/lib/db"
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,31 +11,30 @@ interface BookingFormPageProps {
 }
 
 export default async function BookingFormPage({ params }: BookingFormPageProps) {
-  const supabase = createAdminClient()
+  const formResult = await db.query(
+    `
+    SELECT * FROM booking_forms WHERE id = $1 AND is_active = true
+  `,
+    [params.id],
+  )
 
-  const { data: form, error } = await supabase
-    .from("booking_forms")
-    .select(`
-      *,
-      booking_form_services (
-        service_id,
-        services (
-          id,
-          title_ar,
-          title_en,
-          description_ar
-        )
-      )
-    `)
-    .eq("id", params.id)
-    .eq("is_active", true)
-    .single()
-
-  if (error || !form) {
+  if (formResult.rows.length === 0) {
     notFound()
   }
 
-  const services = form.booking_form_services?.map((s: any) => s.services) || []
+  const form = formResult.rows[0]
+
+  const servicesResult = await db.query(
+    `
+    SELECT s.id, s.title_ar, s.title_en, s.description_ar
+    FROM booking_form_services bfs
+    JOIN services s ON bfs.service_id = s.id
+    WHERE bfs.booking_form_id = $1
+  `,
+    [params.id],
+  )
+
+  const services = servicesResult.rows
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-12 px-4">

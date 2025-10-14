@@ -3,14 +3,13 @@ import { SiteFooter } from "@/components/site-footer"
 import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { createClient } from "@/lib/supabase/server"
+import { db } from "@/lib/db"
 import { AnimatedSection } from "@/components/animated-section"
 import Link from "next/link"
 
 export default async function DoctorsPage() {
-  const supabase = await createClient()
-
-  const { data: doctors } = await supabase.from("doctors").select("*").eq("is_active", true).order("order_index")
+  const result = await db.query("SELECT * FROM doctors WHERE is_active = true ORDER BY order_index")
+  const doctors = result.rows
 
   return (
     <div className="flex min-h-screen flex-col">

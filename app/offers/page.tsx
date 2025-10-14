@@ -4,16 +4,11 @@ import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Tag } from "lucide-react"
-import { createClient } from "@/lib/supabase/server"
+import { db } from "@/lib/db"
 
 export default async function OffersPage() {
-  const supabase = await createClient()
-
-  const { data: offers } = await supabase
-    .from("offers")
-    .select("*")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false })
+  const result = await db.query("SELECT * FROM offers WHERE is_active = true ORDER BY created_at DESC")
+  const offers = result.rows
 
   return (
     <div className="flex min-h-screen flex-col">
