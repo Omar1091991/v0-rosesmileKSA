@@ -5,12 +5,11 @@ export async function GET() {
   try {
     const supabase = createAdminClient()
 
-    // جلب جميع المستخدمين
     const { data: users, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
 
     if (error) throw error
 
-    return NextResponse.json({ users })
+    return NextResponse.json(users || [])
   } catch (error) {
     console.error("[v0] Error fetching users:", error)
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
