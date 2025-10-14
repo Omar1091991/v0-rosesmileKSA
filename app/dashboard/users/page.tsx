@@ -63,8 +63,29 @@ export default function UsersPage() {
   const handleAddUser = async () => {
     if (!newUser.email || !newUser.password || !newUser.full_name) {
       toast({
-        title: "خطأ",
-        description: "يرجى ملء جميع الحقول المطلوبة",
+        title: "بيانات ناقصة",
+        description: "يرجى ملء جميع الحقول المطلوبة (الاسم، البريد الإلكتروني، كلمة المرور)",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // التحقق من صحة البريد الإلكتروني
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(newUser.email)) {
+      toast({
+        title: "بريد إلكتروني غير صحيح",
+        description: "يرجى إدخال بريد إلكتروني صحيح",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // التحقق من طول كلمة المرور
+    if (newUser.password.length < 6) {
+      toast({
+        title: "كلمة مرور ضعيفة",
+        description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
         variant: "destructive",
       })
       return
@@ -81,12 +102,32 @@ export default function UsersPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create user")
+        let errorTitle = "فشل في إضافة المستخدم"
+        let errorDescription = data.error || "حدث خطأ غير متوقع"
+
+        if (response.status === 409) {
+          errorTitle = "بريد إلكتروني مكرر"
+          errorDescription = "البريد الإلكتروني مستخدم بالفعل. يرجى استخدام بريد آخر"
+        } else if (response.status === 401) {
+          errorTitle = "غير مصرح"
+          errorDescription = "يجب تسجيل الدخول أولاً"
+        } else if (response.status === 403) {
+          errorTitle = "ليس لديك صلاحية"
+          errorDescription = "ليس لديك صلاحية لإضافة مستخدمين"
+        }
+
+        toast({
+          title: errorTitle,
+          description: errorDescription,
+          variant: "destructive",
+        })
+        return
       }
 
       toast({
-        title: "نجح",
-        description: `تم إضافة المستخدم ${newUser.full_name} بنجاح`,
+        title: "✓ تم إضافة المستخدم بنجاح",
+        description: `تم إضافة ${newUser.full_name} (${newUser.email}) كـ${newUser.role === "admin" ? "مسؤول" : "مستخدم عادي"}`,
+        variant: "default",
       })
 
       setIsAddOpen(false)
@@ -95,8 +136,8 @@ export default function UsersPage() {
     } catch (error: any) {
       console.error("[v0] Error creating user:", error)
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في إضافة المستخدم",
+        title: "خطأ في الاتصال",
+        description: "فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى",
         variant: "destructive",
       })
     } finally {
