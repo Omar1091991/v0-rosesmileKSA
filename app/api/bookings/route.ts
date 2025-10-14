@@ -10,7 +10,7 @@ export async function GET() {
       .order("created_at", { ascending: false })
 
     if (error) throw error
-    return NextResponse.json({ bookings })
+    return NextResponse.json(bookings || [])
   } catch (error: any) {
     console.error("[v0] Error fetching bookings:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -51,8 +51,8 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const supabase = createAdminClient()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get("id")
+    const body = await request.json()
+    const { id } = body
 
     if (!id) {
       return NextResponse.json({ error: "ID required" }, { status: 400 })

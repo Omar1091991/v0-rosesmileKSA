@@ -8,7 +8,7 @@ export async function GET() {
 
     if (error) throw error
 
-    return NextResponse.json({ offers })
+    return NextResponse.json(offers || [])
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -82,8 +82,8 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const supabase = createAdminClient()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get("id")
+    const body = await request.json()
+    const { id } = body
 
     if (!id) {
       return NextResponse.json({ error: "Offer ID is required" }, { status: 400 })
