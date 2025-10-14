@@ -8,42 +8,140 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { Pencil, Plus, Trash2, ImageIcon, FileText } from "lucide-react"
+import { Save, FileText, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
 
+const CONTENT_SECTIONS = [
+  {
+    section: "hero",
+    title: "القسم الرئيسي (Hero)",
+    fields: [
+      { key: "hero_title_ar", label: "العنوان الرئيسي", type: "text", defaultValue: "ابتسامة الورود ابتسامتك بتعود" },
+      {
+        key: "hero_description_ar",
+        label: "الوصف",
+        type: "textarea",
+        defaultValue: "نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة",
+      },
+      { key: "hero_image_url", label: "صورة القسم", type: "image", defaultValue: "" },
+    ],
+  },
+  {
+    section: "features",
+    title: "المميزات",
+    fields: [
+      { key: "feature_1_title_ar", label: "المميزة الأولى - العنوان", type: "text", defaultValue: "أطباء متخصصون" },
+      {
+        key: "feature_1_description_ar",
+        label: "المميزة الأولى - الوصف",
+        type: "textarea",
+        defaultValue: "فريق طبي متميز من أفضل الأطباء والاستشاريين في مختلف التخصصات",
+      },
+      { key: "feature_2_title_ar", label: "المميزة الثانية - العنوان", type: "text", defaultValue: "أحدث التقنيات" },
+      {
+        key: "feature_2_description_ar",
+        label: "المميزة الثانية - الوصف",
+        type: "textarea",
+        defaultValue: "نستخدم أحدث الأجهزة والتقنيات الطبية لضمان أفضل النتائج",
+      },
+      { key: "feature_3_title_ar", label: "المميزة الثالثة - العنوان", type: "text", defaultValue: "رعاية شاملة" },
+      {
+        key: "feature_3_description_ar",
+        label: "المميزة الثالثة - الوصف",
+        type: "textarea",
+        defaultValue: "نقدم رعاية طبية شاملة ومتابعة مستمرة لضمان راحتك وصحتك",
+      },
+    ],
+  },
+  {
+    section: "services",
+    title: "قسم الخدمات",
+    fields: [
+      { key: "services_title_ar", label: "عنوان القسم", type: "text", defaultValue: "خدماتنا الطبية" },
+      {
+        key: "services_description_ar",
+        label: "وصف القسم",
+        type: "textarea",
+        defaultValue: "نقدم مجموعة شاملة من الخدمات الطبية المتخصصة بأحدث التقنيات وأعلى معايير الجودة",
+      },
+    ],
+  },
+  {
+    section: "doctors",
+    title: "قسم الأطباء",
+    fields: [
+      { key: "doctors_title_ar", label: "عنوان القسم", type: "text", defaultValue: "أطباؤنا المتميزون" },
+      {
+        key: "doctors_description_ar",
+        label: "وصف القسم",
+        type: "textarea",
+        defaultValue: "فريق طبي متخصص بخبرات عالمية",
+      },
+    ],
+  },
+  {
+    section: "why_choose_us",
+    title: "لماذا تختارنا",
+    fields: [
+      {
+        key: "why_choose_us_title_ar",
+        label: "عنوان القسم",
+        type: "text",
+        defaultValue: "لماذا تختار عيادات ابتسامة الورود؟",
+      },
+    ],
+  },
+  {
+    section: "cta",
+    title: "دعوة للعمل (CTA)",
+    fields: [
+      { key: "cta_title_ar", label: "العنوان", type: "text", defaultValue: "هل أنت مستعد لبدء رحلتك نحو صحة أفضل؟" },
+      {
+        key: "cta_description_ar",
+        label: "الوصف",
+        type: "textarea",
+        defaultValue: "احجز موعدك الآن واحصل على استشارة طبية مجانية",
+      },
+    ],
+  },
+]
+
 export default function ContentManagementPage() {
-  const [contents, setContents] = useState<any[]>([])
+  const [settings, setSettings] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingContent, setEditingContent] = useState<any>(null)
-  const [imagePreview, setImagePreview] = useState<string>("")
+  const [saving, setSaving] = useState(false)
+  const [imagePreview, setImagePreview] = useState<Record<string, string>>({})
   const { toast } = useToast()
 
-  const [formData, setFormData] = useState({
-    section: "",
-    title_ar: "",
-    title_en: "",
-    description_ar: "",
-    description_en: "",
-    image_url: "",
-  })
-
   useEffect(() => {
-    fetchContents()
+    fetchSettings()
   }, [])
 
-  async function fetchContents() {
+  async function fetchSettings() {
     try {
-      const response = await fetch("/api/site-content")
+      const response = await fetch("/api/site-settings")
       const data = await response.json()
-      setContents(data)
+
+      const settingsMap: Record<string, any> = {}
+      data.forEach((setting: any) => {
+        settingsMap[setting.key] = setting
+      })
+
+      setSettings(settingsMap)
+
+      const previews: Record<string, string> = {}
+      data.forEach((setting: any) => {
+        if (setting.type === "image" && setting.value_ar) {
+          previews[setting.key] = setting.value_ar
+        }
+      })
+      setImagePreview(previews)
     } catch (error) {
-      console.error("[v0] Error fetching contents:", error)
+      console.error("[v0] Error fetching settings:", error)
       toast({
         title: "خطأ",
-        description: "فشل في جلب المحتوى",
+        description: "فشل في جلب الإعدادات",
         variant: "destructive",
       })
     } finally {
@@ -51,98 +149,60 @@ export default function ContentManagementPage() {
     }
   }
 
-  function handleEdit(content: any) {
-    setEditingContent(content)
-    setFormData({
-      section: content.section || "",
-      title_ar: content.title_ar || "",
-      title_en: content.title_en || "",
-      description_ar: content.description_ar || "",
-      description_en: content.description_en || "",
-      image_url: content.image_url || "",
-    })
-    setImagePreview(content.image_url || "")
-    setDialogOpen(true)
-  }
-
-  function handleAdd() {
-    setEditingContent(null)
-    setFormData({
-      section: "",
-      title_ar: "",
-      title_en: "",
-      description_ar: "",
-      description_en: "",
-      image_url: "",
-    })
-    setImagePreview("")
-    setDialogOpen(true)
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-
+  async function handleSave() {
+    setSaving(true)
     try {
-      const url = "/api/site-content"
-      const method = editingContent ? "PATCH" : "POST"
-      const body = editingContent ? { ...formData, id: editingContent.id } : formData
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+      const promises = Object.entries(settings).map(async ([key, setting]) => {
+        if (setting.id) {
+          // تحديث إعداد موجود
+          return fetch("/api/site-settings", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(setting),
+          })
+        } else {
+          // إنشاء إعداد جديد
+          return fetch("/api/site-settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(setting),
+          })
+        }
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "فشل في حفظ المحتوى")
-      }
+      await Promise.all(promises)
 
       toast({
         title: "نجح",
-        description: editingContent ? "تم تحديث المحتوى بنجاح" : "تم إضافة المحتوى بنجاح",
+        description: "تم حفظ جميع التغييرات بنجاح",
       })
 
-      setDialogOpen(false)
-      fetchContents()
+      fetchSettings()
     } catch (error: any) {
       toast({
         title: "خطأ",
-        description: error.message,
+        description: error.message || "فشل في حفظ التغييرات",
         variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("هل أنت متأكد من حذف هذا المحتوى؟")) return
-
-    try {
-      const response = await fetch(`/api/site-content?id=${id}`, {
-        method: "DELETE",
-      })
-
-      if (!response.ok) throw new Error("فشل في حذف المحتوى")
-
-      toast({
-        title: "نجح",
-        description: "تم حذف المحتوى بنجاح",
-      })
-
-      fetchContents()
-    } catch (error: any) {
-      toast({
-        title: "خطأ",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
+  function handleChange(key: string, value: string, type: string) {
+    setSettings((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        key,
+        value_ar: value,
+        value_en: value,
+        type,
+      },
+    }))
   }
 
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImageUpload(key: string, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -158,17 +218,17 @@ export default function ContentManagementPage() {
     const reader = new FileReader()
     reader.onloadend = () => {
       const base64 = reader.result as string
-      setFormData({ ...formData, image_url: base64 })
-      setImagePreview(base64)
+      handleChange(key, base64, "image")
+      setImagePreview((prev) => ({ ...prev, [key]: base64 }))
     }
     reader.readAsDataURL(file)
   }
 
-  if (loading && contents.length === 0) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground">جاري التحميل...</p>
         </div>
       </div>
@@ -187,177 +247,98 @@ export default function ContentManagementPage() {
             <FileText className="h-8 w-8" />
             إدارة محتوى الموقع
           </h1>
-          <p className="text-muted-foreground mt-2">تعديل النصوص والصور في صفحات الموقع</p>
+          <p className="text-muted-foreground mt-2">تعديل جميع النصوص والصور في صفحات الموقع</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleAdd} size="lg">
-              <Plus className="ml-2 h-5 w-5" />
-              إضافة محتوى
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingContent ? "تعديل المحتوى" : "إضافة محتوى جديد"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="section">القسم *</Label>
-                <Input
-                  id="section"
-                  value={formData.section}
-                  onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                  placeholder="مثال: hero, about, contact"
-                  required
-                  disabled={!!editingContent}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title_ar">العنوان بالعربية</Label>
-                  <Input
-                    id="title_ar"
-                    value={formData.title_ar}
-                    onChange={(e) => setFormData({ ...formData, title_ar: e.target.value })}
-                    placeholder="العنوان بالعربية"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="title_en">العنوان بالإنجليزية</Label>
-                  <Input
-                    id="title_en"
-                    value={formData.title_en}
-                    onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
-                    placeholder="Title in English"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description_ar">الوصف بالعربية</Label>
-                <Textarea
-                  id="description_ar"
-                  value={formData.description_ar}
-                  onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
-                  placeholder="الوصف بالعربية"
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description_en">الوصف بالإنجليزية</Label>
-                <Textarea
-                  id="description_en"
-                  value={formData.description_en}
-                  onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
-                  placeholder="Description in English"
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="image">صورة القسم</Label>
-                <Input id="image" type="file" accept="image/*" onChange={handleImageUpload} />
-                {imagePreview && (
-                  <div className="relative w-full h-48 rounded-lg overflow-hidden border">
-                    <img src={imagePreview || "/placeholder.svg"} alt="معاينة" className="w-full h-full object-cover" />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => {
-                        setFormData({ ...formData, image_url: "" })
-                        setImagePreview("")
-                      }}
-                    >
-                      حذف
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  إلغاء
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "جاري الحفظ..." : editingContent ? "تحديث" : "إضافة"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleSave} disabled={saving} size="lg">
+          {saving ? (
+            <>
+              <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+              جاري الحفظ...
+            </>
+          ) : (
+            <>
+              <Save className="ml-2 h-5 w-5" />
+              حفظ جميع التغييرات
+            </>
+          )}
+        </Button>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      >
-        {contents.map((content, index) => (
+      <div className="space-y-6">
+        {CONTENT_SECTIONS.map((section, sectionIndex) => (
           <motion.div
-            key={content.id}
+            key={section.section}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: sectionIndex * 0.1 }}
           >
-            <Card className="h-full">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="text-lg">{content.section}</span>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(content)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(content.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </CardTitle>
+                <CardTitle>{section.title}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {content.image_url && (
-                  <div className="w-full aspect-square rounded-lg overflow-hidden border">
-                    <img
-                      src={content.image_url || "/placeholder.svg"}
-                      alt={content.title_ar}
-                      className="w-full h-full object-cover"
-                    />
+                {section.fields.map((field) => (
+                  <div key={field.key} className="space-y-2">
+                    <Label htmlFor={field.key}>{field.label}</Label>
+                    {field.type === "text" && (
+                      <Input
+                        id={field.key}
+                        value={settings[field.key]?.value_ar || field.defaultValue}
+                        onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                        placeholder={field.defaultValue}
+                      />
+                    )}
+                    {field.type === "textarea" && (
+                      <Textarea
+                        id={field.key}
+                        value={settings[field.key]?.value_ar || field.defaultValue}
+                        onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                        placeholder={field.defaultValue}
+                        rows={3}
+                      />
+                    )}
+                    {field.type === "image" && (
+                      <div className="space-y-2">
+                        <Input
+                          id={field.key}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(field.key, e)}
+                        />
+                        {imagePreview[field.key] && (
+                          <div className="relative w-full aspect-square max-w-xs rounded-lg overflow-hidden border">
+                            <img
+                              src={imagePreview[field.key] || "/placeholder.svg"}
+                              alt={field.label}
+                              className="w-full h-full object-cover"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-2 right-2"
+                              onClick={() => {
+                                handleChange(field.key, "", field.type)
+                                setImagePreview((prev) => {
+                                  const newPrev = { ...prev }
+                                  delete newPrev[field.key]
+                                  return newPrev
+                                })
+                              }}
+                            >
+                              حذف
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
-                {content.title_ar && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">العنوان</p>
-                    <p className="font-semibold">{content.title_ar}</p>
-                  </div>
-                )}
-                {content.description_ar && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">الوصف</p>
-                    <p className="text-sm line-clamp-3">{content.description_ar}</p>
-                  </div>
-                )}
+                ))}
               </CardContent>
             </Card>
           </motion.div>
         ))}
-      </motion.div>
-
-      {contents.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">لا يوجد محتوى حتى الآن</p>
-            <Button onClick={handleAdd} className="mt-4">
-              إضافة محتوى جديد
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      </div>
     </div>
   )
 }

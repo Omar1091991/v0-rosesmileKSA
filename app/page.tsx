@@ -16,29 +16,32 @@ export default function HomePage() {
   const [doctors, setDoctors] = useState<any[]>([])
   const [offers, setOffers] = useState<any[]>([])
   const [user, setUser] = useState<any>(null)
-  const [heroContent, setHeroContent] = useState<any>(null)
+  const [siteSettings, setSiteSettings] = useState<Record<string, string>>({})
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [servicesRes, doctorsRes, offersRes, contentRes] = await Promise.all([
+        const [servicesRes, doctorsRes, offersRes, settingsRes] = await Promise.all([
           fetch("/api/services"),
           fetch("/api/doctors"),
           fetch("/api/offers"),
-          fetch("/api/site-content"),
+          fetch("/api/site-settings"),
         ])
 
         const servicesData = await servicesRes.json()
         const doctorsData = await doctorsRes.json()
         const offersData = await offersRes.json()
-        const contentData = await contentRes.json()
+        const settingsData = await settingsRes.json()
 
         setServices(servicesData.filter((s: any) => s.is_active).slice(0, 6))
         setDoctors(doctorsData.filter((d: any) => d.is_active).slice(0, 3))
         setOffers(offersData.filter((o: any) => o.is_active).slice(0, 2))
 
-        const hero = contentData.find((c: any) => c.section === "hero")
-        setHeroContent(hero)
+        const settingsMap: Record<string, string> = {}
+        settingsData.forEach((setting: any) => {
+          settingsMap[setting.key] = setting.value_ar || ""
+        })
+        setSiteSettings(settingsMap)
       } catch (error) {
         console.error("[v0] Error fetching data:", error)
       }
@@ -89,13 +92,13 @@ export default function HomePage() {
             >
               <div className="space-y-8 text-center lg:text-right">
                 <motion.h1 className="text-4xl md:text-6xl font-bold text-balance leading-tight" variants={fadeInUp}>
-                  {heroContent?.title_ar || "ابتسامة الورود ابتسامتك بتعود"}
+                  {siteSettings.hero_title_ar || "ابتسامة الورود ابتسامتك بتعود"}
                 </motion.h1>
                 <motion.p
                   className="text-lg md:text-xl text-muted-foreground text-balance leading-relaxed"
                   variants={fadeInUp}
                 >
-                  {heroContent?.description_ar || "نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة"}
+                  {siteSettings.hero_description_ar || "نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة"}
                 </motion.p>
                 <motion.div
                   className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
@@ -114,7 +117,7 @@ export default function HomePage() {
               <motion.div className="relative w-full aspect-square max-w-md mx-auto lg:max-w-full" variants={scaleIn}>
                 <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
                   <Image
-                    src={heroContent?.image_url || "/placeholder.svg?height=600&width=600"}
+                    src={siteSettings.hero_image_url || "/placeholder.svg?height=600&width=600"}
                     alt="ابتسامة الورود"
                     fill
                     className="object-cover"
@@ -139,22 +142,26 @@ export default function HomePage() {
               {[
                 {
                   number: "01",
-                  title: "أطباء متخصصون",
-                  description: "فريق طبي متميز من أفضل الأطباء والاستشاريين في مختلف التخصصات",
+                  title: siteSettings.feature_1_title_ar || "أطباء متخصصون",
+                  description:
+                    siteSettings.feature_1_description_ar ||
+                    "فريق طبي متميز من أفضل الأطباء والاستشاريين في مختلف التخصصات",
                   gradient: "from-primary/5 to-secondary/5",
                   color: "text-primary",
                 },
                 {
                   number: "02",
-                  title: "أحدث التقنيات",
-                  description: "نستخدم أحدث الأجهزة والتقنيات الطبية لضمان أفضل النتائج",
+                  title: siteSettings.feature_2_title_ar || "أحدث التقنيات",
+                  description:
+                    siteSettings.feature_2_description_ar || "نستخدم أحدث الأجهزة والتقنيات الطبية لضمان أفضل النتائج",
                   gradient: "from-secondary/5 to-primary/5",
                   color: "text-secondary",
                 },
                 {
                   number: "03",
-                  title: "رعاية شاملة",
-                  description: "نقدم رعاية طبية شاملة ومتابعة مستمرة لضمان راحتك وصحتك",
+                  title: siteSettings.feature_3_title_ar || "رعاية شاملة",
+                  description:
+                    siteSettings.feature_3_description_ar || "نقدم رعاية طبية شاملة ومتابعة مستمرة لضمان راحتك وصحتك",
                   gradient: "from-primary/5 to-secondary/5",
                   color: "text-primary",
                 },
@@ -183,9 +190,9 @@ export default function HomePage() {
               viewport={{ once: true }}
               variants={fadeInUp}
             >
-              <h2 className="text-3xl md:text-4xl font-bold">خدماتنا الطبية</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">{siteSettings.services_title_ar || "خدماتنا الطبية"}</h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                نقدم مجموعة شاملة من الخدمات الطبية المتخصصة
+                {siteSettings.services_description_ar || "نقدم مجموعة شاملة من الخدمات الطبية المتخصصة"}
               </p>
             </motion.div>
 
@@ -253,8 +260,12 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 variants={fadeInUp}
               >
-                <h2 className="text-3xl md:text-4xl font-bold">أطباؤنا المتميزون</h2>
-                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">فريق طبي متخصص بخبرات عالمية</p>
+                <h2 className="text-3xl md:text-4xl font-bold">
+                  {siteSettings.doctors_title_ar || "أطباؤنا المتميزون"}
+                </h2>
+                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                  {siteSettings.doctors_description_ar || "فريق طبي متخصص بخبرات عالمية"}
+                </p>
               </motion.div>
 
               <motion.div
@@ -396,7 +407,9 @@ export default function HomePage() {
               viewport={{ once: true }}
               variants={fadeInUp}
             >
-              <h2 className="text-3xl md:text-4xl font-bold">لماذا تختار عيادات ابتسامة الورود؟</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">
+                {siteSettings.why_choose_us_title_ar || "لماذا تختار عيادات ابتسامة الورود؟"}
+              </h2>
             </motion.div>
 
             <motion.div
@@ -434,10 +447,10 @@ export default function HomePage() {
               variants={staggerContainer}
             >
               <motion.h2 className="text-3xl md:text-4xl font-bold text-balance" variants={fadeInUp}>
-                هل أنت مستعد لبدء رحلتك نحو صحة أفضل؟
+                {siteSettings.cta_title_ar || "هل أنت مستعد لبدء رحلتك نحو صحة أفضل؟"}
               </motion.h2>
               <motion.p className="text-lg text-muted-foreground text-balance" variants={fadeInUp}>
-                احجز موعدك الآن واحصل على استشارة طبية مجانية
+                {siteSettings.cta_description_ar || "احجز موعدك الآن واحصل على استشارة طبية مجانية"}
               </motion.p>
               <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" variants={fadeInUp}>
                 <BookingDialog />
