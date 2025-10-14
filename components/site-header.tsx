@@ -4,7 +4,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Settings, User, LogOut } from "lucide-react"
 import { useState } from "react"
-import { AdminPanel } from "@/components/admin-panel"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -30,7 +29,6 @@ interface SiteHeaderProps {
 
 export function SiteHeader({ user }: SiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false)
   const router = useRouter()
 
   const handleSignOut = async () => {
@@ -83,9 +81,11 @@ export function SiteHeader({ user }: SiteHeaderProps) {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={() => setIsAdminPanelOpen(true)}>
-              <Settings className="ml-2 h-4 w-4" />
-              لوحة التحكم
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/dashboard">
+                <Settings className="ml-2 h-4 w-4" />
+                لوحة التحكم
+              </Link>
             </Button>
 
             <Button size="sm" asChild>
@@ -116,9 +116,11 @@ export function SiteHeader({ user }: SiteHeaderProps) {
                       الملف الشخصي
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setIsAdminPanelOpen(true)} className="cursor-pointer">
-                    <Settings className="ml-2 h-4 w-4" />
-                    لوحة التحكم
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard" className="cursor-pointer">
+                      <Settings className="ml-2 h-4 w-4" />
+                      لوحة التحكم
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
@@ -180,16 +182,11 @@ export function SiteHeader({ user }: SiteHeaderProps) {
                 العروض
               </Link>
               <div className="flex flex-col gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setIsAdminPanelOpen(true)
-                    setIsMenuOpen(false)
-                  }}
-                >
-                  <Settings className="ml-2 h-4 w-4" />
-                  لوحة التحكم
+                <Button variant="outline" size="sm" asChild onClick={() => setIsMenuOpen(false)}>
+                  <Link href="/dashboard">
+                    <Settings className="ml-2 h-4 w-4" />
+                    لوحة التحكم
+                  </Link>
                 </Button>
                 <Button size="sm" asChild>
                   <Link href="#booking">احجز موعد</Link>
@@ -209,8 +206,6 @@ export function SiteHeader({ user }: SiteHeaderProps) {
           </div>
         )}
       </header>
-
-      {isAdminPanelOpen && <AdminPanel onClose={() => setIsAdminPanelOpen(false)} />}
     </>
   )
 }
