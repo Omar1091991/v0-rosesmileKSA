@@ -83,9 +83,11 @@ export default function BookingFormsPage() {
         setForms(data)
       } else {
         console.error("[v0] Failed to fetch forms, table might not exist")
+        setForms([])
       }
     } catch (error) {
       console.error("[v0] Error fetching forms:", error)
+      setForms([])
     } finally {
       setLoading(false)
     }
@@ -122,6 +124,11 @@ export default function BookingFormsPage() {
     setLoading(true)
 
     try {
+      console.log("[v0] Submitting form data:", {
+        ...formData,
+        service_ids: selectedServices,
+      })
+
       const url = "/api/booking-forms"
       const method = editingForm ? "PATCH" : "POST"
       const body = editingForm
@@ -134,7 +141,11 @@ export default function BookingFormsPage() {
         body: JSON.stringify(body),
       })
 
+      console.log("[v0] Response status:", response.status)
+
       if (response.ok) {
+        const result = await response.json()
+        console.log("[v0] Form saved successfully:", result)
         toast({
           title: "نجح",
           description: editingForm ? "تم تحديث النموذج بنجاح" : "تم إضافة النموذج بنجاح",
@@ -144,6 +155,7 @@ export default function BookingFormsPage() {
         fetchForms()
       } else {
         const error = await response.json()
+        console.error("[v0] Error response:", error)
         toast({
           title: "خطأ",
           description: error.error || "فشل في حفظ النموذج",
@@ -154,7 +166,7 @@ export default function BookingFormsPage() {
       console.error("[v0] Error saving form:", error)
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء حفظ النموذج",
+        description: "حدث خطأ أثناء حفظ النموذج. تأكد من تهيئة الجداول أولاً.",
         variant: "destructive",
       })
     } finally {
@@ -233,18 +245,26 @@ export default function BookingFormsPage() {
   const initializeTables = async () => {
     setInitializing(true)
     try {
+      console.log("[v0] Initializing booking forms tables...")
       const response = await fetch("/api/booking-forms/init", {
         method: "POST",
       })
 
+      console.log("[v0] Init response status:", response.status)
+
       if (response.ok) {
+        const result = await response.json()
+        console.log("[v0] Init result:", result)
         toast({
           title: "نجح",
           description: "تم تهيئة نماذج الحجز بنجاح",
         })
-        fetchForms()
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
       } else {
         const error = await response.json()
+        console.error("[v0] Init error:", error)
         toast({
           title: "خطأ",
           description: error.error || "فشل في تهيئة الجداول",
@@ -647,12 +667,18 @@ export default function BookingFormsPage() {
         ))}
       </div>
 
-      {forms.length === 0 && (
+      {forms.length === 0 && !loading && (
         <Card>
           <CardContent className="py-12 text-center space-y-4">
-            <p className="text-muted-foreground">لا توجد نماذج حجز.</p>
-            <Button onClick={initializeTables} disabled={initializing}>
-              {initializing ? "جاري التهيئة..." : "تهيئة نماذج الحجز"}
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
+            <div className="space-y-2">
+              <p className="text-lg font-medium">لا توجد نماذج حجز</p>
+              <p className="text-sm text-muted-foreground">
+                قم بتهيئة النظام أولاً لإنشاء الجداول المطلوبة، ثم أضف نموذج حجز جديد
+              </p>
+            </div>
+            <Button onClick={initializeTables} disabled={initializing} size="lg">
+              {initializing ? "جاري التهيئة..." : "تهيئة نماذج الحجز الآن"}
             </Button>
           </CardContent>
         </Card>
