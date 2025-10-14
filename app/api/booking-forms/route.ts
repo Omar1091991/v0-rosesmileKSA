@@ -59,27 +59,31 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { service_ids, ...formData } = body
 
+    console.log("[v0] Creating booking form with data:", formData)
+
     let googleSheetId = formData.google_sheet_id
 
     if (!googleSheetId) {
       console.log("[v0] Creating Google Sheet automatically...")
-      const createSheetResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/google-sheets/create`,
-        {
+      try {
+        const createSheetResponse = await fetch(new URL("/api/google-sheets/create", request.url).toString(), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sheetName: `نموذج حجز - ${formData.name_ar}`,
           }),
-        },
-      )
+        })
 
-      if (createSheetResponse.ok) {
-        const sheetData = await createSheetResponse.json()
-        googleSheetId = sheetData.sheetId
-        console.log("[v0] Google Sheet created successfully:", googleSheetId)
-      } else {
-        console.error("[v0] Failed to create Google Sheet automatically")
+        if (createSheetResponse.ok) {
+          const sheetData = await createSheetResponse.json()
+          googleSheetId = sheetData.sheetId
+          console.log("[v0] Google Sheet created successfully:", googleSheetId)
+        } else {
+          const error = await createSheetResponse.text()
+          console.error("[v0] Failed to create Google Sheet:", error)
+        }
+      } catch (sheetError) {
+        console.error("[v0] Error creating Google Sheet:", sheetError)
       }
     }
 
@@ -88,13 +92,20 @@ export async function POST(request: Request) {
       await supabase.from("booking_forms").update({ is_main: false }).eq("is_main", true)
     }
 
+    console.log("[v0] Inserting form with google_sheet_id:", googleSheetId)
+
     const { data: form, error: formError } = await supabase
       .from("booking_forms")
       .insert([{ ...formData, google_sheet_id: googleSheetId }])
       .select()
       .single()
 
-    if (formError) throw formError
+    if (formError) {
+      console.error("[v0] Error inserting form:", formError)
+      throw formError
+    }
+
+    console.log("[v0] Form created successfully:", form)
 
     // ربط الخدمات بالنموذج
     if (service_ids && service_ids.length > 0) {
@@ -103,9 +114,14 @@ export async function POST(request: Request) {
         service_id,
       }))
 
+      console.log("[v0] Linking services:", serviceLinks)
+
       const { error: linkError } = await supabase.from("booking_form_services").insert(serviceLinks)
 
-      if (linkError) throw linkError
+      if (linkError) {
+        console.error("[v0] Error linking services:", linkError)
+        throw linkError
+      }
     }
 
     return NextResponse.json(form)
