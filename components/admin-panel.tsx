@@ -4,12 +4,13 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { X, Plus, Pencil, Trash2, Users } from "lucide-react"
+import { X, Plus, Pencil, Trash2, Users, Mail, Phone, Calendar } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { Badge } from "@/components/ui/badge"
 
 interface AdminPanelProps {
   onClose: () => void
@@ -84,21 +85,26 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
         body: JSON.stringify(newUser),
       })
 
-      if (!response.ok) throw new Error("Failed to create user")
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create user")
+      }
 
       toast({
-        title: "نجح",
-        description: "تم إضافة المستخدم بنجاح",
+        title: "✅ نجح",
+        description: `تم إضافة المستخدم ${newUser.full_name} بنجاح`,
       })
 
       setIsAddUserOpen(false)
       setNewUser({ email: "", password: "", full_name: "", role: "user" })
-      fetchUsers()
-    } catch (error) {
+
+      await fetchUsers()
+    } catch (error: any) {
       console.error("[v0] Error creating user:", error)
       toast({
-        title: "خطأ",
-        description: "فشل في إضافة المستخدم",
+        title: "❌ خطأ",
+        description: error.message || "فشل في إضافة المستخدم",
         variant: "destructive",
       })
     } finally {
@@ -117,21 +123,26 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
         body: JSON.stringify(selectedUser),
       })
 
-      if (!response.ok) throw new Error("Failed to update user")
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update user")
+      }
 
       toast({
-        title: "نجح",
-        description: "تم تحديث المستخدم بنجاح",
+        title: "✅ نجح",
+        description: `تم تحديث بيانات ${selectedUser.full_name} بنجاح`,
       })
 
       setIsEditUserOpen(false)
       setSelectedUser(null)
-      fetchUsers()
-    } catch (error) {
+
+      await fetchUsers()
+    } catch (error: any) {
       console.error("[v0] Error updating user:", error)
       toast({
-        title: "خطأ",
-        description: "فشل في تحديث المستخدم",
+        title: "❌ خطأ",
+        description: error.message || "فشل في تحديث المستخدم",
         variant: "destructive",
       })
     } finally {
@@ -148,24 +159,37 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
         method: "DELETE",
       })
 
-      if (!response.ok) throw new Error("Failed to delete user")
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete user")
+      }
 
       toast({
-        title: "نجح",
+        title: "✅ نجح",
         description: "تم حذف المستخدم بنجاح",
       })
 
-      fetchUsers()
-    } catch (error) {
+      await fetchUsers()
+    } catch (error: any) {
       console.error("[v0] Error deleting user:", error)
       toast({
-        title: "خطأ",
-        description: "فشل في حذف المستخدم",
+        title: "❌ خطأ",
+        description: error.message || "فشل في حذف المستخدم",
         variant: "destructive",
       })
     } finally {
       setLoading(false)
     }
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString("ar-SA", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
   }
 
   return (
@@ -196,39 +220,64 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <Users className="h-5 w-5" />
                     إدارة المستخدمين
+                    <Badge variant="secondary">{users.length}</Badge>
                   </h3>
-                  <Button size="sm" onClick={() => setIsAddUserOpen(true)}>
+                  <Button size="sm" onClick={() => setIsAddUserOpen(true)} disabled={loading}>
                     <Plus className="h-4 w-4 ml-2" />
                     إضافة مستخدم
                   </Button>
                 </div>
 
                 {loading ? (
-                  <p className="text-center text-muted-foreground py-8">جاري التحميل...</p>
+                  <div className="text-center py-12">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+                    <p className="mt-4 text-muted-foreground">جاري التحميل...</p>
+                  </div>
                 ) : users.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">لا يوجد مستخدمين حالياً</p>
+                  <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                      <p className="text-center text-muted-foreground">لا يوجد مستخدمين حالياً</p>
+                      <Button size="sm" className="mt-4" onClick={() => setIsAddUserOpen(true)}>
+                        <Plus className="h-4 w-4 ml-2" />
+                        إضافة أول مستخدم
+                      </Button>
+                    </CardContent>
+                  </Card>
                 ) : (
                   <div className="space-y-3">
                     {users.map((user) => (
-                      <Card key={user.id}>
+                      <Card key={user.id} className="hover:shadow-md transition-shadow">
                         <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-medium">{user.full_name}</h4>
-                                <span
-                                  className={`text-xs px-2 py-1 rounded-full ${
-                                    user.role === "admin"
-                                      ? "bg-primary/10 text-primary"
-                                      : "bg-muted text-muted-foreground"
-                                  }`}
-                                >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-semibold text-lg">{user.full_name}</h4>
+                                <Badge variant={user.role === "admin" ? "default" : "secondary"}>
                                   {user.role === "admin" ? "مسؤول" : "مستخدم"}
-                                </span>
+                                </Badge>
                               </div>
-                              <p className="text-sm text-muted-foreground">{user.email}</p>
-                              {user.phone && <p className="text-sm text-muted-foreground">{user.phone}</p>}
+
+                              <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-2">
+                                  <Mail className="h-4 w-4" />
+                                  <span>{user.email}</span>
+                                </div>
+
+                                {user.phone && (
+                                  <div className="flex items-center gap-2">
+                                    <Phone className="h-4 w-4" />
+                                    <span dir="ltr">{user.phone}</span>
+                                  </div>
+                                )}
+
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4" />
+                                  <span>تاريخ التسجيل: {formatDate(user.created_at)}</span>
+                                </div>
+                              </div>
                             </div>
+
                             <div className="flex gap-2">
                               <Button
                                 variant="outline"
@@ -237,11 +286,19 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
                                   setSelectedUser(user)
                                   setIsEditUserOpen(true)
                                 }}
+                                disabled={loading}
                               >
                                 <Pencil className="h-4 w-4" />
+                                <span className="mr-2 hidden sm:inline">تعديل</span>
                               </Button>
-                              <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(user.id)}>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteUser(user.id)}
+                                disabled={loading}
+                              >
                                 <Trash2 className="h-4 w-4" />
+                                <span className="mr-2 hidden sm:inline">حذف</span>
                               </Button>
                             </div>
                           </div>
@@ -314,78 +371,103 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
       </div>
 
       <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>إضافة مستخدم جديد</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              إضافة مستخدم جديد
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="full_name">الاسم الكامل</Label>
+              <Label htmlFor="full_name">
+                الاسم الكامل <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="full_name"
                 value={newUser.full_name}
                 onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
                 placeholder="أدخل الاسم الكامل"
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">البريد الإلكتروني</Label>
+              <Label htmlFor="email">
+                البريد الإلكتروني <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="email"
                 type="email"
                 value={newUser.email}
                 onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                 placeholder="example@email.com"
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
+              <Label htmlFor="password">
+                كلمة المرور <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="password"
                 type="password"
                 value={newUser.password}
                 onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                placeholder="أدخل كلمة المرور"
+                placeholder="أدخل كلمة المرور (6 أحرف على الأقل)"
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">الصلاحية</Label>
-              <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
+              <Select
+                value={newUser.role}
+                onValueChange={(value) => setNewUser({ ...newUser, role: value })}
+                disabled={loading}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">مستخدم</SelectItem>
+                  <SelectItem value="user">مستخدم عادي</SelectItem>
                   <SelectItem value="admin">مسؤول</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddUserOpen(false)}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsAddUserOpen(false)} disabled={loading}>
               إلغاء
             </Button>
             <Button onClick={handleAddUser} disabled={loading}>
-              {loading ? "جاري الإضافة..." : "إضافة"}
+              {loading ? "جاري الإضافة..." : "إضافة المستخدم"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>تعديل المستخدم</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              تعديل بيانات المستخدم
+            </DialogTitle>
           </DialogHeader>
           {selectedUser && (
-            <div className="space-y-4">
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="edit_full_name">الاسم الكامل</Label>
                 <Input
                   id="edit_full_name"
                   value={selectedUser.full_name}
                   onChange={(e) => setSelectedUser({ ...selectedUser, full_name: e.target.value })}
+                  disabled={loading}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_email">البريد الإلكتروني</Label>
+                <Input id="edit_email" value={selectedUser.email} disabled className="bg-muted" />
+                <p className="text-xs text-muted-foreground">لا يمكن تعديل البريد الإلكتروني</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit_phone">رقم الجوال</Label>
@@ -394,6 +476,8 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
                   value={selectedUser.phone || ""}
                   onChange={(e) => setSelectedUser({ ...selectedUser, phone: e.target.value })}
                   placeholder="05xxxxxxxx"
+                  dir="ltr"
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -401,20 +485,21 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
                 <Select
                   value={selectedUser.role}
                   onValueChange={(value) => setSelectedUser({ ...selectedUser, role: value })}
+                  disabled={loading}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">مستخدم</SelectItem>
+                    <SelectItem value="user">مستخدم عادي</SelectItem>
                     <SelectItem value="admin">مسؤول</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditUserOpen(false)}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsEditUserOpen(false)} disabled={loading}>
               إلغاء
             </Button>
             <Button onClick={handleUpdateUser} disabled={loading}>
