@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { toast } from "@/hooks/use-toast" // Import toast here
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -9,11 +10,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { useToast } from "@/hooks/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Pencil, Trash2, FileText } from "lucide-react"
+import { Plus, Pencil, Trash2, FileText, Info, ExternalLink, Copy, LinkIcon } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import Link from "next/link"
 
 interface Service {
   id: string
@@ -43,10 +45,9 @@ export default function BookingFormsPage() {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
+  const [addServiceOpen, setAddServiceOpen] = useState(false)
   const [editingForm, setEditingForm] = useState<BookingForm | null>(null)
   const [initializing, setInitializing] = useState(false)
-  const { toast } = useToast()
-
   const [formData, setFormData] = useState({
     name_ar: "",
     name_en: "",
@@ -61,6 +62,13 @@ export default function BookingFormsPage() {
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>("")
+  const [newService, setNewService] = useState({
+    title_ar: "",
+    title_en: "",
+    description_ar: "",
+    description_en: "",
+    image_url: "",
+  })
 
   useEffect(() => {
     fetchForms()
@@ -255,6 +263,78 @@ export default function BookingFormsPage() {
     }
   }
 
+  const handleAddService = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const response = await fetch("/api/services", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...newService, is_active: true, order_index: services.length }),
+      })
+
+      if (response.ok) {
+        const service = await response.json()
+        toast({
+          title: "نجح",
+          description: "تم إضافة الخدمة بنجاح",
+        })
+        setAddServiceOpen(false)
+        setNewService({ title_ar: "", title_en: "", description_ar: "", description_en: "", image_url: "" })
+        fetchServices()
+        setSelectedServices([...selectedServices, service.id])
+      } else {
+        toast({
+          title: "خطأ",
+          description: "فشل في إضافة الخدمة",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("[v0] Error adding service:", error)
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء إضافة الخدمة",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleFormActive = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch("/api/booking-forms", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, is_active: !currentStatus }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "نجح",
+          description: !currentStatus ? "تم تفعيل النموذج" : "تم تعطيل النموذج",
+        })
+        fetchForms()
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في تغيير حالة النموذج",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text)
+    toast({
+      title: "تم النسخ",
+      description: `تم نسخ ${label} إلى الحافظة`,
+    })
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-96">جاري التحميل...</div>
   }
@@ -267,7 +347,7 @@ export default function BookingFormsPage() {
             <FileText className="h-6 w-6 sm:h-8 sm:w-8" />
             إدارة نماذج الحجز
           </h1>
-          <p className="text-muted-foreground mt-2">إنشاء وتعديل نماذج الحجز المخصصة</p>
+          <p className="text-muted-foreground mt-2">إنشاء وتعديل نماذج الحجز المخصصة المرتبطة بـ Google Sheets</p>
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
@@ -346,7 +426,53 @@ export default function BookingFormsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>الخدمات المتاحة في النموذج</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>الخدمات المتاحة في النموذج</Label>
+                    <Dialog open={addServiceOpen} onOpenChange={setAddServiceOpen}>
+                      <DialogTrigger asChild>
+                        <Button type="button" variant="outline" size="sm">
+                          <Plus className="ml-2 h-4 w-4" />
+                          إضافة خدمة جديدة
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>إضافة خدمة جديدة</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleAddService} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="service_title_ar">اسم الخدمة بالعربية *</Label>
+                            <Input
+                              id="service_title_ar"
+                              required
+                              value={newService.title_ar}
+                              onChange={(e) => setNewService({ ...newService, title_ar: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="service_title_en">اسم الخدمة بالإنجليزية</Label>
+                            <Input
+                              id="service_title_en"
+                              value={newService.title_en}
+                              onChange={(e) => setNewService({ ...newService, title_en: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="service_description_ar">الوصف بالعربية</Label>
+                            <Textarea
+                              id="service_description_ar"
+                              value={newService.description_ar}
+                              onChange={(e) => setNewService({ ...newService, description_ar: e.target.value })}
+                              rows={3}
+                            />
+                          </div>
+                          <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? "جاري الإضافة..." : "إضافة الخدمة"}
+                          </Button>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
                     {services.map((service) => (
                       <div key={service.id} className="flex items-center space-x-2 space-x-reverse">
@@ -392,6 +518,18 @@ export default function BookingFormsPage() {
         </div>
       </div>
 
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          <strong>ربط Google Sheets:</strong> لربط نموذج الحجز بـ Google Sheet، أضف معرف الـ Sheet في حقل "معرف Google
+          Sheet" عند إنشاء أو تعديل النموذج. يمكنك الحصول على المعرف من رابط الـ Sheet (الجزء بين /d/ و /edit).
+          <br />
+          <span className="text-xs text-muted-foreground mt-1 block">
+            مثال: https://docs.google.com/spreadsheets/d/1ABC123xyz/edit
+          </span>
+        </AlertDescription>
+      </Alert>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {forms.map((form) => (
           <Card key={form.id}>
@@ -402,9 +540,11 @@ export default function BookingFormsPage() {
                   {form.is_main && (
                     <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">رئيسي</span>
                   )}
-                  {!form.is_active && (
-                    <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">غير نشط</span>
-                  )}
+                  <Switch
+                    checked={form.is_active}
+                    onCheckedChange={() => toggleFormActive(form.id, form.is_active)}
+                    className="scale-75"
+                  />
                 </div>
               </CardTitle>
             </CardHeader>
@@ -417,6 +557,84 @@ export default function BookingFormsPage() {
               {form.description_ar && (
                 <p className="text-sm text-muted-foreground line-clamp-2">{form.description_ar}</p>
               )}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">رابط النموذج:</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/booking/${form.id}`}
+                    target="_blank"
+                    className="text-xs text-primary hover:underline truncate flex-1"
+                  >
+                    {typeof window !== "undefined"
+                      ? `${window.location.origin}/booking/${form.id}`
+                      : `/booking/${form.id}`}
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() =>
+                      copyToClipboard(
+                        typeof window !== "undefined"
+                          ? `${window.location.origin}/booking/${form.id}`
+                          : `/booking/${form.id}`,
+                        "رابط النموذج",
+                      )
+                    }
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                  <Link href={`/booking/${form.id}`} target="_blank">
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </Link>
+                </div>
+
+                {form.google_sheet_id && (
+                  <>
+                    <div className="flex items-center gap-2 mt-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">رابط Google Sheet:</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`https://docs.google.com/spreadsheets/d/${form.google_sheet_id}/edit`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline truncate flex-1"
+                      >
+                        فتح الجدول
+                      </a>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() =>
+                          copyToClipboard(
+                            `https://docs.google.com/spreadsheets/d/${form.google_sheet_id}/edit`,
+                            "رابط Google Sheet",
+                          )
+                        }
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                      <a
+                        href={`https://docs.google.com/spreadsheets/d/${form.google_sheet_id}/edit`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      </a>
+                    </div>
+                  </>
+                )}
+              </div>
               <div className="text-sm">
                 <p className="text-muted-foreground">الخدمات المتاحة:</p>
                 <p className="font-medium">{form.booking_form_services?.length || 0} خدمة</p>

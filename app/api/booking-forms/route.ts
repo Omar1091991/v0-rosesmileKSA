@@ -1,9 +1,33 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = createAdminClient()
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    if (id) {
+      const { data: form, error } = await supabase
+        .from("booking_forms")
+        .select(`
+          *,
+          booking_form_services (
+            service_id,
+            services (
+              id,
+              title_ar,
+              title_en
+            )
+          )
+        `)
+        .eq("id", id)
+        .single()
+
+      if (error) throw error
+      return NextResponse.json(form)
+    }
 
     const { data: forms, error } = await supabase
       .from("booking_forms")

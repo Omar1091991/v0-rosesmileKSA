@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -22,17 +22,53 @@ import { Calendar } from "lucide-react"
 
 interface BookingDialogProps {
   trigger?: React.ReactNode
+  formId?: string // إضافة معرف نموذج الحجز
 }
 
-export function BookingDialog({ trigger }: BookingDialogProps) {
+export function BookingDialog({ trigger, formId }: BookingDialogProps) {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [services, setServices] = useState<any[]>([])
+  const [googleSheetId, setGoogleSheetId] = useState<string>("")
   const [formData, setFormData] = useState({
     full_name: "",
     phone: "",
     service_name: "",
     notes: "",
   })
+
+  useEffect(() => {
+    const fetchFormData = async () => {
+      if (formId) {
+        try {
+          const response = await fetch(`/api/booking-forms?id=${formId}`)
+          if (response.ok) {
+            const form = await response.json()
+            setGoogleSheetId(form.google_sheet_id || "")
+            // جلب الخدمات المرتبطة بالنموذج
+            if (form.booking_form_services) {
+              setServices(form.booking_form_services.map((s: any) => s.services))
+            }
+          }
+        } catch (error) {
+          console.error("[v0] Error fetching form data:", error)
+        }
+      } else {
+        // جلب جميع الخدمات النشطة للنموذج الافتراضي
+        try {
+          const response = await fetch("/api/services")
+          if (response.ok) {
+            const data = await response.json()
+            setServices(data.filter((s: any) => s.is_active))
+          }
+        } catch (error) {
+          console.error("[v0] Error fetching services:", error)
+        }
+      }
+    }
+
+    fetchFormData()
+  }, [formId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +77,6 @@ export function BookingDialog({ trigger }: BookingDialogProps) {
     try {
       const supabase = createClient()
 
-      // Save to database
       const { error } = await supabase.from("bookings").insert([
         {
           full_name: formData.full_name,
@@ -54,10 +89,14 @@ export function BookingDialog({ trigger }: BookingDialogProps) {
 
       if (error) throw error
 
-      // Submit to Google Sheets
-      await submitToGoogleSheets(formData)
+      const sheetsResult = await submitToGoogleSheets(formData, googleSheetId)
 
-      alert("تم إرسال طلب الحجز بنجاح! سنتواصل معك قريباً")
+      if (sheetsResult.success) {
+        alert("تم إرسال طلب الحجز بنجاح إلى قاعدة البيانات و Google Sheets! سنتواصل معك قريباً")
+      } else {
+        alert("تم إرسال طلب الحجز بنجاح إلى قاعدة البيانات! سنتواصل معك قريباً")
+      }
+
       setOpen(false)
       setFormData({ full_name: "", phone: "", service_name: "", notes: "" })
     } catch (error) {
@@ -118,13 +157,23 @@ export function BookingDialog({ trigger }: BookingDialogProps) {
                 <SelectValue placeholder="اختر الخدمة" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="طب الأسنان">طب الأسنان</SelectItem>
-                <SelectItem value="تجميل الأسنان">تجميل الأسنان</SelectItem>
-                <SelectItem value="تقويم الأسنان">تقويم الأسنان</SelectItem>
-                <SelectItem value="زراعة الأسنان">زراعة الأسنان</SelectItem>
-                <SelectItem value="علاج اللثة">علاج اللثة</SelectItem>
-                <SelectItem value="طب الأطفال">طب الأطفال</SelectItem>
-                <SelectItem value="أخرى">أخرى</SelectItem>
+                {services.length > 0 ? (
+                  services.map((service) => (
+                    <SelectItem key={service.id} value={service.title_ar}>
+                      {service.title_ar}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="طب الأسنان">طب الأسنان</SelectItem>
+                    <SelectItem value="تجميل الأسنان">تجميل الأسنان</SelectItem>
+                    <SelectItem value="تقويم الأسنان">تقويم الأسنان</SelectItem>
+                    <SelectItem value="زراعة الأسنان">زراعة الأسنان</SelectItem>
+                    <SelectItem value="علاج اللثة">علاج اللثة</SelectItem>
+                    <SelectItem value="طب الأطفال">طب الأطفال</SelectItem>
+                    <SelectItem value="أخرى">أخرى</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>

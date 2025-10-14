@@ -1,11 +1,13 @@
-export async function submitToGoogleSheets(data: {
-  full_name: string
-  phone: string
-  service_name: string
-  notes?: string
-}) {
+export async function submitToGoogleSheets(
+  data: {
+    full_name: string
+    phone: string
+    service_name: string
+    notes?: string
+  },
+  sheet_id?: string,
+) {
   try {
-    // إرسال البيانات إلى Google Sheets عبر API Route
     const response = await fetch("/api/google-sheets", {
       method: "POST",
       headers: {
@@ -14,11 +16,13 @@ export async function submitToGoogleSheets(data: {
       body: JSON.stringify({
         ...data,
         timestamp: new Date().toISOString(),
+        sheet_id, // إرسال معرف الـ sheet
       }),
     })
 
     if (!response.ok) {
-      throw new Error("Failed to submit to Google Sheets")
+      const error = await response.json()
+      throw new Error(error.error || "Failed to submit to Google Sheets")
     }
 
     const result = await response.json()
