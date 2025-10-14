@@ -17,15 +17,16 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from "@/lib/supabase/client"
-import { submitToGoogleSheets } from "@/lib/google-sheets"
 import { Calendar } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface BookingDialogProps {
   trigger?: React.ReactNode
-  formId?: string // إضافة معرف نموذج الحجز
+  formId?: string
 }
 
 export function BookingDialog({ trigger, formId }: BookingDialogProps) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [services, setServices] = useState<any[]>([])
@@ -44,8 +45,8 @@ export function BookingDialog({ trigger, formId }: BookingDialogProps) {
           const response = await fetch(`/api/booking-forms?id=${formId}`)
           if (response.ok) {
             const form = await response.json()
+            console.log("[v0] Form data:", form)
             setGoogleSheetId(form.google_sheet_id || "")
-            // جلب الخدمات المرتبطة بالنموذج
             if (form.booking_form_services) {
               setServices(form.booking_form_services.map((s: any) => s.services))
             }
@@ -54,7 +55,6 @@ export function BookingDialog({ trigger, formId }: BookingDialogProps) {
           console.error("[v0] Error fetching form data:", error)
         }
       } else {
-        // جلب جميع الخدمات النشطة للنموذج الافتراضي
         try {
           const response = await fetch("/api/services")
           if (response.ok) {
@@ -77,7 +77,7 @@ export function BookingDialog({ trigger, formId }: BookingDialogProps) {
     try {
       const supabase = createClient()
 
-      const { error } = await supabase.from("bookings").insert([
+      const { error: dbError } = await supabase.from("bookings").insert([
         {
           full_name: formData.full_name,
           phone: formData.phone,
@@ -87,18 +87,38 @@ export function BookingDialog({ trigger, formId }: BookingDialogProps) {
         },
       ])
 
-      if (error) throw error
+      if (dbError) {
+        console.error("[v0] Database error:", dbError)
+        throw dbError
+      }
 
-      const sheetsResult = await submitToGoogleSheets(formData, googleSheetId)
+      console.log("[v0] Booking saved to database successfully")
 
-      if (sheetsResult.success) {
-        alert("تم إرسال طلب الحجز بنجاح إلى قاعدة البيانات و Google Sheets! سنتواصل معك قريباً")
-      } else {
-        alert("تم إرسال طلب الحجز بنجاح إلى قاعدة البيانات! سنتواصل معك قريباً")
+      if (googleSheetId) {
+        console.log("[v0] Sending to Google Sheets:", googleSheetId)
+
+        const sheetsResponse = await fetch("/api/google-sheets", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            full_name: formData.full_name,
+            phone: formData.phone,
+            service_name: formData.service_name,
+            notes: formData.notes,
+            timestamp: new Date().toISOString(),
+            sheet_id: googleSheetId,
+          }),
+        })
+
+        const sheetsResult = await sheetsResponse.json()
+        console.log("[v0] Google Sheets result:", sheetsResult)
       }
 
       setOpen(false)
       setFormData({ full_name: "", phone: "", service_name: "", notes: "" })
+      router.push("/booking-success")
     } catch (error) {
       console.error("[v0] Error submitting booking:", error)
       alert("حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى")
