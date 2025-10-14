@@ -23,6 +23,7 @@ const menuItems = [
   { title: "الأطباء", href: "/dashboard/doctors", icon: Stethoscope },
   { title: "الأقسام", href: "/dashboard/departments", icon: Building2 },
   { title: "العروض", href: "/dashboard/offers", icon: Tag },
+  { title: "نماذج الحجز", href: "/dashboard/booking-forms", icon: FileText },
   { title: "الحجوزات", href: "/dashboard/bookings", icon: Calendar },
   { title: "المقالات", href: "/dashboard/articles", icon: FileText },
   { title: "معرض الصور", href: "/dashboard/gallery", icon: ImageIcon },

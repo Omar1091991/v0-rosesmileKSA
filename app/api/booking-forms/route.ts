@@ -1,0 +1,126 @@
+import { NextResponse } from "next/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+
+export async function GET() {
+  try {
+    const supabase = createAdminClient()
+
+    const { data: forms, error } = await supabase
+      .from("booking_forms")
+      .select(`
+        *,
+        booking_form_services (
+          service_id,
+          services (
+            id,
+            title_ar,
+            title_en
+          )
+        )
+      `)
+      .order("order_index", { ascending: true })
+
+    if (error) throw error
+
+    return NextResponse.json(forms || [])
+  } catch (error: any) {
+    console.error("[v0] Error fetching booking forms:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabase = createAdminClient()
+    const body = await request.json()
+    const { service_ids, ...formData } = body
+
+    // إذا كان النموذج رئيسي، إلغاء تفعيل النماذج الرئيسية الأخرى
+    if (formData.is_main) {
+      await supabase.from("booking_forms").update({ is_main: false }).eq("is_main", true)
+    }
+
+    const { data: form, error: formError } = await supabase.from("booking_forms").insert([formData]).select().single()
+
+    if (formError) throw formError
+
+    // ربط الخدمات بالنموذج
+    if (service_ids && service_ids.length > 0) {
+      const serviceLinks = service_ids.map((service_id: string) => ({
+        booking_form_id: form.id,
+        service_id,
+      }))
+
+      const { error: linkError } = await supabase.from("booking_form_services").insert(serviceLinks)
+
+      if (linkError) throw linkError
+    }
+
+    return NextResponse.json(form)
+  } catch (error: any) {
+    console.error("[v0] Error creating booking form:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const supabase = createAdminClient()
+    const body = await request.json()
+    const { id, service_ids, ...formData } = body
+
+    // إذا كان النموذج رئيسي، إلغاء تفعيل النماذج الرئيسية الأخرى
+    if (formData.is_main) {
+      await supabase.from("booking_forms").update({ is_main: false }).eq("is_main", true).neq("id", id)
+    }
+
+    const { data: form, error: formError } = await supabase
+      .from("booking_forms")
+      .update({ ...formData, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single()
+
+    if (formError) throw formError
+
+    // تحديث ربط الخدمات
+    if (service_ids !== undefined) {
+      // حذف الروابط القديمة
+      await supabase.from("booking_form_services").delete().eq("booking_form_id", id)
+
+      // إضافة الروابط الجديدة
+      if (service_ids.length > 0) {
+        const serviceLinks = service_ids.map((service_id: string) => ({
+          booking_form_id: id,
+          service_id,
+        }))
+
+        const { error: linkError } = await supabase.from("booking_form_services").insert(serviceLinks)
+
+        if (linkError) throw linkError
+      }
+    }
+
+    return NextResponse.json(form)
+  } catch (error: any) {
+    console.error("[v0] Error updating booking form:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const supabase = createAdminClient()
+    const body = await request.json()
+    const { id } = body
+
+    const { error } = await supabase.from("booking_forms").delete().eq("id", id)
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error("[v0] Error deleting booking form:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}

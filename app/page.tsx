@@ -82,16 +82,19 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-20 md:py-32 overflow-hidden">
-          <div className="container">
+        <section className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-12 sm:py-16 md:py-20 lg:py-32 overflow-hidden">
+          <div className="container px-4 sm:px-6">
             <motion.div
-              className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center"
               initial="initial"
               animate="animate"
               variants={staggerContainer}
             >
-              <div className="space-y-8 text-center lg:text-right">
-                <motion.h1 className="text-4xl md:text-6xl font-bold text-balance leading-tight" variants={fadeInUp}>
+              <div className="space-y-6 sm:space-y-8 text-center lg:text-right order-2 lg:order-1">
+                <motion.h1
+                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-balance leading-tight"
+                  variants={fadeInUp}
+                >
                   {siteSettings.hero_title_ar || "ابتسامة الورود ابتسامتك بتعود"}
                 </motion.h1>
                 <motion.p
@@ -114,7 +117,10 @@ export default function HomePage() {
                 </motion.div>
               </div>
 
-              <motion.div className="relative w-full aspect-square max-w-md mx-auto lg:max-w-full" variants={scaleIn}>
+              <motion.div
+                className="relative w-full aspect-square max-w-sm sm:max-w-md mx-auto lg:max-w-full order-1 lg:order-2"
+                variants={scaleIn}
+              >
                 <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
                   <Image
                     src={siteSettings.hero_image_url || "/placeholder.svg?height=600&width=600"}
@@ -181,8 +187,8 @@ export default function HomePage() {
         </section>
 
         {/* Services Section */}
-        <section className="py-16 md:py-24 bg-gradient-to-br from-secondary/10 to-primary/5">
-          <div className="container">
+        <section className="py-12 sm:py-16 md:py-24 bg-gradient-to-br from-secondary/10 to-primary/5">
+          <div className="container px-4 sm:px-6">
             <motion.div
               className="text-center space-y-4 mb-12"
               initial="initial"
@@ -197,7 +203,7 @@ export default function HomePage() {
             </motion.div>
 
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
               initial="initial"
               whileInView="animate"
               viewport={{ once: true, margin: "-50px" }}
