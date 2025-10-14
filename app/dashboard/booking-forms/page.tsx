@@ -48,6 +48,12 @@ export default function BookingFormsPage() {
   const [addServiceOpen, setAddServiceOpen] = useState(false)
   const [editingForm, setEditingForm] = useState<BookingForm | null>(null)
   const [initializing, setInitializing] = useState(false)
+  const [testingConnection, setTestingConnection] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<{
+    success: boolean
+    message: string
+    serviceAccount?: string
+  } | null>(null)
   const [formData, setFormData] = useState({
     name_ar: "",
     name_en: "",
@@ -355,6 +361,37 @@ export default function BookingFormsPage() {
     })
   }
 
+  const testGoogleConnection = async () => {
+    setTestingConnection(true)
+    try {
+      const response = await fetch("/api/google-sheets/test")
+      const result = await response.json()
+      setConnectionStatus(result)
+
+      if (result.success) {
+        toast({
+          title: "نجح",
+          description: result.message,
+        })
+      } else {
+        toast({
+          title: "خطأ",
+          description: result.error || "فشل الاتصال بـ Google Sheets",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("[v0] Error testing Google connection:", error)
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء اختبار الاتصال",
+        variant: "destructive",
+      })
+    } finally {
+      setTestingConnection(false)
+    }
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-96">جاري التحميل...</div>
   }
@@ -371,6 +408,15 @@ export default function BookingFormsPage() {
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            onClick={testGoogleConnection}
+            disabled={testingConnection}
+            variant="outline"
+            className="flex-1 sm:flex-none bg-transparent"
+          >
+            {testingConnection ? "جاري الاختبار..." : "اختبار اتصال Google"}
+          </Button>
+
           {forms.length === 0 && (
             <Button
               onClick={initializeTables}
@@ -541,6 +587,24 @@ export default function BookingFormsPage() {
         </div>
       </div>
 
+      {connectionStatus && (
+        <Alert variant={connectionStatus.success ? "default" : "destructive"}>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            <strong>{connectionStatus.success ? "✓ متصل" : "✗ غير متصل"}:</strong> {connectionStatus.message}
+            {connectionStatus.serviceAccount && (
+              <>
+                <br />
+                <span className="text-xs mt-1 block">Service Account: {connectionStatus.serviceAccount}</span>
+                <span className="text-xs text-muted-foreground block">
+                  تأكد من منح هذا الإيميل صلاحيات "محرر" على Google Sheets التي تريد ربطها
+                </span>
+              </>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
@@ -549,6 +613,13 @@ export default function BookingFormsPage() {
           <br />
           <span className="text-xs text-muted-foreground mt-1 block">
             مثال: https://docs.google.com/spreadsheets/d/1ABC123xyz/edit
+          </span>
+          <br />
+          <span className="text-xs font-medium mt-2 block">
+            Service Account Email: rosesmile-sheets-connectorv0@medical-rose-smile.iam.gserviceaccount.com
+          </span>
+          <span className="text-xs text-muted-foreground block">
+            امنح هذا الإيميل صلاحيات "محرر" على Google Sheet لتمكين الربط التلقائي
           </span>
         </AlertDescription>
       </Alert>
