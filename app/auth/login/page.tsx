@@ -40,9 +40,23 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      window.location.href = "/"
+      toast({
+        title: "تم تسجيل الدخول بنجاح!",
+        description: "مرحباً بك في عيادات ابتسامة الورود",
+        variant: "default",
+      })
+
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      router.refresh()
+      router.push("/")
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "حدث خطأ أثناء تسجيل الدخول")
+      const errorMessage = error instanceof Error ? error.message : "حدث خطأ أثناء تسجيل الدخول"
+      setError(errorMessage)
+      toast({
+        title: "فشل تسجيل الدخول",
+        description: errorMessage,
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }

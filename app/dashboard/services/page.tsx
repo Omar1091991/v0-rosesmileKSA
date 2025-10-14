@@ -1,9 +1,11 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Pencil, Trash2, Briefcase } from "lucide-react"
+import { Plus, Pencil, Trash2, Briefcase, Upload, X } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,6 +31,8 @@ export default function ServicesPage() {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>("")
+  const [editImagePreview, setEditImagePreview] = useState<string>("")
   const { toast } = useToast()
 
   const [newService, setNewService] = useState({
@@ -96,6 +100,7 @@ export default function ServicesPage() {
       })
 
       setIsAddOpen(false)
+      setImagePreview("")
       setNewService({
         title_ar: "",
         title_en: "",
@@ -142,6 +147,7 @@ export default function ServicesPage() {
       })
 
       setIsEditOpen(false)
+      setEditImagePreview("")
       setSelectedService(null)
       await fetchServices()
     } catch (error: any) {
@@ -189,6 +195,54 @@ export default function ServicesPage() {
     }
   }
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // التحقق من نوع الملف
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار ملف صورة صحيح",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // التحقق من حجم الملف (أقل من 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "خطأ",
+        description: "حجم الصورة يجب أن يكون أقل من 2 ميجابايت",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64String = reader.result as string
+      if (isEdit && selectedService) {
+        setSelectedService({ ...selectedService, image_url: base64String })
+        setEditImagePreview(base64String)
+      } else {
+        setNewService({ ...newService, image_url: base64String })
+        setImagePreview(base64String)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeImage = (isEdit = false) => {
+    if (isEdit && selectedService) {
+      setSelectedService({ ...selectedService, image_url: "" })
+      setEditImagePreview("")
+    } else {
+      setNewService({ ...newService, image_url: "" })
+      setImagePreview("")
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -227,6 +281,15 @@ export default function ServicesPage() {
             <Card key={service.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between gap-4">
+                  {service.image_url && (
+                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                      <img
+                        src={service.image_url || "/placeholder.svg"}
+                        alt={service.title_ar}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
                       {service.icon && <span className="text-2xl">{service.icon}</span>}
@@ -246,6 +309,7 @@ export default function ServicesPage() {
                       size="sm"
                       onClick={() => {
                         setSelectedService(service)
+                        setEditImagePreview(service.image_url || "")
                         setIsEditOpen(true)
                       }}
                       disabled={loading}
@@ -280,6 +344,39 @@ export default function ServicesPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>صورة الخدمة</Label>
+              {imagePreview ? (
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                  <img src={imagePreview || "/placeholder.svg"} alt="معاينة" className="w-full h-full object-cover" />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 left-2"
+                    onClick={() => removeImage(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, false)}
+                    className="hidden"
+                    id="image-upload"
+                    disabled={loading}
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-sm text-muted-foreground">اضغط لرفع صورة</p>
+                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF (أقل من 2MB)</p>
+                  </label>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="title_ar">
                 العنوان بالعربية <span className="text-destructive">*</span>
@@ -347,6 +444,43 @@ export default function ServicesPage() {
           </DialogHeader>
           {selectedService && (
             <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>صورة الخدمة</Label>
+                {editImagePreview ? (
+                  <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={editImagePreview || "/placeholder.svg"}
+                      alt="معاينة"
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 left-2"
+                      onClick={() => removeImage(true)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e, true)}
+                      className="hidden"
+                      id="edit-image-upload"
+                      disabled={loading}
+                    />
+                    <label htmlFor="edit-image-upload" className="cursor-pointer">
+                      <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-sm text-muted-foreground">اضغط لرفع صورة</p>
+                      <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF (أقل من 2MB)</p>
+                    </label>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="edit_title_ar">العنوان بالعربية</Label>
                 <Input
