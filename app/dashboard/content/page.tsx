@@ -9,8 +9,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Save, FileText, Loader2 } from "lucide-react"
+import { Save, FileText, Loader2, Sparkles } from "lucide-react"
 import { motion } from "framer-motion"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const CONTENT_SECTIONS = [
   {
@@ -102,6 +104,123 @@ const CONTENT_SECTIONS = [
         label: "الوصف",
         type: "textarea",
         defaultValue: "احجز موعدك الآن واحصل على استشارة طبية مجانية",
+      },
+    ],
+  },
+]
+
+const ANIMATION_SECTIONS = [
+  {
+    section: "hero_animation",
+    title: "تأثيرات القسم الرئيسي",
+    fields: [
+      {
+        key: "hero_animation_type",
+        label: "نوع التأثير",
+        type: "select",
+        options: [
+          { value: "fade-up", label: "ظهور من الأسفل" },
+          { value: "fade-in", label: "ظهور تدريجي" },
+          { value: "scale-in", label: "تكبير تدريجي" },
+          { value: "slide-left", label: "انزلاق من اليسار" },
+          { value: "slide-right", label: "انزلاق من اليمين" },
+          { value: "bounce", label: "ارتداد" },
+          { value: "rotate", label: "دوران" },
+        ],
+        defaultValue: "fade-up",
+      },
+      {
+        key: "hero_animation_duration",
+        label: "مدة التأثير (ثانية)",
+        type: "number",
+        defaultValue: "0.6",
+      },
+      {
+        key: "hero_animation_delay",
+        label: "تأخير التأثير (ثانية)",
+        type: "number",
+        defaultValue: "0",
+      },
+    ],
+  },
+  {
+    section: "features_animation",
+    title: "تأثيرات قسم المميزات",
+    fields: [
+      {
+        key: "features_animation_type",
+        label: "نوع التأثير",
+        type: "select",
+        options: [
+          { value: "fade-up", label: "ظهور من الأسفل" },
+          { value: "fade-in", label: "ظهور تدريجي" },
+          { value: "scale-in", label: "تكبير تدريجي" },
+          { value: "slide-left", label: "انزلاق من اليسار" },
+          { value: "slide-right", label: "انزلاق من اليمين" },
+          { value: "bounce", label: "ارتداد" },
+          { value: "rotate", label: "دوران" },
+        ],
+        defaultValue: "scale-in",
+      },
+      {
+        key: "features_animation_stagger",
+        label: "تأخير بين العناصر (ثانية)",
+        type: "number",
+        defaultValue: "0.1",
+      },
+    ],
+  },
+  {
+    section: "services_animation",
+    title: "تأثيرات قسم الخدمات",
+    fields: [
+      {
+        key: "services_animation_type",
+        label: "نوع التأثير",
+        type: "select",
+        options: [
+          { value: "fade-up", label: "ظهور من الأسفل" },
+          { value: "fade-in", label: "ظهور تدريجي" },
+          { value: "scale-in", label: "تكبير تدريجي" },
+          { value: "slide-left", label: "انزلاق من اليسار" },
+          { value: "slide-right", label: "انزلاق من اليمين" },
+          { value: "bounce", label: "ارتداد" },
+          { value: "rotate", label: "دوران" },
+        ],
+        defaultValue: "fade-up",
+      },
+      {
+        key: "services_animation_stagger",
+        label: "تأخير بين العناصر (ثانية)",
+        type: "number",
+        defaultValue: "0.15",
+      },
+    ],
+  },
+  {
+    section: "doctors_animation",
+    title: "تأثيرات قسم الأطباء",
+    fields: [
+      {
+        key: "doctors_animation_type",
+        label: "نوع التأثير",
+        type: "select",
+        options: [
+          { value: "fade-up", label: "ظهور من الأسفل" },
+          { value: "fade-in", label: "ظهور تدريجي" },
+          { value: "scale-in", label: "تكبير تدريجي" },
+          { value: "slide-left", label: "انزلاق من اليسار" },
+          { value: "slide-right", label: "انزلاق من اليمين" },
+          { value: "bounce", label: "ارتداد" },
+          { value: "rotate", label: "دوران" },
+        ],
+        defaultValue: "scale-in",
+      },
+      {
+        key: "doctors_animation_stagger",
+        label: "تأخير بين العناصر (ثانية)",
+        type: "number",
+        defaultValue: "0.1",
       },
     ],
   },
@@ -247,7 +366,7 @@ export default function ContentManagementPage() {
             <FileText className="h-8 w-8" />
             إدارة محتوى الموقع
           </h1>
-          <p className="text-muted-foreground mt-2">تعديل جميع النصوص والصور في صفحات الموقع</p>
+          <p className="text-muted-foreground mt-2">تعديل جميع النصوص والصور والتأثيرات في صفحات الموقع</p>
         </div>
         <Button onClick={handleSave} disabled={saving} size="lg">
           {saving ? (
@@ -264,81 +383,194 @@ export default function ContentManagementPage() {
         </Button>
       </motion.div>
 
-      <div className="space-y-6">
-        {CONTENT_SECTIONS.map((section, sectionIndex) => (
-          <motion.div
-            key={section.section}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: sectionIndex * 0.1 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>{section.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {section.fields.map((field) => (
-                  <div key={field.key} className="space-y-2">
-                    <Label htmlFor={field.key}>{field.label}</Label>
-                    {field.type === "text" && (
-                      <Input
-                        id={field.key}
-                        value={settings[field.key]?.value_ar || field.defaultValue}
-                        onChange={(e) => handleChange(field.key, e.target.value, field.type)}
-                        placeholder={field.defaultValue}
-                      />
-                    )}
-                    {field.type === "textarea" && (
-                      <Textarea
-                        id={field.key}
-                        value={settings[field.key]?.value_ar || field.defaultValue}
-                        onChange={(e) => handleChange(field.key, e.target.value, field.type)}
-                        placeholder={field.defaultValue}
-                        rows={3}
-                      />
-                    )}
-                    {field.type === "image" && (
-                      <div className="space-y-2">
+      <Tabs defaultValue="content" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="content">
+            <FileText className="ml-2 h-4 w-4" />
+            المحتوى والنصوص
+          </TabsTrigger>
+          <TabsTrigger value="animations">
+            <Sparkles className="ml-2 h-4 w-4" />
+            تأثيرات الحركة
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="content" className="space-y-6 mt-6">
+          {CONTENT_SECTIONS.map((section, sectionIndex) => (
+            <motion.div
+              key={section.section}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: sectionIndex * 0.1 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>{section.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {section.fields.map((field) => (
+                    <div key={field.key} className="space-y-2">
+                      <Label htmlFor={field.key}>{field.label}</Label>
+                      {field.type === "text" && (
                         <Input
                           id={field.key}
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleImageUpload(field.key, e)}
+                          value={settings[field.key]?.value_ar || field.defaultValue}
+                          onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                          placeholder={field.defaultValue}
                         />
-                        {imagePreview[field.key] && (
-                          <div className="relative w-full aspect-square max-w-xs rounded-lg overflow-hidden border">
-                            <img
-                              src={imagePreview[field.key] || "/placeholder.svg"}
-                              alt={field.label}
-                              className="w-full h-full object-cover"
-                            />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              className="absolute top-2 right-2"
-                              onClick={() => {
-                                handleChange(field.key, "", field.type)
-                                setImagePreview((prev) => {
-                                  const newPrev = { ...prev }
-                                  delete newPrev[field.key]
-                                  return newPrev
-                                })
-                              }}
-                            >
-                              حذف
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      )}
+                      {field.type === "textarea" && (
+                        <Textarea
+                          id={field.key}
+                          value={settings[field.key]?.value_ar || field.defaultValue}
+                          onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                          placeholder={field.defaultValue}
+                          rows={3}
+                        />
+                      )}
+                      {field.type === "image" && (
+                        <div className="space-y-2">
+                          <Input
+                            id={field.key}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(field.key, e)}
+                          />
+                          {imagePreview[field.key] && (
+                            <div className="relative w-full aspect-square max-w-xs rounded-lg overflow-hidden border">
+                              <img
+                                src={imagePreview[field.key] || "/placeholder.svg"}
+                                alt={field.label}
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-2 right-2"
+                                onClick={() => {
+                                  handleChange(field.key, "", field.type)
+                                  setImagePreview((prev) => {
+                                    const newPrev = { ...prev }
+                                    delete newPrev[field.key]
+                                    return newPrev
+                                  })
+                                }}
+                              >
+                                حذف
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="animations" className="space-y-6 mt-6">
+          {ANIMATION_SECTIONS.map((section, sectionIndex) => (
+            <motion.div
+              key={section.section}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: sectionIndex * 0.1 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    {section.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {section.fields.map((field) => (
+                    <div key={field.key} className="space-y-2">
+                      <Label htmlFor={field.key}>{field.label}</Label>
+                      {field.type === "select" && (
+                        <Select
+                          value={settings[field.key]?.value_ar || field.defaultValue}
+                          onValueChange={(value) => handleChange(field.key, value, field.type)}
+                        >
+                          <SelectTrigger id={field.key}>
+                            <SelectValue placeholder="اختر نوع التأثير" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {field.options?.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      {field.type === "number" && (
+                        <Input
+                          id={field.key}
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="5"
+                          value={settings[field.key]?.value_ar || field.defaultValue}
+                          onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                        />
+                      )}
+                    </div>
+                  ))}
+                  <div className="mt-6 p-6 border rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground mb-4">معاينة التأثير:</p>
+                    <AnimationPreview
+                      type={settings[section.fields[0].key]?.value_ar || section.fields[0].defaultValue}
+                      duration={
+                        section.fields.find((f) => f.key.includes("duration"))
+                          ? Number.parseFloat(
+                              settings[section.fields.find((f) => f.key.includes("duration"))!.key]?.value_ar ||
+                                section.fields.find((f) => f.key.includes("duration"))!.defaultValue,
+                            )
+                          : 0.6
+                      }
+                    />
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
+function AnimationPreview({ type, duration }: { type: string; duration: number }) {
+  const [key, setKey] = useState(0)
+
+  const animations: Record<string, any> = {
+    "fade-up": { initial: { opacity: 0, y: 40 }, animate: { opacity: 1, y: 0 } },
+    "fade-in": { initial: { opacity: 0 }, animate: { opacity: 1 } },
+    "scale-in": { initial: { opacity: 0, scale: 0.9 }, animate: { opacity: 1, scale: 1 } },
+    "slide-left": { initial: { opacity: 0, x: -40 }, animate: { opacity: 1, x: 0 } },
+    "slide-right": { initial: { opacity: 0, x: 40 }, animate: { opacity: 1, x: 0 } },
+    bounce: { initial: { opacity: 0, y: -20 }, animate: { opacity: 1, y: 0 } },
+    rotate: { initial: { opacity: 0, rotate: -10 }, animate: { opacity: 1, rotate: 0 } },
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-4">
+      <motion.div
+        key={key}
+        initial={animations[type]?.initial}
+        animate={animations[type]?.animate}
+        transition={{ duration, ease: "easeOut" }}
+        className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium"
+      >
+        مثال على التأثير
+      </motion.div>
+      <Button variant="outline" size="sm" onClick={() => setKey((k) => k + 1)}>
+        إعادة التشغيل
+      </Button>
     </div>
   )
 }
