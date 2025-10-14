@@ -364,8 +364,16 @@ export default function ContentManagementPage() {
 
   async function fetchSettings() {
     try {
+      console.log("[v0] Fetching site settings...")
       const response = await fetch("/api/site-settings")
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "فشل في جلب الإعدادات")
+      }
+
       const data = await response.json()
+      console.log("[v0] Settings fetched successfully:", data.length, "settings")
 
       const settingsMap: Record<string, any> = {}
       data.forEach((setting: any) => {
@@ -381,11 +389,11 @@ export default function ContentManagementPage() {
         }
       })
       setImagePreview(previews)
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Error fetching settings:", error)
       toast({
         title: "خطأ",
-        description: "فشل في جلب الإعدادات",
+        description: error.message || "فشل في جلب الإعدادات",
         variant: "destructive",
       })
     } finally {
@@ -396,25 +404,43 @@ export default function ContentManagementPage() {
   async function handleSave() {
     setSaving(true)
     try {
+      console.log("[v0] Saving settings...", Object.keys(settings).length, "settings")
+
       const promises = Object.entries(settings).map(async ([key, setting]) => {
+        console.log("[v0] Saving setting:", key, setting)
+
         if (setting.id) {
-          // تحديث إعداد موجود
-          return fetch("/api/site-settings", {
+          const response = await fetch("/api/site-settings", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(setting),
           })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(`فشل في تحديث ${key}: ${errorData.error}`)
+          }
+
+          return response
         } else {
-          // إنشاء إعداد جديد
-          return fetch("/api/site-settings", {
+          const response = await fetch("/api/site-settings", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(setting),
           })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(`فشل في إنشاء ${key}: ${errorData.error}`)
+          }
+
+          return response
         }
       })
 
       await Promise.all(promises)
+
+      console.log("[v0] All settings saved successfully")
 
       toast({
         title: "نجح",
@@ -423,6 +449,7 @@ export default function ContentManagementPage() {
 
       fetchSettings()
     } catch (error: any) {
+      console.error("[v0] Error saving settings:", error)
       toast({
         title: "خطأ",
         description: error.message || "فشل في حفظ التغييرات",
