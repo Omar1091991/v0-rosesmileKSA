@@ -21,7 +21,7 @@ interface Doctor {
   bio_ar?: string
   bio_en?: string
   image_url?: string
-  active: boolean
+  is_active: boolean
   created_at: string
 }
 
@@ -42,7 +42,7 @@ export default function DoctorsPage() {
     bio_ar: "",
     bio_en: "",
     image_url: "",
-    active: true,
+    is_active: true,
   })
 
   useEffect(() => {
@@ -207,7 +207,7 @@ export default function DoctorsPage() {
       bio_ar: doctor.bio_ar || "",
       bio_en: doctor.bio_en || "",
       image_url: doctor.image_url || "",
-      active: doctor.active,
+      is_active: doctor.is_active,
     })
     setImagePreview(doctor.image_url || "")
     setIsEditOpen(true)
@@ -222,7 +222,7 @@ export default function DoctorsPage() {
       bio_ar: "",
       bio_en: "",
       image_url: "",
-      active: true,
+      is_active: true,
     })
     setImagePreview("")
     setEditingDoctor(null)

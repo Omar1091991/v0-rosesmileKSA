@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase.from("gallery").insert(body).select().single()
 
     if (error) throw error
-    return NextResponse.json({ image: data })
+    return NextResponse.json(data)
   } catch (error: any) {
     console.error("[v0] Error creating gallery image:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -41,7 +41,7 @@ export async function PATCH(request: Request) {
     const { data, error } = await supabase.from("gallery").update(updates).eq("id", id).select().single()
 
     if (error) throw error
-    return NextResponse.json({ image: data })
+    return NextResponse.json(data)
   } catch (error: any) {
     console.error("[v0] Error updating gallery image:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Pencil, Trash2, UsersIcon, Mail, Phone, Calendar } from "lucide-react"
+import { Plus, Pencil, Trash2, UsersIcon, Mail, Phone, Calendar, Search } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,6 +26,8 @@ export default function UsersPage() {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [roleFilter, setRoleFilter] = useState<string>("all")
   const { toast } = useToast()
 
   const [newUser, setNewUser] = useState({
@@ -224,6 +226,17 @@ export default function UsersPage() {
     })
   }
 
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.phone && user.phone.includes(searchQuery))
+
+    const matchesRole = roleFilter === "all" || user.role === roleFilter
+
+    return matchesSearch && matchesRole
+  })
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -240,25 +253,60 @@ export default function UsersPage() {
         </Button>
       </div>
 
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="ابحث بالاسم أو البريد الإلكتروني أو رقم الجوال..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="تصفية حسب الصلاحية" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع المستخدمين</SelectItem>
+                <SelectItem value="admin">المسؤولين فقط</SelectItem>
+                <SelectItem value="user">المستخدمين العاديين</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {searchQuery && (
+            <p className="text-sm text-muted-foreground mt-2">
+              تم العثور على {filteredUsers.length} من أصل {users.length} مستخدم
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {loading && users.length === 0 ? (
         <div className="text-center py-12">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
           <p className="mt-4 text-muted-foreground">جاري التحميل...</p>
         </div>
-      ) : users.length === 0 ? (
+      ) : filteredUsers.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <UsersIcon className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-center text-muted-foreground">لا يوجد مستخدمين حالياً</p>
-            <Button size="sm" className="mt-4" onClick={() => setIsAddOpen(true)}>
-              <Plus className="h-4 w-4 ml-2" />
-              إضافة أول مستخدم
-            </Button>
+            <p className="text-center text-muted-foreground">
+              {searchQuery || roleFilter !== "all" ? "لا توجد نتائج مطابقة للبحث" : "لا يوجد مستخدمين حالياً"}
+            </p>
+            {!searchQuery && roleFilter === "all" && (
+              <Button size="sm" className="mt-4" onClick={() => setIsAddOpen(true)}>
+                <Plus className="h-4 w-4 ml-2" />
+                إضافة أول مستخدم
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {users.map((user) => (
+          {filteredUsers.map((user) => (
             <Card key={user.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between gap-4">

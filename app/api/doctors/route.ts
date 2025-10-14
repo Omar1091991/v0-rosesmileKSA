@@ -33,7 +33,7 @@ export async function POST(request: Request) {
           bio_ar: body.bio_ar,
           bio_en: body.bio_en,
           image_url: body.image_url,
-          active: body.active ?? true,
+          is_active: body.is_active ?? true,
         },
       ])
       .select()
@@ -62,7 +62,7 @@ export async function PATCH(request: Request) {
         bio_ar: body.bio_ar,
         bio_en: body.bio_en,
         image_url: body.image_url,
-        active: body.active,
+        is_active: body.is_active,
       })
       .eq("id", body.id)
       .select()

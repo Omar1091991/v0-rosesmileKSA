@@ -17,7 +17,7 @@ interface Department {
   description_ar?: string
   description_en?: string
   icon?: string
-  active: boolean
+  is_active: boolean
   created_at: string
 }
 
@@ -35,7 +35,7 @@ export default function DepartmentsPage() {
     description_ar: "",
     description_en: "",
     icon: "",
-    active: true,
+    is_active: true,
   })
 
   useEffect(() => {
@@ -175,7 +175,7 @@ export default function DepartmentsPage() {
       description_ar: department.description_ar || "",
       description_en: department.description_en || "",
       icon: department.icon || "",
-      active: department.active,
+      is_active: department.is_active,
     })
     setIsEditOpen(true)
   }
@@ -187,7 +187,7 @@ export default function DepartmentsPage() {
       description_ar: "",
       description_en: "",
       icon: "",
-      active: true,
+      is_active: true,
     })
     setEditingDepartment(null)
   }

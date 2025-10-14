@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase.from("departments").insert(body).select().single()
 
     if (error) throw error
-    return NextResponse.json({ department: data })
+    return NextResponse.json(data)
   } catch (error: any) {
     console.error("[v0] Error creating department:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -41,7 +41,7 @@ export async function PATCH(request: Request) {
     const { data, error } = await supabase.from("departments").update(updates).eq("id", id).select().single()
 
     if (error) throw error
-    return NextResponse.json({ department: data })
+    return NextResponse.json(data)
   } catch (error: any) {
     console.error("[v0] Error updating department:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
