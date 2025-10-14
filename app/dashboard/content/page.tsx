@@ -207,6 +207,31 @@ const CONTENT_SECTIONS = [
       },
     ],
   },
+  {
+    section: "colors",
+    title: "ألوان الكتابة",
+    fields: [
+      { key: "primary_color", label: "اللون الأساسي (الوردي)", type: "color", defaultValue: "#ec4899" },
+      { key: "secondary_color", label: "اللون الثانوي (الأزرق)", type: "color", defaultValue: "#3b82f6" },
+      { key: "heading_color", label: "لون العناوين", type: "color", defaultValue: "#1f2937" },
+      { key: "text_color", label: "لون النصوص", type: "color", defaultValue: "#4b5563" },
+    ],
+  },
+  {
+    section: "working_hours",
+    title: "ساعات العمل",
+    fields: [
+      { key: "working_hours_title_ar", label: "عنوان ساعات العمل", type: "text", defaultValue: "ساعات العمل" },
+      { key: "saturday_hours", label: "السبت", type: "text", defaultValue: "9:00 ص - 9:00 م" },
+      { key: "sunday_hours", label: "الأحد", type: "text", defaultValue: "9:00 ص - 9:00 م" },
+      { key: "monday_hours", label: "الاثنين", type: "text", defaultValue: "9:00 ص - 9:00 م" },
+      { key: "tuesday_hours", label: "الثلاثاء", type: "text", defaultValue: "9:00 ص - 9:00 م" },
+      { key: "wednesday_hours", label: "الأربعاء", type: "text", defaultValue: "9:00 ص - 9:00 م" },
+      { key: "thursday_hours", label: "الخميس", type: "text", defaultValue: "9:00 ص - 9:00 م" },
+      { key: "friday_hours", label: "الجمعة", type: "text", defaultValue: "مغلق" },
+      { key: "working_hours_note", label: "ملاحظة (اختياري)", type: "textarea", defaultValue: "" },
+    ],
+  },
 ]
 
 const ANIMATION_SECTIONS = [
@@ -527,6 +552,24 @@ export default function ContentManagementPage() {
                           placeholder={field.defaultValue}
                           rows={3}
                         />
+                      )}
+                      {field.type === "color" && (
+                        <div className="flex gap-2">
+                          <Input
+                            id={field.key}
+                            type="color"
+                            value={settings[field.key]?.value_ar || field.defaultValue}
+                            onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                            className="w-20 h-10"
+                          />
+                          <Input
+                            type="text"
+                            value={settings[field.key]?.value_ar || field.defaultValue}
+                            onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                            placeholder={field.defaultValue}
+                            className="flex-1"
+                          />
+                        </div>
                       )}
                       {field.type === "select" && (
                         <Select
