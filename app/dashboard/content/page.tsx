@@ -107,6 +107,106 @@ const CONTENT_SECTIONS = [
       },
     ],
   },
+  {
+    section: "whatsapp",
+    title: "إعدادات الواتساب",
+    fields: [
+      { key: "whatsapp_number", label: "رقم الواتساب (مع رمز الدولة)", type: "text", defaultValue: "+966500000000" },
+      {
+        key: "whatsapp_visible",
+        label: "إظهار زر الواتساب",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "true",
+      },
+    ],
+  },
+  {
+    section: "social_media",
+    title: "روابط التواصل الاجتماعي",
+    fields: [
+      { key: "facebook_url", label: "رابط فيسبوك", type: "text", defaultValue: "" },
+      {
+        key: "facebook_visible",
+        label: "إظهار فيسبوك",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "false",
+      },
+      { key: "twitter_url", label: "رابط تويتر (X)", type: "text", defaultValue: "" },
+      {
+        key: "twitter_visible",
+        label: "إظهار تويتر",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "false",
+      },
+      { key: "instagram_url", label: "رابط إنستغرام", type: "text", defaultValue: "" },
+      {
+        key: "instagram_visible",
+        label: "إظهار إنستغرام",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "false",
+      },
+      { key: "linkedin_url", label: "رابط لينكد إن", type: "text", defaultValue: "" },
+      {
+        key: "linkedin_visible",
+        label: "إظهار لينكد إن",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "false",
+      },
+      { key: "youtube_url", label: "رابط يوتيوب", type: "text", defaultValue: "" },
+      {
+        key: "youtube_visible",
+        label: "إظهار يوتيوب",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "false",
+      },
+      { key: "tiktok_url", label: "رابط تيك توك", type: "text", defaultValue: "" },
+      {
+        key: "tiktok_visible",
+        label: "إظهار تيك توك",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "false",
+      },
+      { key: "snapchat_url", label: "رابط سناب شات", type: "text", defaultValue: "" },
+      {
+        key: "snapchat_visible",
+        label: "إظهار سناب شات",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "false",
+      },
+    ],
+  },
 ]
 
 const ANIMATION_SECTIONS = [
@@ -427,6 +527,23 @@ export default function ContentManagementPage() {
                           placeholder={field.defaultValue}
                           rows={3}
                         />
+                      )}
+                      {field.type === "select" && (
+                        <Select
+                          value={settings[field.key]?.value_ar || field.defaultValue}
+                          onValueChange={(value) => handleChange(field.key, value, field.type)}
+                        >
+                          <SelectTrigger id={field.key}>
+                            <SelectValue placeholder="اختر خياراً" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {field.options?.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       )}
                       {field.type === "image" && (
                         <div className="space-y-2">

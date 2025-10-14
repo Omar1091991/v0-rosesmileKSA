@@ -10,6 +10,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
+import { WhatsAppButton } from "@/components/whatsapp-button"
 
 export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
@@ -473,6 +474,7 @@ export default function HomePage() {
       </main>
 
       <SiteFooter />
+      <WhatsAppButton />
     </div>
   )
 }

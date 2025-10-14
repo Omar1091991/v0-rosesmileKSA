@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Phone, Mail, MapPin } from "lucide-react"
+import { SocialMediaLinks } from "@/components/social-media-links"
 
 export function SiteFooter() {
   return (
@@ -63,7 +64,12 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-border/40 text-center text-sm text-muted-foreground">
+        {/* Social Media Links */}
+        <div className="mt-8 pt-8 border-t border-border/40 flex justify-center">
+          <SocialMediaLinks />
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-border/40 text-center text-sm text-muted-foreground">
           <p>© 2025 عيادات ابتسامة الورود. جميع الحقوق محفوظة.</p>
         </div>
       </div>

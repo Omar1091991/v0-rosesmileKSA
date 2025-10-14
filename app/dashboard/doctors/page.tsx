@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Pencil, Trash2, Stethoscope, Settings } from "lucide-react"
+import { Plus, Pencil, Trash2, Stethoscope, Settings, X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -29,12 +28,11 @@ interface Doctor {
 
 interface DoctorCase {
   id: string
-  title_ar?: string
-  title_en?: string
-  before_image_url?: string
-  after_image_url?: string
-  description_ar?: string
-  description_en?: string
+  doctor_id: string
+  image_url: string
+  caption_ar?: string
+  caption_en?: string
+  order_index: number
 }
 
 export default function DoctorsPage() {
@@ -60,16 +58,8 @@ export default function DoctorsPage() {
   })
 
   const [doctorCases, setDoctorCases] = useState<DoctorCase[]>([])
-  const [caseFormData, setCaseFormData] = useState({
-    title_ar: "",
-    title_en: "",
-    before_image_url: "",
-    after_image_url: "",
-    description_ar: "",
-    description_en: "",
-  })
-  const [beforeImagePreview, setBeforeImagePreview] = useState<string>("")
-  const [afterImagePreview, setAfterImagePreview] = useState<string>("")
+  const [caseImages, setCaseImages] = useState<string[]>([])
+  const [caseImagePreviews, setCaseImagePreviews] = useState<string[]>([])
 
   useEffect(() => {
     fetchDoctors()
@@ -128,9 +118,14 @@ export default function DoctorsPage() {
     }
   }
 
-  const handleBeforeImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
+  const handleCaseImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+
+    const newImages: string[] = []
+    const newPreviews: string[] = []
+
+    Array.from(files).forEach((file) => {
       if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "خطأ",
@@ -143,72 +138,55 @@ export default function DoctorsPage() {
       const reader = new FileReader()
       reader.onloadend = () => {
         const base64 = reader.result as string
-        setCaseFormData({ ...caseFormData, before_image_url: base64 })
-        setBeforeImagePreview(base64)
+        newImages.push(base64)
+        newPreviews.push(base64)
+        setCaseImages([...caseImages, ...newImages])
+        setCaseImagePreviews([...caseImagePreviews, ...newPreviews])
       }
       reader.readAsDataURL(file)
-    }
+    })
   }
 
-  const handleAfterImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "خطأ",
-          description: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت",
-          variant: "destructive",
-        })
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64 = reader.result as string
-        setCaseFormData({ ...caseFormData, after_image_url: base64 })
-        setAfterImagePreview(base64)
-      }
-      reader.readAsDataURL(file)
-    }
+  const removeCaseImage = (index: number) => {
+    setCaseImages(caseImages.filter((_, i) => i !== index))
+    setCaseImagePreviews(caseImagePreviews.filter((_, i) => i !== index))
   }
 
-  const handleAdd = async () => {
-    if (!formData.name_ar || !formData.specialty_ar) {
+  const handleAddCases = async () => {
+    if (!editingDoctor || caseImages.length === 0) {
       toast({
         title: "خطأ",
-        description: "الرجاء ملء جميع الحقول المطلوبة",
+        description: "الرجاء إضافة صورة واحدة على الأقل",
         variant: "destructive",
       })
       return
     }
 
     try {
-      const response = await fetch("/api/doctors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
-
-      if (response.ok) {
-        toast({
-          title: "نجح",
-          description: "تم إضافة الطبيب بنجاح",
-        })
-        setIsAddOpen(false)
-        resetForm()
-        fetchDoctors()
-      } else {
-        const error = await response.json()
-        toast({
-          title: "خطأ",
-          description: error.error || "فشل في إضافة الطبيب",
-          variant: "destructive",
+      // إضافة كل صورة كحالة منفصلة
+      for (const image of caseImages) {
+        await fetch("/api/doctor-cases", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            doctor_id: editingDoctor.id,
+            image_url: image,
+            order_index: doctorCases.length,
+          }),
         })
       }
+
+      toast({
+        title: "نجح",
+        description: "تم إضافة الصور بنجاح",
+      })
+      setCaseImages([])
+      setCaseImagePreviews([])
+      fetchDoctorCases(editingDoctor.id)
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء إضافة الطبيب",
+        description: "حدث خطأ أثناء إضافة الصور",
         variant: "destructive",
       })
     }
@@ -248,36 +226,6 @@ export default function DoctorsPage() {
     }
   }
 
-  const handleAddCase = async () => {
-    if (!editingDoctor) return
-
-    try {
-      const response = await fetch("/api/doctor-cases", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          doctor_id: editingDoctor.id,
-          ...caseFormData,
-        }),
-      })
-
-      if (response.ok) {
-        toast({
-          title: "نجح",
-          description: "تم إضافة الحالة بنجاح",
-        })
-        resetCaseForm()
-        fetchDoctorCases(editingDoctor.id)
-      }
-    } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء إضافة الحالة",
-        variant: "destructive",
-      })
-    }
-  }
-
   const handleDelete = async (id: string) => {
     if (!confirm("هل أنت متأكد من حذف هذا الطبيب؟")) return
 
@@ -311,7 +259,7 @@ export default function DoctorsPage() {
   }
 
   const handleDeleteCase = async (caseId: string) => {
-    if (!confirm("هل أنت متأكد من حذف هذه الحالة؟")) return
+    if (!confirm("هل أنت متأكد من حذف هذه الصورة؟")) return
 
     try {
       const response = await fetch("/api/doctor-cases", {
@@ -323,7 +271,7 @@ export default function DoctorsPage() {
       if (response.ok) {
         toast({
           title: "نجح",
-          description: "تم حذف الحالة بنجاح",
+          description: "تم حذف الصورة بنجاح",
         })
         if (editingDoctor) {
           fetchDoctorCases(editingDoctor.id)
@@ -332,7 +280,7 @@ export default function DoctorsPage() {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء حذف الحالة",
+        description: "حدث خطأ أثناء حذف الصورة",
         variant: "destructive",
       })
     }
@@ -354,16 +302,8 @@ export default function DoctorsPage() {
   }
 
   const resetCaseForm = () => {
-    setCaseFormData({
-      title_ar: "",
-      title_en: "",
-      before_image_url: "",
-      after_image_url: "",
-      description_ar: "",
-      description_en: "",
-    })
-    setBeforeImagePreview("")
-    setAfterImagePreview("")
+    setCaseImages([])
+    setCaseImagePreviews([])
   }
 
   const openEditDialog = (doctor: Doctor) => {
@@ -542,8 +482,8 @@ export default function DoctorsPage() {
                 )}
               </div>
 
-              <Button onClick={handleAdd} className="w-full">
-                إضافة الطبيب
+              <Button onClick={handleAddCases} className="w-full">
+                إضافة الصور
               </Button>
             </div>
           </DialogContent>
@@ -596,7 +536,7 @@ export default function DoctorsPage() {
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="basic">المعلومات الأساسية</TabsTrigger>
-              <TabsTrigger value="cases">حالات قبل وبعد</TabsTrigger>
+              <TabsTrigger value="cases">صور الحالات</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-4">
@@ -680,116 +620,75 @@ export default function DoctorsPage() {
             <TabsContent value="cases" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">إضافة حالة جديدة</CardTitle>
+                  <CardTitle className="text-lg">إضافة صور الحالات (اختياري)</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="case_title_ar">عنوان الحالة بالعربية</Label>
-                      <Input
-                        id="case_title_ar"
-                        value={caseFormData.title_ar}
-                        onChange={(e) => setCaseFormData({ ...caseFormData, title_ar: e.target.value })}
-                        placeholder="تبييض الأسنان"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="case_title_en">عنوان الحالة بالإنجليزية</Label>
-                      <Input
-                        id="case_title_en"
-                        value={caseFormData.title_en}
-                        onChange={(e) => setCaseFormData({ ...caseFormData, title_en: e.target.value })}
-                        placeholder="Teeth Whitening"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="before_image">صورة قبل</Label>
-                      <Input id="before_image" type="file" accept="image/*" onChange={handleBeforeImageChange} />
-                      {beforeImagePreview && (
-                        <div className="mt-2">
-                          <img
-                            src={beforeImagePreview || "/placeholder.svg"}
-                            alt="Before"
-                            className="w-full h-32 object-cover rounded-lg"
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="after_image">صورة بعد</Label>
-                      <Input id="after_image" type="file" accept="image/*" onChange={handleAfterImageChange} />
-                      {afterImagePreview && (
-                        <div className="mt-2">
-                          <img
-                            src={afterImagePreview || "/placeholder.svg"}
-                            alt="After"
-                            className="w-full h-32 object-cover rounded-lg"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
                   <div>
-                    <Label htmlFor="case_description_ar">وصف الحالة بالعربية</Label>
-                    <Textarea
-                      id="case_description_ar"
-                      value={caseFormData.description_ar}
-                      onChange={(e) => setCaseFormData({ ...caseFormData, description_ar: e.target.value })}
-                      rows={2}
+                    <Label htmlFor="case_images">اختر صور متعددة</Label>
+                    <Input
+                      id="case_images"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleCaseImagesChange}
+                      className="mt-2"
                     />
+                    <p className="text-sm text-muted-foreground mt-1">يمكنك اختيار عدة صور في نفس الوقت</p>
                   </div>
 
-                  <Button onClick={handleAddCase} className="w-full">
-                    <Plus className="h-4 w-4 ml-2" />
-                    إضافة الحالة
-                  </Button>
+                  {caseImagePreviews.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {caseImagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview || "/placeholder.svg"}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full aspect-square object-cover rounded-lg"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => removeCaseImage(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {caseImages.length > 0 && (
+                    <Button onClick={handleAddCases} className="w-full">
+                      <Plus className="h-4 w-4 ml-2" />
+                      إضافة {caseImages.length} صورة
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
 
               <div className="space-y-4">
-                <h3 className="font-semibold">الحالات المضافة</h3>
+                <h3 className="font-semibold">الصور المضافة</h3>
                 {doctorCases.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">لا توجد حالات مضافة</p>
+                  <p className="text-sm text-muted-foreground text-center py-8">لا توجد صور مضافة</p>
                 ) : (
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {doctorCases.map((case_) => (
-                      <Card key={case_.id}>
-                        <CardContent className="pt-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <h4 className="font-semibold">{case_.title_ar || "حالة بدون عنوان"}</h4>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteCase(case_.id)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            {case_.before_image_url && (
-                              <div>
-                                <p className="text-sm text-muted-foreground mb-2">قبل</p>
-                                <img
-                                  src={case_.before_image_url || "/placeholder.svg"}
-                                  alt="Before"
-                                  className="w-full h-32 object-cover rounded-lg"
-                                />
-                              </div>
-                            )}
-                            {case_.after_image_url && (
-                              <div>
-                                <p className="text-sm text-muted-foreground mb-2">بعد</p>
-                                <img
-                                  src={case_.after_image_url || "/placeholder.svg"}
-                                  alt="After"
-                                  className="w-full h-32 object-cover rounded-lg"
-                                />
-                              </div>
-                            )}
-                          </div>
-                          {case_.description_ar && (
-                            <p className="text-sm text-muted-foreground mt-2">{case_.description_ar}</p>
-                          )}
+                      <Card key={case_.id} className="relative group">
+                        <CardContent className="p-2">
+                          <img
+                            src={case_.image_url || "/placeholder.svg"}
+                            alt="Case"
+                            className="w-full aspect-square object-cover rounded-lg"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleDeleteCase(case_.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </CardContent>
                       </Card>
                     ))}
