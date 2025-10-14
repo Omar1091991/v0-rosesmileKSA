@@ -18,6 +18,7 @@ import {
 const menuItems = [
   { title: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
   { title: "المستخدمين", href: "/dashboard/users", icon: Users },
+  { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText },
   { title: "الخدمات", href: "/dashboard/services", icon: Briefcase },
   { title: "الأطباء", href: "/dashboard/doctors", icon: Stethoscope },
   { title: "الأقسام", href: "/dashboard/departments", icon: Building2 },

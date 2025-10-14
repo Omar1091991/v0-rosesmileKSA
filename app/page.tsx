@@ -16,23 +16,29 @@ export default function HomePage() {
   const [doctors, setDoctors] = useState<any[]>([])
   const [offers, setOffers] = useState<any[]>([])
   const [user, setUser] = useState<any>(null)
+  const [heroContent, setHeroContent] = useState<any>(null)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [servicesRes, doctorsRes, offersRes] = await Promise.all([
+        const [servicesRes, doctorsRes, offersRes, contentRes] = await Promise.all([
           fetch("/api/services"),
           fetch("/api/doctors"),
           fetch("/api/offers"),
+          fetch("/api/site-content"),
         ])
 
         const servicesData = await servicesRes.json()
         const doctorsData = await doctorsRes.json()
         const offersData = await offersRes.json()
+        const contentData = await contentRes.json()
 
         setServices(servicesData.filter((s: any) => s.is_active).slice(0, 6))
         setDoctors(doctorsData.filter((d: any) => d.is_active).slice(0, 3))
         setOffers(offersData.filter((o: any) => o.is_active).slice(0, 2))
+
+        const hero = contentData.find((c: any) => c.section === "hero")
+        setHeroContent(hero)
       } catch (error) {
         console.error("[v0] Error fetching data:", error)
       }
@@ -76,28 +82,45 @@ export default function HomePage() {
         <section className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-20 md:py-32 overflow-hidden">
           <div className="container">
             <motion.div
-              className="mx-auto max-w-3xl text-center space-y-8"
+              className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
               initial="initial"
               animate="animate"
               variants={staggerContainer}
             >
-              <motion.h1 className="text-4xl md:text-6xl font-bold text-balance leading-tight" variants={fadeInUp}>
-                ابتسامة الورود ابتسامتك بتعود
-              </motion.h1>
-              <motion.p
-                className="text-lg md:text-xl text-muted-foreground text-balance leading-relaxed"
-                variants={fadeInUp}
-              >
-                نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة
-              </motion.p>
-              <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" variants={fadeInUp}>
-                <BookingDialog />
-                <Button variant="outline" size="lg" asChild>
-                  <Link href="/services">
-                    تصفح خدماتنا
-                    <ArrowLeft className="mr-2 h-5 w-5" />
-                  </Link>
-                </Button>
+              <div className="space-y-8 text-center lg:text-right">
+                <motion.h1 className="text-4xl md:text-6xl font-bold text-balance leading-tight" variants={fadeInUp}>
+                  {heroContent?.title_ar || "ابتسامة الورود ابتسامتك بتعود"}
+                </motion.h1>
+                <motion.p
+                  className="text-lg md:text-xl text-muted-foreground text-balance leading-relaxed"
+                  variants={fadeInUp}
+                >
+                  {heroContent?.description_ar || "نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة"}
+                </motion.p>
+                <motion.div
+                  className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
+                  variants={fadeInUp}
+                >
+                  <BookingDialog />
+                  <Button variant="outline" size="lg" asChild>
+                    <Link href="/services">
+                      تصفح خدماتنا
+                      <ArrowLeft className="mr-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                </motion.div>
+              </div>
+
+              <motion.div className="relative w-full aspect-square max-w-md mx-auto lg:max-w-full" variants={scaleIn}>
+                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+                  <Image
+                    src={heroContent?.image_url || "/placeholder.svg?height=600&width=600"}
+                    alt="ابتسامة الورود"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </div>
               </motion.div>
             </motion.div>
           </div>
@@ -183,7 +206,7 @@ export default function HomePage() {
                   <Card className="hover:shadow-lg transition-shadow h-full">
                     <CardContent className="pt-6 space-y-4">
                       {service.image_url ? (
-                        <div className="w-full h-48 relative rounded-lg overflow-hidden">
+                        <div className="w-full aspect-square relative rounded-lg overflow-hidden">
                           <Image
                             src={service.image_url || "/placeholder.svg"}
                             alt={service.title_ar}
@@ -247,11 +270,14 @@ export default function HomePage() {
                       <CardContent className="pt-6 space-y-4">
                         <div className="w-32 h-32 mx-auto rounded-full bg-muted flex items-center justify-center text-4xl overflow-hidden">
                           {doctor.image_url ? (
-                            <img
-                              src={doctor.image_url || "/placeholder.svg"}
-                              alt={doctor.name_ar}
-                              className="w-full h-full object-cover"
-                            />
+                            <div className="relative w-full h-full">
+                              <Image
+                                src={doctor.image_url || "/placeholder.svg"}
+                                alt={doctor.name_ar}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
                           ) : (
                             "👨‍⚕️"
                           )}
