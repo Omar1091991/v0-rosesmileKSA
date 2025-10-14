@@ -1,23 +1,9 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-
-    // التحقق من صلاحيات المسؤول
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
+    const supabase = createAdminClient()
 
     // جلب جميع المستخدمين
     const { data: users, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
@@ -33,22 +19,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-
-    // التحقق من صلاحيات المسؤول
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: "يجب تسجيل الدخول أولاً" }, { status: 401 })
-    }
-
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json({ error: "ليس لديك صلاحية لإضافة مستخدمين" }, { status: 403 })
-    }
-
+    const supabase = createAdminClient()
     const body = await request.json()
     const { email, password, full_name, phone, role } = body
 
@@ -123,22 +94,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const supabase = await createClient()
-
-    // التحقق من صلاحيات المسؤول
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
+    const supabase = createAdminClient()
     const body = await request.json()
     const { id, full_name, role, phone } = body
 
@@ -149,7 +105,6 @@ export async function PATCH(request: Request) {
         full_name,
         role,
         phone,
-        updated_at: new Date().toISOString(),
       })
       .eq("id", id)
 
@@ -164,22 +119,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = await createClient()
-
-    // التحقق من صلاحيات المسؤول
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
+    const supabase = createAdminClient()
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("id")
 

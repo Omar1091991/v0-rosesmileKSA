@@ -43,8 +43,7 @@ export default async function HomePage() {
       <SiteHeader user={user} />
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative bg-gradient-to-b from-muted/50 to-background py-20 md:py-32">
+        <section className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-20 md:py-32">
           <div className="container">
             <div className="mx-auto max-w-3xl text-center space-y-8">
               <h1 className="text-4xl md:text-6xl font-bold text-balance leading-tight">ابتسامتك هي عنوان صحتك</h1>
@@ -68,7 +67,7 @@ export default async function HomePage() {
         <section className="py-16 md:py-24">
           <div className="container">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <Card className="border-none shadow-none bg-muted/30">
+              <Card className="border-none shadow-none bg-gradient-to-br from-primary/5 to-secondary/5">
                 <CardContent className="pt-6 space-y-4">
                   <div className="text-5xl font-bold text-primary">01</div>
                   <h3 className="text-xl font-semibold">أطباء متخصصون</h3>
@@ -78,9 +77,9 @@ export default async function HomePage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-none shadow-none bg-muted/30">
+              <Card className="border-none shadow-none bg-gradient-to-br from-secondary/5 to-primary/5">
                 <CardContent className="pt-6 space-y-4">
-                  <div className="text-5xl font-bold text-primary">02</div>
+                  <div className="text-5xl font-bold text-secondary">02</div>
                   <h3 className="text-xl font-semibold">أحدث التقنيات</h3>
                   <p className="text-muted-foreground leading-relaxed">
                     نستخدم أحدث الأجهزة والتقنيات الطبية لضمان أفضل النتائج
@@ -88,7 +87,7 @@ export default async function HomePage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-none shadow-none bg-muted/30">
+              <Card className="border-none shadow-none bg-gradient-to-br from-primary/5 to-secondary/5">
                 <CardContent className="pt-6 space-y-4">
                   <div className="text-5xl font-bold text-primary">03</div>
                   <h3 className="text-xl font-semibold">رعاية شاملة</h3>
@@ -101,8 +100,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Services Section */}
-        <section className="py-16 md:py-24 bg-muted/30">
+        <section className="py-16 md:py-24 bg-gradient-to-br from-secondary/10 to-primary/5">
           <div className="container">
             <div className="text-center space-y-4 mb-12">
               <h2 className="text-3xl md:text-4xl font-bold">خدماتنا الطبية</h2>
@@ -182,9 +180,8 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Offers Section */}
         {offers && offers.length > 0 && (
-          <section className="py-16 md:py-24 bg-primary text-primary-foreground">
+          <section className="py-16 md:py-24 bg-gradient-to-br from-primary to-primary/90 text-primary-foreground">
             <div className="container">
               <div className="text-center space-y-4 mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold">عروضنا الحصرية</h2>
@@ -253,8 +250,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-16 md:py-24 bg-muted/30">
+        <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-secondary/10 to-primary/5">
           <div className="container">
             <div className="max-w-3xl mx-auto text-center space-y-8">
               <h2 className="text-3xl md:text-4xl font-bold text-balance">هل أنت مستعد لبدء رحلتك نحو صحة أفضل؟</h2>

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 interface SiteHeaderProps {
   user?: {
@@ -55,9 +56,16 @@ export function SiteHeader({ user }: SiteHeaderProps) {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="text-2xl font-bold text-primary">ابتسامة الورود</div>
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/images/logo.jpeg"
+              alt="ابتسامة الورود"
+              width={50}
+              height={50}
+              className="h-12 w-auto"
+              priority
+            />
+            <div className="text-xl font-bold text-primary hidden sm:block">ابتسامة الورود</div>
           </Link>
 
           {/* Desktop Navigation */}
