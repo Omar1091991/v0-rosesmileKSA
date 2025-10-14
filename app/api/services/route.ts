@@ -8,7 +8,7 @@ export async function GET() {
 
     if (error) throw error
 
-    return NextResponse.json({ services })
+    return NextResponse.json(services || [])
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
