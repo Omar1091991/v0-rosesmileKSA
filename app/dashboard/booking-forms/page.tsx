@@ -44,6 +44,7 @@ export default function BookingFormsPage() {
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [editingForm, setEditingForm] = useState<BookingForm | null>(null)
+  const [initializing, setInitializing] = useState(false)
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({
@@ -72,6 +73,8 @@ export default function BookingFormsPage() {
       if (response.ok) {
         const data = await response.json()
         setForms(data)
+      } else {
+        console.error("[v0] Failed to fetch forms, table might not exist")
       }
     } catch (error) {
       console.error("[v0] Error fetching forms:", error)
@@ -219,6 +222,39 @@ export default function BookingFormsPage() {
     )
   }
 
+  const initializeTables = async () => {
+    setInitializing(true)
+    try {
+      const response = await fetch("/api/booking-forms/init", {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        toast({
+          title: "نجح",
+          description: "تم تهيئة نماذج الحجز بنجاح",
+        })
+        fetchForms()
+      } else {
+        const error = await response.json()
+        toast({
+          title: "خطأ",
+          description: error.error || "فشل في تهيئة الجداول",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("[v0] Error initializing tables:", error)
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء التهيئة",
+        variant: "destructive",
+      })
+    } finally {
+      setInitializing(false)
+    }
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-96">جاري التحميل...</div>
   }
@@ -234,113 +270,126 @@ export default function BookingFormsPage() {
           <p className="text-muted-foreground mt-2">إنشاء وتعديل نماذج الحجز المخصصة</p>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="w-full sm:w-auto">
-              <Plus className="ml-2 h-4 w-4" />
-              إضافة نموذج جديد
+        <div className="flex gap-2 w-full sm:w-auto">
+          {forms.length === 0 && (
+            <Button
+              onClick={initializeTables}
+              disabled={initializing}
+              variant="outline"
+              className="flex-1 sm:flex-none bg-transparent"
+            >
+              {initializing ? "جاري التهيئة..." : "تهيئة النماذج"}
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingForm ? "تعديل نموذج الحجز" : "إضافة نموذج حجز جديد"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name_ar">الاسم بالعربية *</Label>
-                  <Input
-                    id="name_ar"
-                    required
-                    value={formData.name_ar}
-                    onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
-                  />
-                </div>
+          )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="name_en">الاسم بالإنجليزية</Label>
-                  <Input
-                    id="name_en"
-                    value={formData.name_en}
-                    onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description_ar">الوصف بالعربية</Label>
-                <Textarea
-                  id="description_ar"
-                  value={formData.description_ar}
-                  onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="google_sheet_id">معرف Google Sheet</Label>
-                <Input
-                  id="google_sheet_id"
-                  value={formData.google_sheet_id}
-                  onChange={(e) => setFormData({ ...formData, google_sheet_id: e.target.value })}
-                  placeholder="أدخل معرف Google Sheet"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>صورة النموذج</Label>
-                <Input type="file" accept="image/*" onChange={handleImageChange} />
-                {imagePreview && (
-                  <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                    <Image src={imagePreview || "/placeholder.svg"} alt="معاينة" fill className="object-cover" />
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>الخدمات المتاحة في النموذج</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
-                  {services.map((service) => (
-                    <div key={service.id} className="flex items-center space-x-2 space-x-reverse">
-                      <Checkbox
-                        id={service.id}
-                        checked={selectedServices.includes(service.id)}
-                        onCheckedChange={() => toggleService(service.id)}
-                      />
-                      <label htmlFor={service.id} className="text-sm cursor-pointer">
-                        {service.title_ar}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 space-x-reverse">
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                  />
-                  <Label htmlFor="is_active">نشط</Label>
-                </div>
-
-                <div className="flex items-center space-x-2 space-x-reverse">
-                  <Switch
-                    id="is_main"
-                    checked={formData.is_main}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_main: checked })}
-                  />
-                  <Label htmlFor="is_main">نموذج رئيسي</Label>
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "جاري الحفظ..." : editingForm ? "تحديث النموذج" : "إضافة النموذج"}
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm} className="flex-1 sm:flex-none">
+                <Plus className="ml-2 h-4 w-4" />
+                إضافة نموذج جديد
               </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingForm ? "تعديل نموذج الحجز" : "إضافة نموذج حجز جديد"}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name_ar">الاسم بالعربية *</Label>
+                    <Input
+                      id="name_ar"
+                      required
+                      value={formData.name_ar}
+                      onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="name_en">الاسم بالإنجليزية</Label>
+                    <Input
+                      id="name_en"
+                      value={formData.name_en}
+                      onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description_ar">الوصف بالعربية</Label>
+                  <Textarea
+                    id="description_ar"
+                    value={formData.description_ar}
+                    onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="google_sheet_id">معرف Google Sheet</Label>
+                  <Input
+                    id="google_sheet_id"
+                    value={formData.google_sheet_id}
+                    onChange={(e) => setFormData({ ...formData, google_sheet_id: e.target.value })}
+                    placeholder="أدخل معرف Google Sheet"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>صورة النموذج</Label>
+                  <Input type="file" accept="image/*" onChange={handleImageChange} />
+                  {imagePreview && (
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                      <Image src={imagePreview || "/placeholder.svg"} alt="معاينة" fill className="object-cover" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>الخدمات المتاحة في النموذج</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                    {services.map((service) => (
+                      <div key={service.id} className="flex items-center space-x-2 space-x-reverse">
+                        <Checkbox
+                          id={service.id}
+                          checked={selectedServices.includes(service.id)}
+                          onCheckedChange={() => toggleService(service.id)}
+                        />
+                        <label htmlFor={service.id} className="text-sm cursor-pointer">
+                          {service.title_ar}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Switch
+                      id="is_active"
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                    />
+                    <Label htmlFor="is_active">نشط</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Switch
+                      id="is_main"
+                      checked={formData.is_main}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_main: checked })}
+                    />
+                    <Label htmlFor="is_main">نموذج رئيسي</Label>
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "جاري الحفظ..." : editingForm ? "تحديث النموذج" : "إضافة النموذج"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -388,8 +437,11 @@ export default function BookingFormsPage() {
 
       {forms.length === 0 && (
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            لا توجد نماذج حجز. ابدأ بإضافة نموذج جديد!
+          <CardContent className="py-12 text-center space-y-4">
+            <p className="text-muted-foreground">لا توجد نماذج حجز.</p>
+            <Button onClick={initializeTables} disabled={initializing}>
+              {initializing ? "جاري التهيئة..." : "تهيئة نماذج الحجز"}
+            </Button>
           </CardContent>
         </Card>
       )}
