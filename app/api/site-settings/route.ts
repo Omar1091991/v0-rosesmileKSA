@@ -1,19 +1,13 @@
-import { createAdminClient } from "@/lib/supabase/admin"
+import { query } from "@/lib/db"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
     console.log("[v0] GET /api/site-settings - Fetching settings...")
-    const supabase = createAdminClient()
-    const { data, error } = await supabase.from("site_settings").select("*").order("key")
+    const result = await query("SELECT * FROM site_settings ORDER BY key")
 
-    if (error) {
-      console.error("[v0] Database error:", error)
-      throw error
-    }
-
-    console.log("[v0] Successfully fetched", data?.length || 0, "settings")
-    return NextResponse.json(data || [])
+    console.log("[v0] Successfully fetched", result.rows.length, "settings")
+    return NextResponse.json(result.rows)
   } catch (error: any) {
     console.error("[v0] Error fetching site settings:", error)
     return NextResponse.json({ error: error.message || "فشل في جلب إعدادات الموقع" }, { status: 500 })
@@ -23,19 +17,18 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     console.log("[v0] POST /api/site-settings - Creating new setting...")
-    const supabase = createAdminClient()
     const body = await request.json()
     console.log("[v0] Request body:", body)
 
-    const { data, error } = await supabase.from("site_settings").insert([body]).select().single()
+    const result = await query(
+      `INSERT INTO site_settings (key, value, type)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [body.key, body.value, body.type || "text"],
+    )
 
-    if (error) {
-      console.error("[v0] Database error:", error)
-      throw error
-    }
-
-    console.log("[v0] Successfully created setting:", data)
-    return NextResponse.json(data)
+    console.log("[v0] Successfully created setting:", result.rows[0])
+    return NextResponse.json(result.rows[0])
   } catch (error: any) {
     console.error("[v0] Error creating site setting:", error)
     return NextResponse.json({ error: error.message || "فشل في إضافة الإعداد" }, { status: 500 })
@@ -45,25 +38,21 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     console.log("[v0] PATCH /api/site-settings - Updating setting...")
-    const supabase = createAdminClient()
     const body = await request.json()
     const { id, ...updates } = body
     console.log("[v0] Updating setting ID:", id, "with:", updates)
 
-    const { data, error } = await supabase
-      .from("site_settings")
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single()
+    const fields = Object.keys(updates)
+    const values = Object.values(updates)
+    const setClause = fields.map((field, index) => `${field} = $${index + 1}`).join(", ")
 
-    if (error) {
-      console.error("[v0] Database error:", error)
-      throw error
-    }
+    const result = await query(
+      `UPDATE site_settings SET ${setClause}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`,
+      [...values, id],
+    )
 
-    console.log("[v0] Successfully updated setting:", data)
-    return NextResponse.json(data)
+    console.log("[v0] Successfully updated setting:", result.rows[0])
+    return NextResponse.json(result.rows[0])
   } catch (error: any) {
     console.error("[v0] Error updating site setting:", error)
     return NextResponse.json({ error: error.message || "فشل في تحديث الإعداد" }, { status: 500 })
@@ -72,7 +61,6 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = createAdminClient()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 
@@ -80,9 +68,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "معرف الإعداد مطلوب" }, { status: 400 })
     }
 
-    const { error } = await supabase.from("site_settings").delete().eq("id", id)
-
-    if (error) throw error
+    await query("DELETE FROM site_settings WHERE id = $1", [id])
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

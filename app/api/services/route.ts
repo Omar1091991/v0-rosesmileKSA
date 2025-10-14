@@ -1,14 +1,10 @@
-import { createAdminClient } from "@/lib/supabase/admin"
+import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const supabase = createAdminClient()
-    const { data: services, error } = await supabase.from("services").select("*").order("order_index")
-
-    if (error) throw error
-
-    return NextResponse.json(services || [])
+    const result = await db.query("SELECT * FROM services ORDER BY order_index")
+    return NextResponse.json(result.rows)
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -16,29 +12,25 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
 
-    const { data, error } = await supabase
-      .from("services")
-      .insert([
-        {
-          title_ar: body.title_ar,
-          title_en: body.title_en || body.title_ar,
-          description_ar: body.description_ar,
-          description_en: body.description_en || body.description_ar,
-          icon: body.icon,
-          image_url: body.image_url,
-          is_active: body.is_active ?? true,
-          order_index: body.order_index ?? 0,
-        },
-      ])
-      .select()
-      .single()
+    const result = await db.query(
+      `INSERT INTO services (title_ar, title_en, description_ar, description_en, icon, image_url, is_active, order_index)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        body.title_ar,
+        body.title_en || body.title_ar,
+        body.description_ar,
+        body.description_en || body.description_ar,
+        body.icon,
+        body.image_url,
+        body.is_active ?? true,
+        body.order_index ?? 0,
+      ],
+    )
 
-    if (error) throw error
-
-    return NextResponse.json(data)
+    return NextResponse.json(result.rows[0])
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -46,28 +38,28 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
 
-    const { data, error } = await supabase
-      .from("services")
-      .update({
-        title_ar: body.title_ar,
-        title_en: body.title_en,
-        description_ar: body.description_ar,
-        description_en: body.description_en,
-        icon: body.icon,
-        image_url: body.image_url,
-        is_active: body.is_active,
-        order_index: body.order_index,
-      })
-      .eq("id", body.id)
-      .select()
-      .single()
+    const result = await db.query(
+      `UPDATE services 
+       SET title_ar = $1, title_en = $2, description_ar = $3, description_en = $4, 
+           icon = $5, image_url = $6, is_active = $7, order_index = $8
+       WHERE id = $9
+       RETURNING *`,
+      [
+        body.title_ar,
+        body.title_en,
+        body.description_ar,
+        body.description_en,
+        body.icon,
+        body.image_url,
+        body.is_active,
+        body.order_index,
+        body.id,
+      ],
+    )
 
-    if (error) throw error
-
-    return NextResponse.json(data)
+    return NextResponse.json(result.rows[0])
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -75,7 +67,6 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
     const { id } = body
 
@@ -83,10 +74,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Service ID is required" }, { status: 400 })
     }
 
-    const { error } = await supabase.from("services").delete().eq("id", id)
-
-    if (error) throw error
-
+    await db.query("DELETE FROM services WHERE id = $1", [id])
     return NextResponse.json({ success: true })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

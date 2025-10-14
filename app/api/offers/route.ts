@@ -1,14 +1,10 @@
-import { createAdminClient } from "@/lib/supabase/admin"
+import { query } from "@/lib/db"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const supabase = createAdminClient()
-    const { data: offers, error } = await supabase.from("offers").select("*").order("created_at", { ascending: false })
-
-    if (error) throw error
-
-    return NextResponse.json(offers || [])
+    const result = await query("SELECT * FROM offers ORDER BY created_at DESC")
+    return NextResponse.json(result.rows)
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -16,32 +12,28 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
 
-    const { data, error } = await supabase
-      .from("offers")
-      .insert([
-        {
-          title_ar: body.title_ar,
-          title_en: body.title_en || body.title_ar,
-          description_ar: body.description_ar,
-          description_en: body.description_en || body.description_ar,
-          price_before: body.price_before,
-          price_after: body.price_after,
-          discount_percentage: body.discount_percentage,
-          valid_from: body.valid_from,
-          valid_until: body.valid_until,
-          image_url: body.image_url,
-          is_active: body.is_active ?? true,
-        },
-      ])
-      .select()
-      .single()
+    const result = await query(
+      `INSERT INTO offers (title_ar, title_en, description_ar, description_en, price_before, price_after, discount_percentage, valid_from, valid_until, image_url, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING *`,
+      [
+        body.title_ar,
+        body.title_en || body.title_ar,
+        body.description_ar,
+        body.description_en || body.description_ar,
+        body.price_before,
+        body.price_after,
+        body.discount_percentage,
+        body.valid_from,
+        body.valid_until,
+        body.image_url,
+        body.is_active ?? true,
+      ],
+    )
 
-    if (error) throw error
-
-    return NextResponse.json({ offer: data })
+    return NextResponse.json({ offer: result.rows[0] })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -49,31 +41,32 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
 
-    const { data, error } = await supabase
-      .from("offers")
-      .update({
-        title_ar: body.title_ar,
-        title_en: body.title_en,
-        description_ar: body.description_ar,
-        description_en: body.description_en,
-        price_before: body.price_before,
-        price_after: body.price_after,
-        discount_percentage: body.discount_percentage,
-        valid_from: body.valid_from,
-        valid_until: body.valid_until,
-        image_url: body.image_url,
-        is_active: body.is_active,
-      })
-      .eq("id", body.id)
-      .select()
-      .single()
+    const result = await query(
+      `UPDATE offers SET 
+        title_ar = $1, title_en = $2, description_ar = $3, description_en = $4,
+        price_before = $5, price_after = $6, discount_percentage = $7,
+        valid_from = $8, valid_until = $9, image_url = $10, is_active = $11
+       WHERE id = $12
+       RETURNING *`,
+      [
+        body.title_ar,
+        body.title_en,
+        body.description_ar,
+        body.description_en,
+        body.price_before,
+        body.price_after,
+        body.discount_percentage,
+        body.valid_from,
+        body.valid_until,
+        body.image_url,
+        body.is_active,
+        body.id,
+      ],
+    )
 
-    if (error) throw error
-
-    return NextResponse.json({ offer: data })
+    return NextResponse.json({ offer: result.rows[0] })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -81,7 +74,6 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
     const { id } = body
 
@@ -89,9 +81,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Offer ID is required" }, { status: 400 })
     }
 
-    const { error } = await supabase.from("offers").delete().eq("id", id)
-
-    if (error) throw error
+    await query("DELETE FROM offers WHERE id = $1", [id])
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

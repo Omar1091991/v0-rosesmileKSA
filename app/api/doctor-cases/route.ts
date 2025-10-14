@@ -1,24 +1,24 @@
 import { NextResponse } from "next/server"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { db } from "@/lib/db"
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const doctorId = searchParams.get("doctor_id")
 
-    const supabase = createAdminClient()
-
-    let query = supabase.from("doctor_cases").select("*").order("order_index", { ascending: true })
+    let query = "SELECT * FROM doctor_cases"
+    const params: any[] = []
 
     if (doctorId) {
-      query = query.eq("doctor_id", doctorId)
+      query += " WHERE doctor_id = $1"
+      params.push(doctorId)
     }
 
-    const { data, error } = await query
+    query += " ORDER BY order_index ASC"
 
-    if (error) throw error
+    const result = await db.query(query, params)
 
-    return NextResponse.json(data || [])
+    return NextResponse.json(result.rows)
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -27,13 +27,16 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const supabase = createAdminClient()
+    const { doctor_id, image_url, title_ar, title_en, description_ar, description_en, order_index } = body
 
-    const { data, error } = await supabase.from("doctor_cases").insert([body]).select().single()
+    const result = await db.query(
+      `INSERT INTO doctor_cases (doctor_id, image_url, title_ar, title_en, description_ar, description_en, order_index) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+       RETURNING *`,
+      [doctor_id, image_url, title_ar, title_en, description_ar, description_en, order_index || 0],
+    )
 
-    if (error) throw error
-
-    return NextResponse.json(data)
+    return NextResponse.json(result.rows[0])
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -44,13 +47,16 @@ export async function PATCH(request: Request) {
     const body = await request.json()
     const { id, ...updates } = body
 
-    const supabase = createAdminClient()
+    const fields = Object.keys(updates)
+    const values = Object.values(updates)
+    const setClause = fields.map((field, index) => `${field} = $${index + 1}`).join(", ")
 
-    const { data, error } = await supabase.from("doctor_cases").update(updates).eq("id", id).select().single()
+    const result = await db.query(`UPDATE doctor_cases SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`, [
+      ...values,
+      id,
+    ])
 
-    if (error) throw error
-
-    return NextResponse.json(data)
+    return NextResponse.json(result.rows[0])
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -61,11 +67,7 @@ export async function DELETE(request: Request) {
     const body = await request.json()
     const { id } = body
 
-    const supabase = createAdminClient()
-
-    const { error } = await supabase.from("doctor_cases").delete().eq("id", id)
-
-    if (error) throw error
+    await db.query("DELETE FROM doctor_cases WHERE id = $1", [id])
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

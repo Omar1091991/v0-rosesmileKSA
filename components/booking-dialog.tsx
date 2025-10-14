@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,7 +15,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createClient } from "@/lib/supabase/client"
 import { Calendar } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -75,21 +73,22 @@ export function BookingDialog({ trigger, formId }: BookingDialogProps) {
     setIsLoading(true)
 
     try {
-      const supabase = createClient()
-
-      const { error: dbError } = await supabase.from("bookings").insert([
-        {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           full_name: formData.full_name,
           phone: formData.phone,
           service_name: formData.service_name,
           notes: formData.notes,
           status: "pending",
-        },
-      ])
+        }),
+      })
 
-      if (dbError) {
-        console.error("[v0] Database error:", dbError)
-        throw dbError
+      if (!response.ok) {
+        throw new Error("فشل في حفظ الحجز")
       }
 
       console.log("[v0] Booking saved to database successfully")

@@ -1,16 +1,10 @@
-import { createAdminClient } from "@/lib/supabase/admin"
+import { query } from "@/lib/db"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const supabase = createAdminClient()
-    const { data: articles, error } = await supabase
-      .from("articles")
-      .select("*")
-      .order("created_at", { ascending: false })
-
-    if (error) throw error
-    return NextResponse.json(articles || [])
+    const result = await query("SELECT * FROM articles ORDER BY created_at DESC")
+    return NextResponse.json(result.rows)
   } catch (error: any) {
     console.error("[v0] Error fetching articles:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -19,13 +13,16 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
 
-    const { data, error } = await supabase.from("articles").insert(body).select().single()
+    const result = await query(
+      `INSERT INTO articles (title_ar, title_en, content_ar, content_en, image_url, is_published)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [body.title_ar, body.title_en, body.content_ar, body.content_en, body.image_url, body.is_published ?? true],
+    )
 
-    if (error) throw error
-    return NextResponse.json({ article: data })
+    return NextResponse.json({ article: result.rows[0] })
   } catch (error: any) {
     console.error("[v0] Error creating article:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -34,14 +31,19 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
     const { id, ...updates } = body
 
-    const { data, error } = await supabase.from("articles").update(updates).eq("id", id).select().single()
+    const fields = Object.keys(updates)
+    const values = Object.values(updates)
+    const setClause = fields.map((field, index) => `${field} = $${index + 1}`).join(", ")
 
-    if (error) throw error
-    return NextResponse.json({ article: data })
+    const result = await query(`UPDATE articles SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`, [
+      ...values,
+      id,
+    ])
+
+    return NextResponse.json({ article: result.rows[0] })
   } catch (error: any) {
     console.error("[v0] Error updating article:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -50,7 +52,6 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
     const { id } = body
 
@@ -58,8 +59,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID required" }, { status: 400 })
     }
 
-    const { error } = await supabase.from("articles").delete().eq("id", id)
-    if (error) throw error
+    await query("DELETE FROM articles WHERE id = $1", [id])
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

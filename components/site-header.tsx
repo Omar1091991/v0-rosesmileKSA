@@ -2,55 +2,12 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Settings, User, LogOut } from "lucide-react"
+import { Menu, X, Settings } from "lucide-react"
 import { useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
 import Image from "next/image"
 
-interface SiteHeaderProps {
-  user?: {
-    id: string
-    email?: string
-    user_metadata?: {
-      full_name?: string
-      avatar_url?: string
-    }
-  } | null
-}
-
-export function SiteHeader({ user }: SiteHeaderProps) {
+export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const router = useRouter()
-
-  const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.refresh()
-  }
-
-  const getInitials = () => {
-    if (user?.user_metadata?.full_name) {
-      return user.user_metadata.full_name.charAt(0).toUpperCase()
-    }
-    if (user?.email) {
-      return user.email.charAt(0).toUpperCase()
-    }
-    return "U"
-  }
-
-  const getDisplayName = () => {
-    return user?.user_metadata?.full_name || user?.email?.split("@")[0] || "مستخدم"
-  }
 
   return (
     <>
@@ -99,49 +56,6 @@ export function SiteHeader({ user }: SiteHeaderProps) {
             <Button size="sm" asChild>
               <Link href="#booking">احجز موعد</Link>
             </Button>
-
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.user_metadata?.avatar_url || "/placeholder.svg"} alt={getDisplayName()} />
-                      <AvatarFallback className="bg-primary text-primary-foreground">{getInitials()}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{getDisplayName()}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer">
-                      <User className="ml-2 h-4 w-4" />
-                      الملف الشخصي
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="cursor-pointer">
-                      <Settings className="ml-2 h-4 w-4" />
-                      لوحة التحكم
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
-                    <LogOut className="ml-2 h-4 w-4" />
-                    تسجيل الخروج
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/auth/login">تسجيل الدخول</Link>
-              </Button>
-            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -199,16 +113,6 @@ export function SiteHeader({ user }: SiteHeaderProps) {
                 <Button size="sm" asChild>
                   <Link href="#booking">احجز موعد</Link>
                 </Button>
-                {user ? (
-                  <Button variant="outline" size="sm" onClick={handleSignOut}>
-                    <LogOut className="ml-2 h-4 w-4" />
-                    تسجيل الخروج
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href="/auth/login">تسجيل الدخول</Link>
-                  </Button>
-                )}
               </div>
             </nav>
           </div>

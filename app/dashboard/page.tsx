@@ -1,33 +1,49 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Stethoscope, Briefcase, Calendar, FileText, ImageIcon } from "lucide-react"
-import { createClient } from "@/lib/supabase/server"
+import { db } from "@/lib/db"
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  const [
-    { count: usersCount },
-    { count: servicesCount },
-    { count: doctorsCount },
-    { count: offersCount },
-    { count: bookingsCount },
-    { count: articlesCount },
-  ] = await Promise.all([
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("services").select("*", { count: "exact", head: true }),
-    supabase.from("doctors").select("*", { count: "exact", head: true }),
-    supabase.from("offers").select("*", { count: "exact", head: true }),
-    supabase.from("bookings").select("*", { count: "exact", head: true }),
-    supabase.from("articles").select("*", { count: "exact", head: true }),
+  const [usersCount, servicesCount, doctorsCount, offersCount, bookingsCount, articlesCount] = await Promise.all([
+    db.query("SELECT COUNT(*) FROM profiles"),
+    db.query("SELECT COUNT(*) FROM services"),
+    db.query("SELECT COUNT(*) FROM doctors"),
+    db.query("SELECT COUNT(*) FROM offers"),
+    db.query("SELECT COUNT(*) FROM bookings"),
+    db.query("SELECT COUNT(*) FROM articles"),
   ])
 
   const stats = [
-    { title: "المستخدمين", value: usersCount || 0, icon: Users, color: "text-blue-600" },
-    { title: "الخدمات", value: servicesCount || 0, icon: Briefcase, color: "text-green-600" },
-    { title: "الأطباء", value: doctorsCount || 0, icon: Stethoscope, color: "text-purple-600" },
-    { title: "العروض", value: offersCount || 0, icon: FileText, color: "text-orange-600" },
-    { title: "الحجوزات", value: bookingsCount || 0, icon: Calendar, color: "text-red-600" },
-    { title: "المقالات", value: articlesCount || 0, icon: ImageIcon, color: "text-indigo-600" },
+    { title: "المستخدمين", value: Number.parseInt(usersCount.rows[0].count) || 0, icon: Users, color: "text-blue-600" },
+    {
+      title: "الخدمات",
+      value: Number.parseInt(servicesCount.rows[0].count) || 0,
+      icon: Briefcase,
+      color: "text-green-600",
+    },
+    {
+      title: "الأطباء",
+      value: Number.parseInt(doctorsCount.rows[0].count) || 0,
+      icon: Stethoscope,
+      color: "text-purple-600",
+    },
+    {
+      title: "العروض",
+      value: Number.parseInt(offersCount.rows[0].count) || 0,
+      icon: FileText,
+      color: "text-orange-600",
+    },
+    {
+      title: "الحجوزات",
+      value: Number.parseInt(bookingsCount.rows[0].count) || 0,
+      icon: Calendar,
+      color: "text-red-600",
+    },
+    {
+      title: "المقالات",
+      value: Number.parseInt(articlesCount.rows[0].count) || 0,
+      icon: ImageIcon,
+      color: "text-indigo-600",
+    },
   ]
 
   return (

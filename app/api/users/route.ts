@@ -1,15 +1,14 @@
-import { createAdminClient } from "@/lib/supabase/admin"
+import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
+import bcrypt from "bcryptjs"
 
 export async function GET() {
   try {
-    const supabase = createAdminClient()
+    const result = await db.query(
+      "SELECT id, full_name, email, phone, role, created_at FROM profiles ORDER BY created_at DESC",
+    )
 
-    const { data: users, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
-
-    if (error) throw error
-
-    return NextResponse.json(users || [])
+    return NextResponse.json(result.rows)
   } catch (error) {
     console.error("[v0] Error fetching users:", error)
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
@@ -18,7 +17,6 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
     const { email, password, full_name, phone, role } = body
 
@@ -38,52 +36,26 @@ export async function POST(request: Request) {
     }
 
     // التحقق من عدم وجود المستخدم مسبقاً
-    const { data: existingUser } = await supabase.from("profiles").select("email").eq("email", email).single()
+    const existingUser = await db.query("SELECT email FROM profiles WHERE email = $1", [email])
 
-    if (existingUser) {
+    if (existingUser.rows.length > 0) {
       return NextResponse.json({ error: "البريد الإلكتروني مستخدم بالفعل" }, { status: 409 })
     }
 
-    // إنشاء مستخدم جديد في Supabase Auth
-    const { data: newUser, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name },
-    })
+    // تشفير كلمة المرور
+    const hashedPassword = await bcrypt.hash(password, 10)
 
-    if (authError) {
-      console.error("[v0] Auth error:", authError)
-      if (authError.message.includes("already registered")) {
-        return NextResponse.json({ error: "البريد الإلكتروني مستخدم بالفعل" }, { status: 409 })
-      }
-      return NextResponse.json({ error: `فشل في إنشاء الحساب: ${authError.message}` }, { status: 500 })
-    }
-
-    // إنشاء البروفايل
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: newUser.user.id,
-      full_name,
-      email,
-      phone: phone || null,
-      role: role || "user",
-    })
-
-    if (profileError) {
-      console.error("[v0] Profile error:", profileError)
-      await supabase.auth.admin.deleteUser(newUser.user.id)
-      return NextResponse.json({ error: `فشل في حفظ بيانات المستخدم: ${profileError.message}` }, { status: 500 })
-    }
+    // إنشاء مستخدم جديد
+    const result = await db.query(
+      `INSERT INTO profiles (full_name, email, phone, role, password) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING id, full_name, email, phone, role`,
+      [full_name, email, phone || null, role || "user", hashedPassword],
+    )
 
     return NextResponse.json({
       success: true,
-      user: {
-        id: newUser.user.id,
-        email,
-        full_name,
-        phone,
-        role: role || "user",
-      },
+      user: result.rows[0],
     })
   } catch (error: any) {
     console.error("[v0] Error creating user:", error)
@@ -93,21 +65,15 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const supabase = createAdminClient()
     const body = await request.json()
     const { id, full_name, role, phone } = body
 
-    // تحديث البروفايل
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name,
-        role,
-        phone,
-      })
-      .eq("id", id)
-
-    if (error) throw error
+    await db.query("UPDATE profiles SET full_name = $1, role = $2, phone = $3 WHERE id = $4", [
+      full_name,
+      role,
+      phone,
+      id,
+    ])
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
@@ -118,7 +84,6 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = createAdminClient()
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("id")
 
@@ -126,13 +91,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 })
     }
 
-    // حذف المستخدم من Supabase Auth
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId)
-    if (authError) throw authError
-
-    // حذف البروفايل
-    const { error: profileError } = await supabase.from("profiles").delete().eq("id", userId)
-    if (profileError) throw profileError
+    await db.query("DELETE FROM profiles WHERE id = $1", [userId])
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
