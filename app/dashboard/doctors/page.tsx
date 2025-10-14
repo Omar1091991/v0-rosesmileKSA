@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Pencil, Trash2, Stethoscope } from "lucide-react"
+import { Plus, Pencil, Trash2, Stethoscope, Settings } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface Doctor {
   id: string
@@ -25,6 +27,16 @@ interface Doctor {
   created_at: string
 }
 
+interface DoctorCase {
+  id: string
+  title_ar?: string
+  title_en?: string
+  before_image_url?: string
+  after_image_url?: string
+  description_ar?: string
+  description_en?: string
+}
+
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [loading, setLoading] = useState(true)
@@ -33,6 +45,8 @@ export default function DoctorsPage() {
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null)
   const [imagePreview, setImagePreview] = useState<string>("")
   const { toast } = useToast()
+  const [needsInit, setNeedsInit] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(false)
 
   const [formData, setFormData] = useState({
     name_ar: "",
@@ -45,8 +59,21 @@ export default function DoctorsPage() {
     is_active: true,
   })
 
+  const [doctorCases, setDoctorCases] = useState<DoctorCase[]>([])
+  const [caseFormData, setCaseFormData] = useState({
+    title_ar: "",
+    title_en: "",
+    before_image_url: "",
+    after_image_url: "",
+    description_ar: "",
+    description_en: "",
+  })
+  const [beforeImagePreview, setBeforeImagePreview] = useState<string>("")
+  const [afterImagePreview, setAfterImagePreview] = useState<string>("")
+
   useEffect(() => {
     fetchDoctors()
+    checkIfNeedsInit()
   }, [])
 
   const fetchDoctors = async () => {
@@ -67,6 +94,18 @@ export default function DoctorsPage() {
     }
   }
 
+  const fetchDoctorCases = async (doctorId: string) => {
+    try {
+      const response = await fetch(`/api/doctor-cases?doctor_id=${doctorId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setDoctorCases(data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch doctor cases:", error)
+    }
+  }
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -84,6 +123,50 @@ export default function DoctorsPage() {
         const base64 = reader.result as string
         setFormData({ ...formData, image_url: base64 })
         setImagePreview(base64)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleBeforeImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "خطأ",
+          description: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64 = reader.result as string
+        setCaseFormData({ ...caseFormData, before_image_url: base64 })
+        setBeforeImagePreview(base64)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleAfterImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "خطأ",
+          description: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64 = reader.result as string
+        setCaseFormData({ ...caseFormData, after_image_url: base64 })
+        setAfterImagePreview(base64)
       }
       reader.readAsDataURL(file)
     }
@@ -165,6 +248,36 @@ export default function DoctorsPage() {
     }
   }
 
+  const handleAddCase = async () => {
+    if (!editingDoctor) return
+
+    try {
+      const response = await fetch("/api/doctor-cases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          doctor_id: editingDoctor.id,
+          ...caseFormData,
+        }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "نجح",
+          description: "تم إضافة الحالة بنجاح",
+        })
+        resetCaseForm()
+        fetchDoctorCases(editingDoctor.id)
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء إضافة الحالة",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleDelete = async (id: string) => {
     if (!confirm("هل أنت متأكد من حذف هذا الطبيب؟")) return
 
@@ -197,20 +310,32 @@ export default function DoctorsPage() {
     }
   }
 
-  const openEditDialog = (doctor: Doctor) => {
-    setEditingDoctor(doctor)
-    setFormData({
-      name_ar: doctor.name_ar,
-      name_en: doctor.name_en || "",
-      specialty_ar: doctor.specialty_ar,
-      specialty_en: doctor.specialty_en || "",
-      bio_ar: doctor.bio_ar || "",
-      bio_en: doctor.bio_en || "",
-      image_url: doctor.image_url || "",
-      is_active: doctor.is_active,
-    })
-    setImagePreview(doctor.image_url || "")
-    setIsEditOpen(true)
+  const handleDeleteCase = async (caseId: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذه الحالة؟")) return
+
+    try {
+      const response = await fetch("/api/doctor-cases", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: caseId }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "نجح",
+          description: "تم حذف الحالة بنجاح",
+        })
+        if (editingDoctor) {
+          fetchDoctorCases(editingDoctor.id)
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حذف الحالة",
+        variant: "destructive",
+      })
+    }
   }
 
   const resetForm = () => {
@@ -228,12 +353,97 @@ export default function DoctorsPage() {
     setEditingDoctor(null)
   }
 
+  const resetCaseForm = () => {
+    setCaseFormData({
+      title_ar: "",
+      title_en: "",
+      before_image_url: "",
+      after_image_url: "",
+      description_ar: "",
+      description_en: "",
+    })
+    setBeforeImagePreview("")
+    setAfterImagePreview("")
+  }
+
+  const openEditDialog = (doctor: Doctor) => {
+    setEditingDoctor(doctor)
+    setFormData({
+      name_ar: doctor.name_ar,
+      name_en: doctor.name_en || "",
+      specialty_ar: doctor.specialty_ar,
+      specialty_en: doctor.specialty_en || "",
+      bio_ar: doctor.bio_ar || "",
+      bio_en: doctor.bio_en || "",
+      image_url: doctor.image_url || "",
+      is_active: doctor.is_active,
+    })
+    setImagePreview(doctor.image_url || "")
+    fetchDoctorCases(doctor.id)
+    setIsEditOpen(true)
+  }
+
+  const checkIfNeedsInit = async () => {
+    try {
+      const response = await fetch("/api/doctor-cases?doctor_id=test")
+      if (!response.ok) {
+        setNeedsInit(true)
+      }
+    } catch (error) {
+      setNeedsInit(true)
+    }
+  }
+
+  const handleInitialize = async () => {
+    setIsInitializing(true)
+    try {
+      const response = await fetch("/api/doctor-cases/init", {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        toast({
+          title: "نجح",
+          description: "تم تهيئة جدول حالات الأطباء بنجاح",
+        })
+        setNeedsInit(false)
+      } else {
+        const error = await response.json()
+        toast({
+          title: "خطأ",
+          description: error.error || "فشل في تهيئة الجدول",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء التهيئة",
+        variant: "destructive",
+      })
+    } finally {
+      setIsInitializing(false)
+    }
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-96">جاري التحميل...</div>
   }
 
   return (
     <div className="space-y-6">
+      {needsInit && (
+        <Alert>
+          <Settings className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>يجب تهيئة جدول حالات الأطباء لاستخدام ميزة "قبل وبعد"</span>
+            <Button onClick={handleInitialize} disabled={isInitializing} size="sm">
+              {isInitializing ? "جاري التهيئة..." : "تهيئة الآن"}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -378,87 +588,216 @@ export default function DoctorsPage() {
       )}
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>تعديل الطبيب</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit_name_ar">الاسم بالعربية *</Label>
-                <Input
-                  id="edit_name_ar"
-                  value={formData.name_ar}
-                  onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_name_en">الاسم بالإنجليزية</Label>
-                <Input
-                  id="edit_name_en"
-                  value={formData.name_en}
-                  onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit_specialty_ar">التخصص بالعربية *</Label>
-                <Input
-                  id="edit_specialty_ar"
-                  value={formData.specialty_ar}
-                  onChange={(e) => setFormData({ ...formData, specialty_ar: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_specialty_en">التخصص بالإنجليزية</Label>
-                <Input
-                  id="edit_specialty_en"
-                  value={formData.specialty_en}
-                  onChange={(e) => setFormData({ ...formData, specialty_en: e.target.value })}
-                />
-              </div>
-            </div>
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="basic">المعلومات الأساسية</TabsTrigger>
+              <TabsTrigger value="cases">حالات قبل وبعد</TabsTrigger>
+            </TabsList>
 
-            <div>
-              <Label htmlFor="edit_bio_ar">النبذة بالعربية</Label>
-              <Textarea
-                id="edit_bio_ar"
-                value={formData.bio_ar}
-                onChange={(e) => setFormData({ ...formData, bio_ar: e.target.value })}
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_bio_en">النبذة بالإنجليزية</Label>
-              <Textarea
-                id="edit_bio_en"
-                value={formData.bio_en}
-                onChange={(e) => setFormData({ ...formData, bio_en: e.target.value })}
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_image">صورة الطبيب</Label>
-              <Input id="edit_image" type="file" accept="image/*" onChange={handleImageChange} />
-              {imagePreview && (
-                <div className="mt-2">
-                  <img
-                    src={imagePreview || "/placeholder.svg"}
-                    alt="Preview"
-                    className="w-32 h-32 object-cover rounded-lg"
+            <TabsContent value="basic" className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_name_ar">الاسم بالعربية *</Label>
+                  <Input
+                    id="edit_name_ar"
+                    value={formData.name_ar}
+                    onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
                   />
                 </div>
-              )}
-            </div>
+                <div>
+                  <Label htmlFor="edit_name_en">الاسم بالإنجليزية</Label>
+                  <Input
+                    id="edit_name_en"
+                    value={formData.name_en}
+                    onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                  />
+                </div>
+              </div>
 
-            <Button onClick={handleEdit} className="w-full">
-              حفظ التعديلات
-            </Button>
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_specialty_ar">التخصص بالعربية *</Label>
+                  <Input
+                    id="edit_specialty_ar"
+                    value={formData.specialty_ar}
+                    onChange={(e) => setFormData({ ...formData, specialty_ar: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_specialty_en">التخصص بالإنجليزية</Label>
+                  <Input
+                    id="edit_specialty_en"
+                    value={formData.specialty_en}
+                    onChange={(e) => setFormData({ ...formData, specialty_en: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit_bio_ar">النبذة بالعربية</Label>
+                <Textarea
+                  id="edit_bio_ar"
+                  value={formData.bio_ar}
+                  onChange={(e) => setFormData({ ...formData, bio_ar: e.target.value })}
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_bio_en">النبذة بالإنجليزية</Label>
+                <Textarea
+                  id="edit_bio_en"
+                  value={formData.bio_en}
+                  onChange={(e) => setFormData({ ...formData, bio_en: e.target.value })}
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_image">صورة الطبيب</Label>
+                <Input id="edit_image" type="file" accept="image/*" onChange={handleImageChange} />
+                {imagePreview && (
+                  <div className="mt-2">
+                    <img
+                      src={imagePreview || "/placeholder.svg"}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <Button onClick={handleEdit} className="w-full">
+                حفظ التعديلات
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="cases" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">إضافة حالة جديدة</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="case_title_ar">عنوان الحالة بالعربية</Label>
+                      <Input
+                        id="case_title_ar"
+                        value={caseFormData.title_ar}
+                        onChange={(e) => setCaseFormData({ ...caseFormData, title_ar: e.target.value })}
+                        placeholder="تبييض الأسنان"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="case_title_en">عنوان الحالة بالإنجليزية</Label>
+                      <Input
+                        id="case_title_en"
+                        value={caseFormData.title_en}
+                        onChange={(e) => setCaseFormData({ ...caseFormData, title_en: e.target.value })}
+                        placeholder="Teeth Whitening"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="before_image">صورة قبل</Label>
+                      <Input id="before_image" type="file" accept="image/*" onChange={handleBeforeImageChange} />
+                      {beforeImagePreview && (
+                        <div className="mt-2">
+                          <img
+                            src={beforeImagePreview || "/placeholder.svg"}
+                            alt="Before"
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="after_image">صورة بعد</Label>
+                      <Input id="after_image" type="file" accept="image/*" onChange={handleAfterImageChange} />
+                      {afterImagePreview && (
+                        <div className="mt-2">
+                          <img
+                            src={afterImagePreview || "/placeholder.svg"}
+                            alt="After"
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="case_description_ar">وصف الحالة بالعربية</Label>
+                    <Textarea
+                      id="case_description_ar"
+                      value={caseFormData.description_ar}
+                      onChange={(e) => setCaseFormData({ ...caseFormData, description_ar: e.target.value })}
+                      rows={2}
+                    />
+                  </div>
+
+                  <Button onClick={handleAddCase} className="w-full">
+                    <Plus className="h-4 w-4 ml-2" />
+                    إضافة الحالة
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold">الحالات المضافة</h3>
+                {doctorCases.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">لا توجد حالات مضافة</p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {doctorCases.map((case_) => (
+                      <Card key={case_.id}>
+                        <CardContent className="pt-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <h4 className="font-semibold">{case_.title_ar || "حالة بدون عنوان"}</h4>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteCase(case_.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            {case_.before_image_url && (
+                              <div>
+                                <p className="text-sm text-muted-foreground mb-2">قبل</p>
+                                <img
+                                  src={case_.before_image_url || "/placeholder.svg"}
+                                  alt="Before"
+                                  className="w-full h-32 object-cover rounded-lg"
+                                />
+                              </div>
+                            )}
+                            {case_.after_image_url && (
+                              <div>
+                                <p className="text-sm text-muted-foreground mb-2">بعد</p>
+                                <img
+                                  src={case_.after_image_url || "/placeholder.svg"}
+                                  alt="After"
+                                  className="w-full h-32 object-cover rounded-lg"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          {case_.description_ar && (
+                            <p className="text-sm text-muted-foreground mt-2">{case_.description_ar}</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </div>

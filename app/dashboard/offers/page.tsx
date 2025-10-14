@@ -104,10 +104,16 @@ export default function OffersPage() {
     }
 
     try {
+      const dataToSend = { ...formData }
+      if (!dataToSend.discount_percentage) delete dataToSend.discount_percentage
+      if (!dataToSend.original_price) delete dataToSend.original_price
+      if (!dataToSend.discounted_price) delete dataToSend.discounted_price
+      if (!dataToSend.valid_until) delete dataToSend.valid_until
+
       const response = await fetch("/api/offers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       })
 
       if (response.ok) {
@@ -306,36 +312,39 @@ export default function OffersPage() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="discount_percentage">نسبة الخصم (%)</Label>
+                  <Label htmlFor="discount_percentage">نسبة الخصم (%) - اختياري</Label>
                   <Input
                     id="discount_percentage"
                     type="number"
-                    value={formData.discount_percentage}
-                    onChange={(e) => setFormData({ ...formData, discount_percentage: Number(e.target.value) })}
+                    value={formData.discount_percentage || ""}
+                    onChange={(e) => setFormData({ ...formData, discount_percentage: Number(e.target.value) || 0 })}
+                    placeholder="0"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="original_price">السعر الأصلي</Label>
+                  <Label htmlFor="original_price">السعر الأصلي - اختياري</Label>
                   <Input
                     id="original_price"
                     type="number"
-                    value={formData.original_price}
-                    onChange={(e) => setFormData({ ...formData, original_price: Number(e.target.value) })}
+                    value={formData.original_price || ""}
+                    onChange={(e) => setFormData({ ...formData, original_price: Number(e.target.value) || 0 })}
+                    placeholder="0"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="discounted_price">السعر بعد الخصم</Label>
+                  <Label htmlFor="discounted_price">السعر بعد الخصم - اختياري</Label>
                   <Input
                     id="discounted_price"
                     type="number"
-                    value={formData.discounted_price}
-                    onChange={(e) => setFormData({ ...formData, discounted_price: Number(e.target.value) })}
+                    value={formData.discounted_price || ""}
+                    onChange={(e) => setFormData({ ...formData, discounted_price: Number(e.target.value) || 0 })}
+                    placeholder="0"
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="valid_until">صالح حتى</Label>
+                <Label htmlFor="valid_until">صالح حتى - اختياري</Label>
                 <Input
                   id="valid_until"
                   type="date"
@@ -458,36 +467,39 @@ export default function OffersPage() {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="edit_discount_percentage">نسبة الخصم (%)</Label>
+                <Label htmlFor="edit_discount_percentage">نسبة الخصم (%) - اختياري</Label>
                 <Input
                   id="edit_discount_percentage"
                   type="number"
-                  value={formData.discount_percentage}
-                  onChange={(e) => setFormData({ ...formData, discount_percentage: Number(e.target.value) })}
+                  value={formData.discount_percentage || ""}
+                  onChange={(e) => setFormData({ ...formData, discount_percentage: Number(e.target.value) || 0 })}
+                  placeholder="0"
                 />
               </div>
               <div>
-                <Label htmlFor="edit_original_price">السعر الأصلي</Label>
+                <Label htmlFor="edit_original_price">السعر الأصلي - اختياري</Label>
                 <Input
                   id="edit_original_price"
                   type="number"
-                  value={formData.original_price}
-                  onChange={(e) => setFormData({ ...formData, original_price: Number(e.target.value) })}
+                  value={formData.original_price || ""}
+                  onChange={(e) => setFormData({ ...formData, original_price: Number(e.target.value) || 0 })}
+                  placeholder="0"
                 />
               </div>
               <div>
-                <Label htmlFor="edit_discounted_price">السعر بعد الخصم</Label>
+                <Label htmlFor="edit_discounted_price">السعر بعد الخصم - اختياري</Label>
                 <Input
                   id="edit_discounted_price"
                   type="number"
-                  value={formData.discounted_price}
-                  onChange={(e) => setFormData({ ...formData, discounted_price: Number(e.target.value) })}
+                  value={formData.discounted_price || ""}
+                  onChange={(e) => setFormData({ ...formData, discounted_price: Number(e.target.value) || 0 })}
+                  placeholder="0"
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="edit_valid_until">صالح حتى</Label>
+              <Label htmlFor="edit_valid_until">صالح حتى - اختياري</Label>
               <Input
                 id="edit_valid_until"
                 type="date"
