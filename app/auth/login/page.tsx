@@ -68,7 +68,6 @@ export default function LoginPage() {
     setIsSignupLoading(true)
 
     try {
-      // التحقق من صحة البيانات
       if (!signupFullName.trim()) {
         throw new Error("الرجاء إدخال الاسم الكامل")
       }
@@ -79,7 +78,6 @@ export default function LoginPage() {
         throw new Error("كلمة المرور يجب أن تكون 6 أحرف على الأقل")
       }
 
-      // إنشاء المستخدم في Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
@@ -94,15 +92,24 @@ export default function LoginPage() {
 
       if (error) throw error
 
-      // إضافة رقم الهاتف إلى جدول profiles
       if (data.user) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ phone: signupPhone })
-          .eq("id", data.user.id)
+        const profileResponse = await fetch("/api/auth/create-profile", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: data.user.id,
+            email: signupEmail,
+            full_name: signupFullName,
+            phone: signupPhone,
+            role: "user",
+          }),
+        })
 
-        if (profileError) {
-          console.error("خطأ في تحديث رقم الهاتف:", profileError)
+        if (!profileResponse.ok) {
+          const errorData = await profileResponse.json()
+          console.error("[v0] خطأ في إنشاء البروفايل:", errorData)
         }
       }
 
