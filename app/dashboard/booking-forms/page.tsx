@@ -406,13 +406,16 @@ export default function BookingFormsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="google_sheet_id">معرف Google Sheet</Label>
+                  <Label htmlFor="google_sheet_id">معرف Google Sheet (اختياري)</Label>
                   <Input
                     id="google_sheet_id"
                     value={formData.google_sheet_id}
                     onChange={(e) => setFormData({ ...formData, google_sheet_id: e.target.value })}
-                    placeholder="أدخل معرف Google Sheet"
+                    placeholder="سيتم إنشاؤه تلقائياً إذا تُرك فارغاً"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    إذا تركت هذا الحقل فارغاً، سيتم إنشاء Google Sheet جديد تلقائياً وربطه بالنموذج
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -568,22 +571,13 @@ export default function BookingFormsPage() {
                     target="_blank"
                     className="text-xs text-primary hover:underline truncate flex-1"
                   >
-                    {typeof window !== "undefined"
-                      ? `${window.location.origin}/booking/${form.id}`
-                      : `/booking/${form.id}`}
+                    {window.location.origin}/booking/{form.id}
                   </Link>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 p-0"
-                    onClick={() =>
-                      copyToClipboard(
-                        typeof window !== "undefined"
-                          ? `${window.location.origin}/booking/${form.id}`
-                          : `/booking/${form.id}`,
-                        "رابط النموذج",
-                      )
-                    }
+                    onClick={() => copyToClipboard(window.location.origin + `/booking/${form.id}`, "رابط النموذج")}
                   >
                     <Copy className="h-3 w-3" />
                   </Button>

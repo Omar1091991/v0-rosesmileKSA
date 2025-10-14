@@ -32,3 +32,28 @@ export async function submitToGoogleSheets(
     return { success: false, error }
   }
 }
+
+export async function createGoogleSheet(sheetName: string) {
+  try {
+    const response = await fetch("/api/google-sheets/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sheetName,
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || "Failed to create Google Sheet")
+    }
+
+    const result = await response.json()
+    return { success: true, sheetId: result.sheetId, sheetUrl: result.sheetUrl }
+  } catch (error) {
+    console.error("[v0] Error creating Google Sheet:", error)
+    return { success: false, error }
+  }
+}

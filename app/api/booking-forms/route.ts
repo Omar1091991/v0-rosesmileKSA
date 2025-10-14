@@ -59,12 +59,40 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { service_ids, ...formData } = body
 
+    let googleSheetId = formData.google_sheet_id
+
+    if (!googleSheetId) {
+      console.log("[v0] Creating Google Sheet automatically...")
+      const createSheetResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/google-sheets/create`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sheetName: `نموذج حجز - ${formData.name_ar}`,
+          }),
+        },
+      )
+
+      if (createSheetResponse.ok) {
+        const sheetData = await createSheetResponse.json()
+        googleSheetId = sheetData.sheetId
+        console.log("[v0] Google Sheet created successfully:", googleSheetId)
+      } else {
+        console.error("[v0] Failed to create Google Sheet automatically")
+      }
+    }
+
     // إذا كان النموذج رئيسي، إلغاء تفعيل النماذج الرئيسية الأخرى
     if (formData.is_main) {
       await supabase.from("booking_forms").update({ is_main: false }).eq("is_main", true)
     }
 
-    const { data: form, error: formError } = await supabase.from("booking_forms").insert([formData]).select().single()
+    const { data: form, error: formError } = await supabase
+      .from("booking_forms")
+      .insert([{ ...formData, google_sheet_id: googleSheetId }])
+      .select()
+      .single()
 
     if (formError) throw formError
 
