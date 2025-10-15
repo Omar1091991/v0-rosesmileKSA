@@ -157,12 +157,14 @@ export async function POST() {
         phone TEXT NOT NULL,
         service_id UUID REFERENCES services(id) ON DELETE SET NULL,
         service_name TEXT,
+        booking_form_id UUID REFERENCES booking_forms(id) ON DELETE SET NULL,
         notes TEXT,
         status TEXT DEFAULT 'pending',
         contacted BOOLEAN DEFAULT false,
         contact_attempts INTEGER DEFAULT 0,
         admin_notes TEXT,
-        created_at TIMESTAMPTZ DEFAULT NOW()
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
       );
 
       -- جدول إعدادات الموقع
@@ -182,9 +184,83 @@ export async function POST() {
       CREATE INDEX IF NOT EXISTS idx_offers_active ON offers(is_active);
       CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
       CREATE INDEX IF NOT EXISTS idx_bookings_created ON bookings(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_bookings_form ON bookings(booking_form_id);
     `)
 
     console.log("[v0] Database tables created successfully")
+
+    try {
+      await query(`
+        -- إضافة عمود booking_form_id إلى جدول bookings إذا لم يكن موجوداً
+        DO $$ 
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'bookings' AND column_name = 'booking_form_id'
+          ) THEN
+            ALTER TABLE bookings ADD COLUMN booking_form_id UUID REFERENCES booking_forms(id) ON DELETE SET NULL;
+          END IF;
+        END $$;
+
+        -- إضافة عمود updated_at إلى جدول bookings إذا لم يكن موجوداً
+        DO $$ 
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'bookings' AND column_name = 'updated_at'
+          ) THEN
+            ALTER TABLE bookings ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+          END IF;
+        END $$;
+
+        -- إضافة أعمدة value_ar, value_en, type إلى جدول site_settings إذا لم تكن موجودة
+        DO $$ 
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'site_settings' AND column_name = 'value_ar'
+          ) THEN
+            ALTER TABLE site_settings ADD COLUMN value_ar TEXT;
+          END IF;
+
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'site_settings' AND column_name = 'value_en'
+          ) THEN
+            ALTER TABLE site_settings ADD COLUMN value_en TEXT;
+          END IF;
+
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'site_settings' AND column_name = 'type'
+          ) THEN
+            ALTER TABLE site_settings ADD COLUMN type TEXT DEFAULT 'text';
+          END IF;
+
+          -- نقل البيانات من value إلى value_ar إذا كانت موجودة
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'site_settings' AND column_name = 'value'
+          ) THEN
+            UPDATE site_settings SET value_ar = value WHERE value_ar IS NULL;
+          END IF;
+        END $$;
+
+        -- إضافة عمود is_active إلى جدول doctors إذا لم يكن موجوداً
+        DO $$ 
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'doctors' AND column_name = 'is_active'
+          ) THEN
+            ALTER TABLE doctors ADD COLUMN is_active BOOLEAN DEFAULT true;
+          END IF;
+        END $$;
+      `)
+      console.log("[v0] Missing columns added successfully")
+    } catch (alterError) {
+      console.log("[v0] Note: Some columns may already exist:", alterError)
+    }
 
     await query(`
       -- إدراج مستخدم إداري افتراضي
@@ -196,13 +272,24 @@ export async function POST() {
       INSERT INTO booking_forms (name_ar, name_en, description_ar, description_en, is_main, is_active)
       VALUES ('نموذج الحجز الرئيسي', 'Main Booking Form', 'نموذج الحجز الأساسي للموقع', 'Main booking form for the website', true, true)
       ON CONFLICT DO NOTHING;
+
+      -- إدراج إعدادات الموقع الافتراضية
+      INSERT INTO site_settings (key, value_ar, value_en, type) VALUES
+        ('hero_title', 'ابتسامة الورود | ابتسامتك تتألود', 'Rose Smile | Your Smile Shines', 'text'),
+        ('hero_description', 'نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة', 'We provide the best medical services with the latest technologies in Makkah', 'textarea'),
+        ('hero_animation_type', 'fade', 'fade', 'select'),
+        ('phone', '+966500000000', '+966500000000', 'text'),
+        ('email', 'info@rosesmile.com', 'info@rosesmile.com', 'text'),
+        ('address', 'مكة المكرمة، المملكة العربية السعودية', 'Makkah, Saudi Arabia', 'text'),
+        ('whatsapp', '+966500000000', '+966500000000', 'text')
+      ON CONFLICT (key) DO NOTHING;
     `)
 
     console.log("[v0] Default data inserted successfully")
 
     return NextResponse.json({
       success: true,
-      message: "تم إنشاء قاعدة البيانات بنجاح",
+      message: "تم إنشاء قاعدة البيانات بنجاح وإضافة جميع الأعمدة المطلوبة",
     })
   } catch (error: any) {
     console.error("[v0] Database initialization error:", error)

@@ -366,6 +366,48 @@ export default function DoctorsPage() {
     }
   }
 
+  const handleAdd = async () => {
+    if (!formData.image_url) {
+      toast({
+        title: "خطأ",
+        description: "الرجاء إضافة صورة واحدة على الأقل",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const response = await fetch("/api/doctors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "نجح",
+          description: "تم إضافة الطبيب بنجاح",
+        })
+        setIsAddOpen(false)
+        resetForm()
+        fetchDoctors()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "خطأ",
+          description: errorData.error || "فشل في إضافة الطبيب",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء إضافة الطبيب",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-96">جاري التحميل...</div>
   }
@@ -482,8 +524,8 @@ export default function DoctorsPage() {
                 )}
               </div>
 
-              <Button onClick={handleAddCases} className="w-full">
-                إضافة الصور
+              <Button onClick={handleAdd} className="w-full">
+                إضافة الطبيب
               </Button>
             </div>
           </DialogContent>
