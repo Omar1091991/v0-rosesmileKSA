@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertTriangle, CheckCircle2, Info } from "lucide-react"
+import { AlertTriangle, CheckCircle2, Info, ExternalLink } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 
 export default function GoogleAuthPage() {
@@ -59,17 +59,61 @@ export default function GoogleAuthPage() {
             <Info className="h-6 w-6 text-blue-500" />
             إعدادات Google Sheets
           </CardTitle>
-          <CardDescription>التحقق من اتصال Google Sheets</CardDescription>
+          <CardDescription>التحقق من اتصال Google Sheets وتفعيل الخدمات</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <Alert className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              <strong className="block mb-2">⚠️ خطوات مهمة قبل الاستخدام</strong>
+              <p className="text-sm mb-3">
+                إذا ظهر خطأ "The caller does not have permission"، يجب تفعيل الخدمات التالية في Google Cloud Console:
+              </p>
+              <ol className="list-decimal list-inside space-y-2 text-sm">
+                <li>
+                  اذهب إلى{" "}
+                  <a
+                    href="https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=medical-rose-smile"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                  >
+                    Google Sheets API
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </li>
+                <li>
+                  اذهب إلى{" "}
+                  <a
+                    href="https://console.cloud.google.com/apis/library/drive.googleapis.com?project=medical-rose-smile"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                  >
+                    Google Drive API
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </li>
+                <li>انقر على "تفعيل" (Enable) لكل خدمة</li>
+                <li>انتظر دقيقة واحدة حتى يتم تفعيل الخدمات</li>
+                <li>ارجع هنا واختبر الاتصال</li>
+              </ol>
+            </AlertDescription>
+          </Alert>
+
           <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
             <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <AlertDescription className="text-blue-800 dark:text-blue-200">
-              <strong className="block mb-2">معلومات مهمة</strong>
+              <strong className="block mb-2">معلومات Service Account</strong>
               <ul className="list-disc list-inside space-y-1 text-sm">
                 <li>النظام يستخدم Google Service Account للاتصال بـ Google Sheets</li>
-                <li>Service Account Email: rosesmile-sheets@rosesmile-sheets.iam.gserviceaccount.com</li>
-                <li>يجب منح هذا البريد صلاحيات التعديل على Google Sheets المراد استخدامها</li>
+                <li>
+                  Service Account Email:{" "}
+                  <code className="text-xs bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">
+                    rosesmile-sheets-connectorv0@medical-rose-smile.iam.gserviceaccount.com
+                  </code>
+                </li>
+                <li>المشروع: medical-rose-smile</li>
                 <li>الاتصال دائم ولا يحتاج إعادة مصادقة يدوية</li>
               </ul>
             </AlertDescription>
@@ -89,9 +133,15 @@ export default function GoogleAuthPage() {
               {loading ? "جاري الاختبار..." : "اختبار الاتصال"}
             </Button>
 
-            <Button onClick={handleReauth} disabled={loading} variant="secondary" className="w-full">
-              <Info className="ml-2 h-4 w-4" />
-              عرض معلومات الاتصال
+            <Button
+              onClick={() =>
+                window.open("https://console.cloud.google.com/apis/dashboard?project=medical-rose-smile", "_blank")
+              }
+              variant="secondary"
+              className="w-full"
+            >
+              <ExternalLink className="ml-2 h-4 w-4" />
+              فتح Google Cloud Console
             </Button>
           </div>
 
@@ -103,7 +153,8 @@ export default function GoogleAuthPage() {
               <li>افتح Google Sheet المراد ربطه</li>
               <li>انقر على "مشاركة" في الزاوية العلوية</li>
               <li>
-                أضف البريد: <code className="text-xs">rosesmile-sheets@rosesmile-sheets.iam.gserviceaccount.com</code>
+                أضف البريد:{" "}
+                <code className="text-xs">rosesmile-sheets-connectorv0@medical-rose-smile.iam.gserviceaccount.com</code>
               </li>
               <li>اختر صلاحية "محرر" (Editor)</li>
               <li>انقر على "إرسال"</li>

@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     const sheets = google.sheets({ version: "v4", auth })
     const drive = google.drive({ version: "v3", auth })
 
+    // Try to create the spreadsheet
     const createResponse = await sheets.spreadsheets.create({
       requestBody: {
         properties: {
@@ -54,6 +55,7 @@ export async function POST(request: Request) {
       throw new Error("فشل في إنشاء Google Sheet")
     }
 
+    // Add header row
     await sheets.spreadsheets.values.update({
       spreadsheetId,
       range: "الحجوزات!A1:G1",
@@ -63,6 +65,7 @@ export async function POST(request: Request) {
       },
     })
 
+    // Format header row
     await sheets.spreadsheets.batchUpdate({
       spreadsheetId,
       requestBody: {
@@ -92,6 +95,7 @@ export async function POST(request: Request) {
       },
     })
 
+    // Make the sheet publicly writable
     await drive.permissions.create({
       fileId: spreadsheetId,
       requestBody: {
@@ -110,6 +114,34 @@ export async function POST(request: Request) {
     })
   } catch (error: any) {
     console.error("[v0] Error creating Google Sheet:", error)
-    return NextResponse.json({ error: error.message || "فشل في إنشاء Google Sheet" }, { status: 500 })
+
+    let errorMessage = "فشل في إنشاء Google Sheet"
+    let helpText = ""
+    let helpLink = ""
+
+    if (error.message?.includes("permission") || error.code === 403) {
+      errorMessage = "لا توجد صلاحيات كافية - يجب تفعيل Google APIs"
+      helpText =
+        "يجب تفعيل Google Sheets API و Google Drive API في Google Cloud Console. اذهب إلى صفحة إعدادات Google للحصول على التعليمات الكاملة."
+      helpLink = "/dashboard/google-auth"
+    } else if (error.code === 401) {
+      errorMessage = "خطأ في المصادقة"
+      helpText = "تحقق من صحة بيانات Service Account"
+    } else if (error.message?.includes("API has not been used")) {
+      errorMessage = "Google Sheets API غير مفعّل"
+      helpText = "يجب تفعيل Google Sheets API في مشروع Google Cloud"
+      helpLink = `https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=${GOOGLE_CREDENTIALS.project_id}`
+    }
+
+    return NextResponse.json(
+      {
+        error: errorMessage,
+        details: error.message,
+        help: helpText,
+        helpLink,
+        projectId: GOOGLE_CREDENTIALS.project_id,
+      },
+      { status: error.code || 500 },
+    )
   }
 }
