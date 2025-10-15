@@ -5,6 +5,14 @@ export async function GET() {
   try {
     console.log("[v0] GET /api/site-settings - Fetching settings...")
 
+    if (!process.env.DATABASE_PUBLIC_URL && !process.env.DATABASE_URL) {
+      console.error("[v0] DATABASE_URL not configured")
+      return NextResponse.json({
+        error: "قاعدة البيانات غير مهيأة",
+        settings: [],
+      })
+    }
+
     const tableCheck = await query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -14,12 +22,10 @@ export async function GET() {
 
     if (!tableCheck.rows[0].exists) {
       console.log("[v0] site_settings table does not exist")
-      return NextResponse.json(
-        {
-          error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة من /railway-init",
-        },
-        { status: 500 },
-      )
+      return NextResponse.json({
+        error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة من /railway-init",
+        settings: [],
+      })
     }
 
     const result = await query("SELECT * FROM site_settings ORDER BY key")
@@ -30,15 +36,23 @@ export async function GET() {
     console.error("[v0] Error fetching site settings:", error)
 
     if (error.message?.includes('relation "site_settings" does not exist')) {
-      return NextResponse.json(
-        {
-          error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة من /railway-init",
-        },
-        { status: 500 },
-      )
+      return NextResponse.json({
+        error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة من /railway-init",
+        settings: [],
+      })
     }
 
-    return NextResponse.json({ error: error.message || "فشل في جلب إعدادات الموقع" }, { status: 500 })
+    if (error.message?.includes("DATABASE_URL") || error.message?.includes("connection")) {
+      return NextResponse.json({
+        error: "فشل الاتصال بقاعدة البيانات. يرجى التحقق من إعدادات Railway.",
+        settings: [],
+      })
+    }
+
+    return NextResponse.json({
+      error: error.message || "فشل في جلب إعدادات الموقع",
+      settings: [],
+    })
   }
 }
 

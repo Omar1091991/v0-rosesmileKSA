@@ -53,7 +53,7 @@ export default async function BookingFormPage({ params }: BookingFormPageProps) 
             {form.description_ar && <p className="text-muted-foreground">{form.description_ar}</p>}
           </CardHeader>
           <CardContent>
-            <BookingFormClient formId={form.id} googleSheetId={form.google_sheet_id} services={services} />
+            <BookingFormClient formId={form.id} services={services} />
           </CardContent>
         </Card>
       </div>

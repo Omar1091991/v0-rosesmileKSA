@@ -1,70 +1,5 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { google } from "googleapis"
-import GOOGLE_CREDENTIALS from "@/lib/google-credentials.json"
-
-// Function to create a Google Sheet directly
-async function createGoogleSheet(sheetName: string) {
-  try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: GOOGLE_CREDENTIALS,
-      scopes: ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"],
-    })
-
-    const sheets = google.sheets({ version: "v4", auth })
-    const drive = google.drive({ version: "v3", auth })
-
-    const createResponse = await sheets.spreadsheets.create({
-      requestBody: {
-        properties: { title: sheetName },
-        sheets: [{ properties: { title: "الحجوزات" } }],
-      },
-    })
-
-    const spreadsheetId = createResponse.data.spreadsheetId
-    if (!spreadsheetId) throw new Error("فشل في إنشاء Google Sheet")
-
-    await sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: "الحجوزات!A1:E1",
-      valueInputOption: "RAW",
-      requestBody: {
-        values: [["التاريخ والوقت", "الاسم الكامل", "رقم الهاتف", "الخدمة", "ملاحظات"]],
-      },
-    })
-
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      requestBody: {
-        requests: [
-          {
-            repeatCell: {
-              range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1 },
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 0.2, green: 0.4, blue: 0.8 },
-                  textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, fontSize: 12, bold: true },
-                  horizontalAlignment: "CENTER",
-                },
-              },
-              fields: "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)",
-            },
-          },
-        ],
-      },
-    })
-
-    await drive.permissions.create({
-      fileId: spreadsheetId,
-      requestBody: { role: "writer", type: "anyone" },
-    })
-
-    return { sheetId: spreadsheetId, sheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit` }
-  } catch (error) {
-    console.error("[v0] Error creating Google Sheet:", error)
-    throw error
-  }
-}
 
 export async function GET(request: Request) {
   try {
@@ -129,27 +64,14 @@ export async function POST(request: Request) {
 
     console.log("[v0] Creating booking form with data:", formData)
 
-    let googleSheetId = formData.google_sheet_id
-
-    if (!googleSheetId) {
-      console.log("[v0] Creating Google Sheet automatically...")
-      try {
-        const sheetData = await createGoogleSheet(`نموذج حجز - ${formData.name_ar}`)
-        googleSheetId = sheetData.sheetId
-        console.log("[v0] Google Sheet created successfully:", googleSheetId)
-      } catch (sheetError) {
-        console.error("[v0] Error creating Google Sheet:", sheetError)
-      }
-    }
-
     if (formData.is_main) {
       await db.query("UPDATE booking_forms SET is_main = false WHERE is_main = true")
     }
 
     const result = await db.query(
       `
-      INSERT INTO booking_forms (name_ar, name_en, description_ar, description_en, image_url, google_sheet_id, is_main, is_active, order_index)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO booking_forms (name_ar, name_en, description_ar, description_en, image_url, is_main, is_active, order_index)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `,
       [
@@ -158,7 +80,6 @@ export async function POST(request: Request) {
         formData.description_ar,
         formData.description_en,
         formData.image_url,
-        googleSheetId,
         formData.is_main,
         formData.is_active,
         formData.order_index,

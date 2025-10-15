@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { toast } from "@/hooks/use-toast" // Import toast here
+import { toast } from "@/hooks/use-toast"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -11,10 +11,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Pencil, Trash2, FileText, Info, ExternalLink, Copy, LinkIcon } from "lucide-react"
+import { Plus, Pencil, Trash2, FileText, LinkIcon, Copy, ExternalLink } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 
 interface Service {
@@ -30,7 +29,6 @@ interface BookingForm {
   description_ar: string
   description_en: string
   image_url: string
-  google_sheet_id: string
   is_active: boolean
   is_main: boolean
   order_index: number
@@ -48,19 +46,12 @@ export default function BookingFormsPage() {
   const [addServiceOpen, setAddServiceOpen] = useState(false)
   const [editingForm, setEditingForm] = useState<BookingForm | null>(null)
   const [initializing, setInitializing] = useState(false)
-  const [testingConnection, setTestingConnection] = useState(false)
-  const [connectionStatus, setConnectionStatus] = useState<{
-    success: boolean
-    message: string
-    serviceAccount?: string
-  } | null>(null)
   const [formData, setFormData] = useState({
     name_ar: "",
     name_en: "",
     description_ar: "",
     description_en: "",
     image_url: "",
-    google_sheet_id: "",
     is_active: true,
     is_main: false,
     order_index: 0,
@@ -75,8 +66,6 @@ export default function BookingFormsPage() {
     description_en: "",
     image_url: "",
   })
-  const [creatingSheet, setCreatingSheet] = useState(false)
-  const [sheetMode, setSheetMode] = useState<"auto" | "manual">("auto")
 
   useEffect(() => {
     fetchForms()
@@ -132,11 +121,6 @@ export default function BookingFormsPage() {
     setLoading(true)
 
     try {
-      console.log("[v0] Submitting form data:", {
-        ...formData,
-        service_ids: selectedServices,
-      })
-
       const url = "/api/booking-forms"
       const method = editingForm ? "PATCH" : "POST"
       const body = editingForm
@@ -149,11 +133,7 @@ export default function BookingFormsPage() {
         body: JSON.stringify(body),
       })
 
-      console.log("[v0] Response status:", response.status)
-
       if (response.ok) {
-        const result = await response.json()
-        console.log("[v0] Form saved successfully:", result)
         toast({
           title: "نجح",
           description: editingForm ? "تم تحديث النموذج بنجاح" : "تم إضافة النموذج بنجاح",
@@ -163,7 +143,6 @@ export default function BookingFormsPage() {
         fetchForms()
       } else {
         const error = await response.json()
-        console.error("[v0] Error response:", error)
         toast({
           title: "خطأ",
           description: error.error || "فشل في حفظ النموذج",
@@ -174,7 +153,7 @@ export default function BookingFormsPage() {
       console.error("[v0] Error saving form:", error)
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء حفظ النموذج. تأكد من تهيئة الجداول أولاً.",
+        description: "حدث خطأ أثناء حفظ النموذج",
         variant: "destructive",
       })
     } finally {
@@ -190,7 +169,6 @@ export default function BookingFormsPage() {
       description_ar: form.description_ar || "",
       description_en: form.description_en || "",
       image_url: form.image_url || "",
-      google_sheet_id: form.google_sheet_id || "",
       is_active: form.is_active,
       is_main: form.is_main,
       order_index: form.order_index,
@@ -233,7 +211,6 @@ export default function BookingFormsPage() {
       description_ar: "",
       description_en: "",
       image_url: "",
-      google_sheet_id: "",
       is_active: true,
       is_main: false,
       order_index: 0,
@@ -253,16 +230,11 @@ export default function BookingFormsPage() {
   const initializeTables = async () => {
     setInitializing(true)
     try {
-      console.log("[v0] Initializing booking forms tables...")
       const response = await fetch("/api/booking-forms/init", {
         method: "POST",
       })
 
-      console.log("[v0] Init response status:", response.status)
-
       if (response.ok) {
-        const result = await response.json()
-        console.log("[v0] Init result:", result)
         toast({
           title: "نجح",
           description: "تم تهيئة نماذج الحجز بنجاح",
@@ -272,7 +244,6 @@ export default function BookingFormsPage() {
         }, 1000)
       } else {
         const error = await response.json()
-        console.error("[v0] Init error:", error)
         toast({
           title: "خطأ",
           description: error.error || "فشل في تهيئة الجداول",
@@ -280,7 +251,6 @@ export default function BookingFormsPage() {
         })
       }
     } catch (error) {
-      console.error("[v0] Error initializing tables:", error)
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء التهيئة",
@@ -320,7 +290,6 @@ export default function BookingFormsPage() {
         })
       }
     } catch (error) {
-      console.error("[v0] Error adding service:", error)
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء إضافة الخدمة",
@@ -363,82 +332,6 @@ export default function BookingFormsPage() {
     })
   }
 
-  const testGoogleConnection = async () => {
-    setTestingConnection(true)
-    try {
-      const response = await fetch("/api/google-sheets/test")
-      const result = await response.json()
-      setConnectionStatus(result)
-
-      if (result.success) {
-        toast({
-          title: "نجح",
-          description: result.message,
-        })
-      } else {
-        toast({
-          title: "خطأ",
-          description: result.error || "فشل الاتصال بـ Google Sheets",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error("[v0] Error testing Google connection:", error)
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء اختبار الاتصال",
-        variant: "destructive",
-      })
-    } finally {
-      setTestingConnection(false)
-    }
-  }
-
-  const handleCreateSheet = async () => {
-    if (!formData.name_ar) {
-      toast({
-        title: "خطأ",
-        description: "يرجى إدخال اسم النموذج أولاً",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setCreatingSheet(true)
-    try {
-      const response = await fetch("/api/google-sheets/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sheetName: `نموذج حجز - ${formData.name_ar}` }),
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        setFormData({ ...formData, google_sheet_id: result.sheetId })
-        toast({
-          title: "نجح",
-          description: "تم إنشاء Google Sheet بنجاح",
-        })
-      } else {
-        const error = await response.json()
-        toast({
-          title: "خطأ",
-          description: error.error || "فشل في إنشاء Google Sheet",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error("[v0] Error creating sheet:", error)
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء إنشاء Google Sheet",
-        variant: "destructive",
-      })
-    } finally {
-      setCreatingSheet(false)
-    }
-  }
-
   if (loading) {
     return <div className="flex items-center justify-center h-96">جاري التحميل...</div>
   }
@@ -451,32 +344,10 @@ export default function BookingFormsPage() {
             <FileText className="h-6 w-6 sm:h-8 sm:w-8" />
             إدارة نماذج الحجز
           </h1>
-          <p className="text-muted-foreground mt-2">إنشاء وتعديل نماذج الحجز المخصصة المرتبطة بـ Google Sheets</p>
+          <p className="text-muted-foreground mt-2">إنشاء وتعديل نماذج الحجز المخصصة</p>
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
-          <Link href="/google-sheets-guide">
-            <Button variant="outline" className="flex-1 sm:flex-none bg-transparent">
-              <Info className="ml-2 h-4 w-4" />
-              دليل Google Sheets
-            </Button>
-          </Link>
-
-          <Link href="/dashboard/google-auth">
-            <Button variant="outline" className="flex-1 sm:flex-none bg-transparent">
-              إعادة مصادقة Google
-            </Button>
-          </Link>
-
-          <Button
-            onClick={testGoogleConnection}
-            disabled={testingConnection}
-            variant="outline"
-            className="flex-1 sm:flex-none bg-transparent"
-          >
-            {testingConnection ? "جاري الاختبار..." : "اختبار اتصال Google"}
-          </Button>
-
           {forms.length === 0 && (
             <Button
               onClick={initializeTables}
@@ -529,75 +400,6 @@ export default function BookingFormsPage() {
                     onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
                     rows={3}
                   />
-                </div>
-
-                <div className="space-y-3">
-                  <Label>ربط Google Sheet</Label>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant={sheetMode === "auto" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSheetMode("auto")}
-                      className="flex-1"
-                    >
-                      إنشاء جديد تلقائياً
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={sheetMode === "manual" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSheetMode("manual")}
-                      className="flex-1"
-                    >
-                      ربط موجود يدوياً
-                    </Button>
-                  </div>
-
-                  {sheetMode === "auto" ? (
-                    <div className="space-y-2">
-                      <Button
-                        type="button"
-                        onClick={handleCreateSheet}
-                        disabled={creatingSheet || !formData.name_ar}
-                        variant="outline"
-                        className="w-full bg-transparent"
-                      >
-                        {creatingSheet ? "جاري الإنشاء..." : "إنشاء Google Sheet الآن"}
-                      </Button>
-                      {formData.google_sheet_id && (
-                        <div className="p-3 bg-green-50 dark:bg-green-950 rounded-md">
-                          <p className="text-sm text-green-800 dark:text-green-200">تم إنشاء Google Sheet بنجاح</p>
-                          <a
-                            href={`https://docs.google.com/spreadsheets/d/${formData.google_sheet_id}/edit`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline flex items-center gap-1 mt-1"
-                          >
-                            فتح الجدول
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        سيتم إنشاء Google Sheet جديد تلقائياً مع صف رأس منسق وصلاحيات مشاركة
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Input
-                        id="google_sheet_id"
-                        value={formData.google_sheet_id}
-                        onChange={(e) => setFormData({ ...formData, google_sheet_id: e.target.value })}
-                        placeholder="أدخل معرف Google Sheet"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        احصل على المعرف من رابط الـ Sheet (الجزء بين /d/ و /edit)
-                        <br />
-                        مثال: https://docs.google.com/spreadsheets/d/<strong>1ABC123xyz</strong>/edit
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -703,41 +505,6 @@ export default function BookingFormsPage() {
         </div>
       </div>
 
-      {connectionStatus && (
-        <Alert variant={connectionStatus.success ? "default" : "destructive"}>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            <strong>{connectionStatus.success ? "✓ متصل" : "✗ غير متصل"}:</strong> {connectionStatus.message}
-            {connectionStatus.serviceAccount && (
-              <>
-                <br />
-                <span className="text-xs mt-1 block">Service Account: {connectionStatus.serviceAccount}</span>
-                <span className="text-xs text-muted-foreground block">
-                  تأكد من منح هذا الإيميل صلاحيات "محرر" على Google Sheets التي تريد ربطها
-                </span>
-              </>
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <strong>ربط Google Sheets:</strong> يمكنك إنشاء Google Sheet جديد تلقائياً أو ربط Sheet موجود يدوياً.
-          <br />
-          <span className="text-xs font-medium mt-2 block">
-            Service Account Email: rosesmile-sheets-connectorv0@medical-rose-smile.iam.gserviceaccount.com
-          </span>
-          <span className="text-xs text-muted-foreground block">
-            امنح هذا الإيميل صلاحيات "محرر" على Google Sheet لتمكين الربط التلقائي
-          </span>
-          <Link href="/dashboard/google-auth" className="text-xs text-primary hover:underline block mt-2">
-            إعادة مصادقة Google →
-          </Link>
-        </AlertDescription>
-      </Alert>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {forms.map((form) => (
           <Card key={form.id}>
@@ -776,13 +543,16 @@ export default function BookingFormsPage() {
                     target="_blank"
                     className="text-xs text-primary hover:underline truncate flex-1"
                   >
-                    {window.location.origin}/booking/{form.id}
+                    {typeof window !== "undefined" && `${window.location.origin}/booking/${form.id}`}
                   </Link>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 p-0"
-                    onClick={() => copyToClipboard(window.location.origin + `/booking/${form.id}`, "رابط النموذج")}
+                    onClick={() =>
+                      typeof window !== "undefined" &&
+                      copyToClipboard(window.location.origin + `/booking/${form.id}`, "رابط النموذج")
+                    }
                   >
                     <Copy className="h-3 w-3" />
                   </Button>
@@ -792,47 +562,6 @@ export default function BookingFormsPage() {
                     </Button>
                   </Link>
                 </div>
-
-                {form.google_sheet_id && (
-                  <>
-                    <div className="flex items-center gap-2 mt-2">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">رابط Google Sheet:</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={`https://docs.google.com/spreadsheets/d/${form.google_sheet_id}/edit`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline truncate flex-1"
-                      >
-                        فتح الجدول
-                      </a>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0"
-                        onClick={() =>
-                          copyToClipboard(
-                            `https://docs.google.com/spreadsheets/d/${form.google_sheet_id}/edit`,
-                            "رابط Google Sheet",
-                          )
-                        }
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <a
-                        href={`https://docs.google.com/spreadsheets/d/${form.google_sheet_id}/edit`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                          <ExternalLink className="h-3 w-3" />
-                        </Button>
-                      </a>
-                    </div>
-                  </>
-                )}
               </div>
               <div className="text-sm">
                 <p className="text-muted-foreground">الخدمات المتاحة:</p>
@@ -858,9 +587,7 @@ export default function BookingFormsPage() {
             <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
             <div className="space-y-2">
               <p className="text-lg font-medium">لا توجد نماذج حجز</p>
-              <p className="text-sm text-muted-foreground">
-                قم بتهيئة النظام أولاً لإنشاء الجداول المطلوبة، ثم أضف نموذج حجز جديد
-              </p>
+              <p className="text-sm text-muted-foreground">قم بتهيئة النظام أولاً لإنشاء الجداول المطلوبة</p>
             </div>
             <Button onClick={initializeTables} disabled={initializing} size="lg">
               {initializing ? "جاري التهيئة..." : "تهيئة نماذج الحجز الآن"}

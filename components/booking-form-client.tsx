@@ -14,7 +14,6 @@ import { Loader2 } from "lucide-react"
 
 interface BookingFormClientProps {
   formId: string
-  googleSheetId?: string
   services: Array<{
     id: string
     title_ar: string
@@ -23,7 +22,7 @@ interface BookingFormClientProps {
   }>
 }
 
-export function BookingFormClient({ formId, googleSheetId, services }: BookingFormClientProps) {
+export function BookingFormClient({ formId, services }: BookingFormClientProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     full_name: "",
