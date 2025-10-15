@@ -3,18 +3,26 @@ import { Pool } from "pg"
 let pool: Pool | null = null
 
 export function getDb() {
-  if (!process.env.DATABASE_URL) {
-    console.warn("[v0] DATABASE_URL is not set. Database operations will fail.")
-    throw new Error("DATABASE_URL environment variable is required")
+  const connectionString = process.env.DATABASE_URL
+
+  if (!connectionString) {
+    console.error("[v0] DATABASE_URL is not set. Please configure Railway database.")
+    throw new Error("DATABASE_URL environment variable is required for Railway connection")
   }
 
   if (!pool) {
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+      connectionString,
+      ssl: {
+        rejectUnauthorized: false,
+      },
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
+    })
+
+    pool.on("error", (err) => {
+      console.error("[v0] Unexpected database error:", err)
     })
   }
   return pool
@@ -23,7 +31,8 @@ export function getDb() {
 export async function query(text: string, params?: any[]) {
   try {
     const db = getDb()
-    return await db.query(text, params)
+    const result = await db.query(text, params)
+    return result
   } catch (error) {
     console.error("[v0] Database query error:", error)
     throw error

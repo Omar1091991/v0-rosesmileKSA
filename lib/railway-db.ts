@@ -1,23 +1,40 @@
-import { Pool } from "@neondatabase/serverless"
+import { Pool } from "pg"
 
-// إنشاء اتصال مع Railway PostgreSQL
+let railwayPool: Pool | null = null
+
 export function createRailwayClient() {
-  const connectionString =
-    process.env.DATABASE_URL ||
-    "postgresql://postgres:FvUMkvYFIakqHVioZTEIftAPZGnaMrPl@shortline.proxy.rlwy.net:32732/railway"
+  const connectionString = process.env.DATABASE_URL
 
-  const pool = new Pool({ connectionString })
+  if (!connectionString) {
+    throw new Error("DATABASE_URL environment variable is required for Railway")
+  }
+
+  if (!railwayPool) {
+    railwayPool = new Pool({
+      connectionString,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+    })
+
+    railwayPool.on("error", (err) => {
+      console.error("[v0] Railway database error:", err)
+    })
+  }
 
   return {
     query: async (text: string, params?: any[]) => {
-      const client = await pool.connect()
       try {
-        const result = await client.query(text, params)
+        const result = await railwayPool!.query(text, params)
         return result
-      } finally {
-        client.release()
+      } catch (error) {
+        console.error("[v0] Railway query error:", error)
+        throw error
       }
     },
-    end: () => pool.end(),
+    end: () => railwayPool?.end(),
   }
 }

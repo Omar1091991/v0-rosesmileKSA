@@ -15,7 +15,7 @@ importers:
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.60.0(react@19.0.0))
       '@neondatabase/serverless':
-        specifier: latest
+        specifier: 1.0.2
         version: 1.0.2
       '@radix-ui/react-accordion':
         specifier: 1.2.2
