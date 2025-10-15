@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
 import { createSession } from "@/lib/auth"
 import { cookies } from "next/headers"
+import bcrypt from "bcryptjs"
 
 export async function POST(request: Request) {
   try {
@@ -26,9 +27,9 @@ export async function POST(request: Request) {
     const user = result.rows[0]
     console.log("[v0] User found:", { email: user.email, role: user.role })
 
-    // التحقق من كلمة المرور (في الإنتاج، استخدم bcrypt للتحقق من كلمة المرور المشفرة)
-    console.log("[v0] Comparing passwords - provided:", password, "stored:", user.password)
-    if (user.password !== password) {
+    const passwordMatch = await bcrypt.compare(password, user.password)
+
+    if (!passwordMatch) {
       console.log("[v0] Password mismatch")
       return NextResponse.json({ error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" }, { status: 401 })
     }

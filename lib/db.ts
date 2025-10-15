@@ -36,6 +36,8 @@ function saveToStorage(data: InMemoryStore) {
   }
 }
 
+import bcrypt from "bcryptjs"
+
 // تهيئة المخزن
 const storedData = loadFromStorage()
 const inMemoryStore: InMemoryStore = storedData || {
@@ -54,6 +56,30 @@ const inMemoryStore: InMemoryStore = storedData || {
 // التأكد من وجود booking_form_services
 if (!inMemoryStore.booking_form_services) {
   inMemoryStore.booking_form_services = []
+}
+
+async function initializeDefaultData(store: InMemoryStore) {
+  // إضافة مستخدم مدير افتراضي إذا لم يكن موجوداً
+  if (store.profiles.length === 0) {
+    const defaultAdminPassword = await bcrypt.hash("admin123", 10)
+    const defaultAdmin = {
+      id: "1",
+      full_name: "مدير النظام",
+      email: "admin@rosesmile.com",
+      phone: "+966500000000",
+      role: "admin",
+      password: defaultAdminPassword,
+      created_at: new Date().toISOString(),
+    }
+    store.profiles.push(defaultAdmin)
+    console.log("[v0] تم إنشاء مستخدم المدير الافتراضي")
+  }
+}
+
+if (!storedData || inMemoryStore.profiles.length === 0) {
+  initializeDefaultData(inMemoryStore).then(() => {
+    saveToStorage(inMemoryStore)
+  })
 }
 
 // دالة الاستعلام الرئيسية
