@@ -3,11 +3,11 @@ import { Pool } from "pg"
 let pool: Pool | null = null
 
 export function getDb() {
-  const connectionString = process.env.DATABASE_URL
+  const connectionString = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL
 
   if (!connectionString) {
-    console.error("[v0] DATABASE_URL is not set. Please configure Railway database.")
-    throw new Error("DATABASE_URL environment variable is required for Railway connection")
+    console.error("[v0] DATABASE_PUBLIC_URL or DATABASE_URL is not set. Please configure Railway database.")
+    throw new Error("DATABASE_PUBLIC_URL or DATABASE_URL environment variable is required for Railway connection")
   }
 
   if (!pool) {
