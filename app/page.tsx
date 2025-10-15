@@ -56,8 +56,9 @@ export default function HomePage() {
           setMainBookingFormId(mainForm.id)
         }
 
+        const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
         const settingsMap: Record<string, string> = {}
-        settingsData.forEach((setting: any) => {
+        settings.forEach((setting: any) => {
           settingsMap[setting.key] = setting.value_ar || ""
         })
         setSiteSettings(settingsMap)

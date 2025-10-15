@@ -372,7 +372,8 @@ export default function ContentManagementPage() {
         throw new Error(errorData.error || "فشل في جلب الإعدادات")
       }
 
-      const data = await response.json()
+      const responseData = await response.json()
+      const data = Array.isArray(responseData) ? responseData : responseData.settings || []
       console.log("[v0] Settings fetched successfully:", data.length, "settings")
 
       const settingsMap: Record<string, any> = {}
@@ -523,7 +524,7 @@ export default function ContentManagementPage() {
         <Button onClick={handleSave} disabled={saving} size="lg">
           {saving ? (
             <>
-              <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+              <Loader2 className="ml-2 h-5 w-5 animate-spin text-primary mx-auto" />
               جاري الحفظ...
             </>
           ) : (

@@ -14,46 +14,50 @@ export default async function DashboardPage() {
   ]
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/database/test`, {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || ""
+    const apiUrl = baseUrl ? `${baseUrl}/api/database/test` : "/api/database/test"
+
+    const response = await fetch(apiUrl, {
       cache: "no-store",
     })
+
     if (response.ok) {
       const data = await response.json()
       if (data.tables) {
         stats = [
           {
             title: "المستخدمين",
-            value: data.tables.find((t: any) => t.name === "profiles")?.count || 0,
+            value: data.tables.profiles?.count || 0,
             icon: Users,
             color: "text-blue-600",
           },
           {
             title: "الخدمات",
-            value: data.tables.find((t: any) => t.name === "services")?.count || 0,
+            value: data.tables.services?.count || 0,
             icon: Briefcase,
             color: "text-green-600",
           },
           {
             title: "الأطباء",
-            value: data.tables.find((t: any) => t.name === "doctors")?.count || 0,
+            value: data.tables.doctors?.count || 0,
             icon: Stethoscope,
             color: "text-purple-600",
           },
           {
             title: "العروض",
-            value: data.tables.find((t: any) => t.name === "offers")?.count || 0,
+            value: data.tables.offers?.count || 0,
             icon: FileText,
             color: "text-orange-600",
           },
           {
             title: "الحجوزات",
-            value: data.tables.find((t: any) => t.name === "bookings")?.count || 0,
+            value: data.tables.bookings?.count || 0,
             icon: Calendar,
             color: "text-red-600",
           },
           {
             title: "المقالات",
-            value: data.tables.find((t: any) => t.name === "articles")?.count || 0,
+            value: data.tables.articles?.count || 0,
             icon: ImageIcon,
             color: "text-indigo-600",
           },

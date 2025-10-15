@@ -3,26 +3,14 @@ import { SiteFooter } from "@/components/site-footer"
 import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { AnimatedSection } from "@/components/animated-section"
+import { query } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
 async function getServices() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    const res = await fetch(`${baseUrl}/api/services`, {
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-
-    if (!res.ok) {
-      console.error("[v0] Failed to fetch services:", res.status)
-      return []
-    }
-
-    const data = await res.json()
-    return Array.isArray(data) ? data.filter((s: any) => s.is_active) : []
+    const result = await query("SELECT * FROM services WHERE is_active = true ORDER BY order_index")
+    return result.rows || []
   } catch (error) {
     console.error("[v0] Error fetching services:", error)
     return []

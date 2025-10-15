@@ -14,17 +14,6 @@ export async function GET() {
   try {
     console.log("[v0] GET /api/site-settings - Starting...")
 
-    if (!process.env.POSTGRES_URL && !process.env.DATABASE_PUBLIC_URL && !process.env.DATABASE_URL) {
-      console.error("[v0] No database URL configured")
-      return NextResponse.json(
-        {
-          settings: [],
-          error: "قاعدة البيانات غير مهيأة",
-        },
-        { status: 200 },
-      )
-    }
-
     const query = await getDbQuery()
     if (!query) {
       console.error("[v0] Database module not available")
@@ -32,38 +21,6 @@ export async function GET() {
         {
           settings: [],
           error: "قاعدة البيانات غير متاحة",
-        },
-        { status: 200 },
-      )
-    }
-
-    let tableExists = false
-    try {
-      const tableCheck = await query(`
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_name = 'site_settings'
-        )
-      `)
-      tableExists = tableCheck.rows[0].exists
-      console.log("[v0] Table exists:", tableExists)
-    } catch (tableError: any) {
-      console.error("[v0] Error checking table:", tableError.message)
-      return NextResponse.json(
-        {
-          settings: [],
-          error: "فشل في التحقق من جدول الإعدادات",
-        },
-        { status: 200 },
-      )
-    }
-
-    if (!tableExists) {
-      console.log("[v0] site_settings table does not exist")
-      return NextResponse.json(
-        {
-          settings: [],
-          error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة",
         },
         { status: 200 },
       )

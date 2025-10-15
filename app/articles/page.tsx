@@ -5,19 +5,12 @@ import { ArrowRight, Calendar, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { query } from "@/lib/db"
 
 async function getArticles() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/articles`, {
-      cache: "no-store",
-    })
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch articles")
-    }
-
-    const data = await response.json()
-    return data.articles || []
+    const result = await query("SELECT * FROM articles WHERE is_published = true ORDER BY created_at DESC")
+    return result.rows || []
   } catch (error) {
     console.error("Error fetching articles:", error)
     return []

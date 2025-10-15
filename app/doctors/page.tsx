@@ -5,18 +5,15 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AnimatedSection } from "@/components/animated-section"
 import Link from "next/link"
+import { query } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
 export default async function DoctorsPage() {
   let doctors = []
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/doctors`, {
-      cache: "no-store",
-    })
-    if (response.ok) {
-      doctors = await response.json()
-    }
+    const result = await query("SELECT * FROM doctors WHERE is_active = true ORDER BY order_index")
+    doctors = result.rows || []
   } catch (error) {
     console.error("[v0] Error fetching doctors:", error)
   }
