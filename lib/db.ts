@@ -15,15 +15,26 @@ const mockData = {
       email: "admin@rosesmile.com",
       phone: "+966500000001",
       role: "admin",
+      password: "admin123",
       created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
       id: "2",
-      full_name: "مستخدم تجريبي",
-      email: "user@example.com",
+      full_name: "مستخدم عادي",
+      email: "user@rosesmile.com",
       phone: "+966500000002",
       role: "user",
+      password: "user123",
       created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "3",
+      full_name: "محرر المقالات",
+      email: "editor@rosesmile.com",
+      phone: "+966500000003",
+      role: "editor",
+      password: "editor123",
+      created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     },
   ],
   services: [
@@ -244,6 +255,8 @@ export async function query(text: string, params?: any[]) {
           email: params?.[1] || "",
           phone: params?.[2] || null,
           role: params?.[3] || "user",
+          // إضافة كلمة مرور للمستخدم الجديد
+          password: params?.[4] || "",
           created_at: new Date().toISOString(),
         }
         inMemoryStore.profiles.push(newUser)
@@ -261,6 +274,8 @@ export async function query(text: string, params?: any[]) {
             full_name: params?.[0],
             role: params?.[1],
             phone: params?.[2],
+            // تحديث كلمة مرور للمستخدم
+            password: params?.[4],
           }
         }
         return { rows: [], rowCount: 1 }

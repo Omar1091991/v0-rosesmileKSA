@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Suspense } from "react"
 import { Toaster } from "@/components/ui/toaster"
+import { WhatsAppButton } from "@/components/whatsapp-button"
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -31,6 +32,7 @@ export default function RootLayout({
           {children}
           <Analytics />
           <Toaster />
+          <WhatsAppButton />
         </Suspense>
       </body>
     </html>

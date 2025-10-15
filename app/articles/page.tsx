@@ -2,6 +2,9 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { ArrowRight, Calendar, User } from "lucide-react"
 
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
+import { WhatsAppButton } from "@/components/whatsapp-button"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -88,26 +91,33 @@ async function ArticlesList() {
 
 export default function ArticlesPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-16">
-        <div className="mb-12 text-center">
-          <h1 className="mb-4 text-4xl font-bold">المقالات الطبية</h1>
-          <p className="text-lg text-muted-foreground">اكتشف أحدث المقالات والنصائح الطبية من خبرائنا</p>
-        </div>
+    <div className="flex min-h-screen flex-col">
+      <SiteHeader />
 
-        <Suspense fallback={<ArticlesSkeleton />}>
-          <ArticlesList />
-        </Suspense>
+      <main className="flex-1">
+        <div className="container mx-auto px-4 py-16">
+          <div className="mb-12 text-center">
+            <h1 className="mb-4 text-4xl font-bold">المقالات الطبية</h1>
+            <p className="text-lg text-muted-foreground">اكتشف أحدث المقالات والنصائح الطبية من خبرائنا</p>
+          </div>
 
-        <div className="mt-12 text-center">
-          <Button asChild variant="outline" size="lg">
-            <Link href="/">
-              <ArrowRight className="ml-2 h-5 w-5 rotate-180" />
-              العودة للرئيسية
-            </Link>
-          </Button>
+          <Suspense fallback={<ArticlesSkeleton />}>
+            <ArticlesList />
+          </Suspense>
+
+          <div className="mt-12 text-center">
+            <Button asChild variant="outline" size="lg">
+              <Link href="/">
+                <ArrowRight className="ml-2 h-5 w-5 rotate-180" />
+                العودة للرئيسية
+              </Link>
+            </Button>
+          </div>
         </div>
-      </div>
+      </main>
+
+      <SiteFooter />
+      <WhatsAppButton />
     </div>
   )
 }
