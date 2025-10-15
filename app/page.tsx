@@ -12,6 +12,7 @@ import Image from "next/image"
 import { motion } from "framer-motion"
 import { useEffect, useState, useRef } from "react"
 import { WhatsAppButton } from "@/components/whatsapp-button"
+import { useLanguage } from "@/components/language-switcher"
 
 export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
@@ -21,6 +22,7 @@ export default function HomePage() {
   const [user, setUser] = useState<any>(null)
   const [siteSettings, setSiteSettings] = useState<Record<string, string>>({})
   const [mainBookingFormId, setMainBookingFormId] = useState<string>("")
+  const language = useLanguage()
 
   const servicesScrollRef = useRef<HTMLDivElement>(null)
   const doctorsScrollRef = useRef<HTMLDivElement>(null)
@@ -59,7 +61,8 @@ export default function HomePage() {
         const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
         const settingsMap: Record<string, string> = {}
         settings.forEach((setting: any) => {
-          settingsMap[setting.key] = setting.value_ar || ""
+          settingsMap[setting.key + "_ar"] = setting.value_ar || ""
+          settingsMap[setting.key + "_en"] = setting.value_en || setting.value_ar || ""
         })
         setSiteSettings(settingsMap)
       } catch (error) {
@@ -106,6 +109,17 @@ export default function HomePage() {
     transition: { duration: 0.5, ease: "easeOut" },
   }
 
+  const renderFormattedText = (text: string) => {
+    // السماح فقط بالوسوم الآمنة: strong, em, s, b, i, del
+    const sanitizedText = text.replace(/<(?!\/?(?:strong|em|s|b|i|del)\b)[^>]*>/gi, "")
+    return <span dangerouslySetInnerHTML={{ __html: sanitizedText }} />
+  }
+
+  const getText = (key: string) => {
+    const langKey = `${key}_${language}`
+    return siteSettings[langKey] || siteSettings[`${key}_ar`] || ""
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader user={user} />
@@ -125,24 +139,34 @@ export default function HomePage() {
                   className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-balance leading-tight"
                   variants={fadeInUp}
                 >
-                  {siteSettings.hero_title_ar || "ابتسامة الورود ابتسامتك بتعود"}
+                  {renderFormattedText(
+                    getText("hero_title") ||
+                      (language === "ar" ? "ابتسامة الورود ابتسامتك بتعود" : "Rose Smile - Your Smile Returns"),
+                  )}
                 </motion.h1>
                 <motion.p
                   className="text-lg md:text-xl text-muted-foreground text-balance leading-relaxed"
                   variants={fadeInUp}
                 >
-                  {siteSettings.hero_description_ar || "نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة"}
+                  {renderFormattedText(
+                    getText("hero_description") ||
+                      (language === "ar"
+                        ? "نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة"
+                        : "We provide the best medical services with the latest technologies in Makkah"),
+                  )}
                 </motion.p>
                 <motion.div
                   className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
                   variants={fadeInUp}
                 >
                   <Button size="lg" asChild>
-                    <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>احجز موعد</Link>
+                    <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                      {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                    </Link>
                   </Button>
                   <Button variant="outline" size="lg" asChild>
                     <Link href="/services">
-                      تصفح خدماتنا
+                      {language === "ar" ? "تصفح خدماتنا" : "Explore Our Services"}
                       <ArrowLeft className="mr-2 h-5 w-5" />
                     </Link>
                   </Button>
@@ -179,22 +203,30 @@ export default function HomePage() {
             >
               {[
                 {
-                  title: siteSettings.feature_1_title_ar || "أطباء متخصصون",
+                  title: getText("feature_1_title") || (language === "ar" ? "أطباء متخصصون" : "Specialized Doctors"),
                   description:
-                    siteSettings.feature_1_description_ar ||
-                    "فريق طبي متميز من أفضل الأطباء والاستشاريين في مختلف التخصصات",
+                    getText("feature_1_description") ||
+                    (language === "ar"
+                      ? "فريق طبي متميز من أفضل الأطباء والاستشاريين في مختلف التخصصات"
+                      : "Distinguished medical team of the best doctors and consultants in various specialties"),
                   gradient: "from-primary/5 to-secondary/5",
                 },
                 {
-                  title: siteSettings.feature_2_title_ar || "أحدث التقنيات",
+                  title: getText("feature_2_title") || (language === "ar" ? "أحدث التقنيات" : "Latest Technologies"),
                   description:
-                    siteSettings.feature_2_description_ar || "نستخدم أحدث الأجهزة والتقنيات الطبية لضمان أفضل النتائج",
+                    getText("feature_2_description") ||
+                    (language === "ar"
+                      ? "نستخدم أحدث الأجهزة والتقنيات الطبية لضمان أفضل النتائج"
+                      : "We use the latest medical devices and technologies to ensure the best results"),
                   gradient: "from-secondary/5 to-primary/5",
                 },
                 {
-                  title: siteSettings.feature_3_title_ar || "رعاية شاملة",
+                  title: getText("feature_3_title") || (language === "ar" ? "رعاية شاملة" : "Comprehensive Care"),
                   description:
-                    siteSettings.feature_3_description_ar || "نقدم رعاية طبية شاملة ومتابعة مستمرة لضمان راحتك وصحتك",
+                    getText("feature_3_description") ||
+                    (language === "ar"
+                      ? "نقدم رعاية طبية شاملة ومتابعة مستمرة لضمان راحتك وصحتك"
+                      : "We provide comprehensive medical care and continuous follow-up to ensure your comfort and health"),
                   gradient: "from-primary/5 to-secondary/5",
                 },
               ].map((feature, index) => (
@@ -202,9 +234,9 @@ export default function HomePage() {
                   <Card className={`border-none shadow-none bg-gradient-to-br ${feature.gradient} h-full`}>
                     <CardContent className="pt-6 space-y-4">
                       <h3 className="text-xl font-semibold text-[#E91E63]">
-                        {feature.title.replace(/^\d+[\s.:-]*/, "")}
+                        {renderFormattedText(feature.title.replace(/^\d+[\s.:-]*/, ""))}
                       </h3>
-                      <p className="text-[#2196F3] leading-relaxed">{feature.description}</p>
+                      <p className="text-[#2196F3] leading-relaxed">{renderFormattedText(feature.description)}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -223,9 +255,18 @@ export default function HomePage() {
               viewport={{ once: true }}
               variants={fadeInUp}
             >
-              <h2 className="text-3xl md:text-4xl font-bold">{siteSettings.services_title_ar || "خدماتنا الطبية"}</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">
+                {renderFormattedText(
+                  getText("services_title") || (language === "ar" ? "خدماتنا الطبية" : "Our Medical Services"),
+                )}
+              </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                {siteSettings.services_description_ar || "نقدم مجموعة شاملة من الخدمات الطبية المتخصصة"}
+                {renderFormattedText(
+                  getText("services_description") ||
+                    (language === "ar"
+                      ? "نقدم مجموعة شاملة من الخدمات الطبية المتخصصة"
+                      : "We provide a comprehensive range of specialized medical services"),
+                )}
               </p>
             </motion.div>
 
@@ -258,7 +299,7 @@ export default function HomePage() {
                             <div className="w-full aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
                               <Image
                                 src={service.image_url || "/placeholder.svg"}
-                                alt={service.title_ar}
+                                alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
                                 fill
                                 className="object-cover"
                               />
@@ -269,15 +310,21 @@ export default function HomePage() {
                             </div>
                           )}
                         </Link>
-                        <h3 className="text-xl font-semibold">{service.title_ar}</h3>
-                        <p className="text-muted-foreground leading-relaxed line-clamp-3">{service.description_ar}</p>
+                        <h3 className="text-xl font-semibold">
+                          {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                        </h3>
+                        <p className="text-muted-foreground leading-relaxed line-clamp-3">
+                          {language === "ar"
+                            ? service.description_ar
+                            : service.description_en || service.description_ar}
+                        </p>
                         <div className="flex gap-2">
                           <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent">
-                            <Link href={`/services/${service.id}`}>التفاصيل</Link>
+                            <Link href={`/services/${service.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
                           </Button>
                           <Button size="sm" asChild className="flex-1">
                             <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                              حجز موعد
+                              {language === "ar" ? "حجز موعد" : "Book Appointment"}
                             </Link>
                           </Button>
                         </div>
@@ -305,7 +352,7 @@ export default function HomePage() {
             >
               <Button variant="outline" size="lg" asChild>
                 <Link href="/services">
-                  عرض جميع الخدمات
+                  {language === "ar" ? "عرض جميع الخدمات" : "View All Services"}
                   <ArrowLeft className="mr-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -325,10 +372,17 @@ export default function HomePage() {
                 variants={fadeInUp}
               >
                 <h2 className="text-3xl md:text-4xl font-bold">
-                  {siteSettings.doctors_title_ar || "أطباؤنا المتميزون"}
+                  {renderFormattedText(
+                    getText("doctors_title") || (language === "ar" ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"),
+                  )}
                 </h2>
                 <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                  {siteSettings.doctors_description_ar || "فريق طبي متخصص بخبرات عالمية"}
+                  {renderFormattedText(
+                    getText("doctors_description") ||
+                      (language === "ar"
+                        ? "فريق طبي متخصص بخبرات عالمية"
+                        : "A team of specialized doctors with international experience"),
+                  )}
                 </p>
               </motion.div>
 
@@ -373,21 +427,25 @@ export default function HomePage() {
                             </div>
                           </Link>
                           <div>
-                            <h3 className="text-xl font-semibold">{doctor.name_ar}</h3>
-                            <p className="text-primary font-medium">{doctor.specialty_ar}</p>
+                            <h3 className="text-xl font-semibold">
+                              {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
+                            </h3>
+                            <p className="text-primary font-medium">
+                              {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
+                            </p>
                           </div>
                           {doctor.bio_ar && (
                             <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                              {doctor.bio_ar}
+                              {language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar}
                             </p>
                           )}
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent">
-                              <Link href={`/doctors/${doctor.id}`}>التفاصيل</Link>
+                              <Link href={`/doctors/${doctor.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
                             </Button>
                             <Button size="sm" asChild className="flex-1">
                               <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                                حجز موعد
+                                {language === "ar" ? "حجز موعد" : "Book Appointment"}
                               </Link>
                             </Button>
                           </div>
@@ -415,7 +473,7 @@ export default function HomePage() {
               >
                 <Button variant="outline" size="lg" asChild>
                   <Link href="/doctors">
-                    تعرف على جميع الأطباء
+                    {language === "ar" ? "تعرف على جميع الأطباء" : "Meet All Our Doctors"}
                     <ArrowLeft className="mr-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -435,8 +493,12 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 variants={fadeInUp}
               >
-                <h2 className="text-3xl md:text-4xl font-bold">عروضنا الحصرية</h2>
-                <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto">استفد من عروضنا الخاصة المحدودة</p>
+                <h2 className="text-3xl md:text-4xl font-bold">
+                  {language === "ar" ? "عروضنا الحصرية" : "Exclusive Offers"}
+                </h2>
+                <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto">
+                  {language === "ar" ? "استفد من عروضنا الخاصة المحدودة" : "Enjoy our limited exclusive offers"}
+                </p>
               </motion.div>
 
               <div className="relative max-w-4xl mx-auto">
@@ -468,7 +530,7 @@ export default function HomePage() {
                               <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
                                 <Image
                                   src={offer.image_url || "/placeholder.svg"}
-                                  alt={offer.title_ar}
+                                  alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
                                   fill
                                   className="object-cover"
                                 />
@@ -476,14 +538,20 @@ export default function HomePage() {
                             )}
                           </Link>
                           <div className="flex items-center justify-between">
-                            <h3 className="text-2xl font-bold">{offer.title_ar}</h3>
+                            <h3 className="text-2xl font-bold">
+                              {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
+                            </h3>
                             {offer.discount_percentage && (
                               <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-bold">
-                                خصم {offer.discount_percentage}%
+                                {language === "ar"
+                                  ? `خصم ${offer.discount_percentage}%`
+                                  : `Discount ${offer.discount_percentage}%`}
                               </div>
                             )}
                           </div>
-                          <p className="text-muted-foreground leading-relaxed line-clamp-3">{offer.description_ar}</p>
+                          <p className="text-muted-foreground leading-relaxed line-clamp-3">
+                            {language === "ar" ? offer.description_ar : offer.description_en || offer.description_ar}
+                          </p>
                           {offer.price_before && offer.price_after && (
                             <div className="flex items-center gap-4">
                               <span className="text-3xl font-bold text-primary">{offer.price_after} ريال</span>
@@ -494,7 +562,7 @@ export default function HomePage() {
                           )}
                           <Button className="w-full" asChild>
                             <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                              احجز الآن
+                              {language === "ar" ? "احجز الآن" : "Book Now"}
                             </Link>
                           </Button>
                         </CardContent>
@@ -521,7 +589,7 @@ export default function HomePage() {
               >
                 <Button variant="secondary" size="lg" asChild>
                   <Link href="/offers">
-                    عرض جميع العروض
+                    {language === "ar" ? "عرض جميع العروض" : "View All Offers"}
                     <ArrowLeft className="mr-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -542,10 +610,17 @@ export default function HomePage() {
                 variants={fadeInUp}
               >
                 <h2 className="text-3xl md:text-4xl font-bold">
-                  {siteSettings.articles_title_ar || "مقالاتنا الطبية"}
+                  {renderFormattedText(
+                    getText("articles_title") || (language === "ar" ? "مقالاتنا الطبية" : "Our Medical Articles"),
+                  )}
                 </h2>
                 <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                  {siteSettings.articles_description_ar || "اقرأ أحدث المقالات والنصائح الطبية"}
+                  {renderFormattedText(
+                    getText("articles_description") ||
+                      (language === "ar"
+                        ? "اقرأ أحدث المقالات والنصائح الطبية"
+                        : "Read the latest medical articles and tips"),
+                  )}
                 </p>
               </motion.div>
 
@@ -578,20 +653,25 @@ export default function HomePage() {
                               <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
                                 <Image
                                   src={article.image_url || "/placeholder.svg"}
-                                  alt={article.title_ar}
+                                  alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
                                   fill
                                   className="object-cover"
                                 />
                               </div>
                             )}
                           </Link>
-                          <h3 className="text-xl font-semibold line-clamp-2">{article.title_ar}</h3>
+                          <h3 className="text-xl font-semibold line-clamp-2">
+                            {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                          </h3>
                           <p className="text-muted-foreground leading-relaxed line-clamp-3">
-                            {article.content_ar?.substring(0, 150)}...
+                            {language === "ar"
+                              ? article.content_ar?.substring(0, 150)
+                              : article.content_en?.substring(0, 150) || article.content_ar?.substring(0, 150)}
+                            ...
                           </p>
                           <Button variant="outline" size="sm" asChild className="w-full bg-transparent">
                             <Link href={`/articles/${article.id}`}>
-                              اقرأ المزيد
+                              {language === "ar" ? "اقرأ المزيد" : "Read More"}
                               <ArrowLeft className="mr-2 h-4 w-4" />
                             </Link>
                           </Button>
@@ -619,7 +699,7 @@ export default function HomePage() {
               >
                 <Button variant="outline" size="lg" asChild>
                   <Link href="/articles">
-                    عرض جميع المقالات
+                    {language === "ar" ? "عرض جميع المقالات" : "View All Articles"}
                     <ArrowLeft className="mr-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -639,7 +719,10 @@ export default function HomePage() {
               variants={fadeInUp}
             >
               <h2 className="text-3xl md:text-4xl font-bold">
-                {siteSettings.why_choose_us_title_ar || "لماذا تختار عيادات ابتسامة الورود؟"}
+                {renderFormattedText(
+                  getText("why_choose_us_title") ||
+                    (language === "ar" ? "لماذا تختار عيادات ابتسامة الورود؟" : "Why Choose Rose Smile Clinics?"),
+                )}
               </h2>
             </motion.div>
 
@@ -651,12 +734,12 @@ export default function HomePage() {
               variants={staggerContainer}
             >
               {[
-                "فريق طبي متخصص ومؤهل",
-                "أحدث التقنيات والأجهزة الطبية",
-                "بيئة نظيفة ومعقمة",
-                "أسعار تنافسية وعروض مميزة",
-                "مواعيد مرنة تناسب الجميع",
-                "خدمة عملاء متميزة",
+                language === "ar" ? "فريق طبي متخصص ومؤهل" : "Specialized and Qualified Medical Team",
+                language === "ar" ? "أحدث التقنيات والأجهزة الطبية" : "Latest Medical Technologies and Devices",
+                language === "ar" ? "بيئة نظيفة ومعقمة" : "Clean and Modern Environment",
+                language === "ar" ? "أسعار تنافسية وعروض مميزة" : "Competitive Prices and Special Offers",
+                language === "ar" ? "مواعيد مرنة تناسب الجميع" : "Flexible Appointments for Everyone",
+                language === "ar" ? "خدمة عملاء متميزة" : "Distinguished Customer Service",
               ].map((item, index) => (
                 <motion.div key={index} className="flex items-center gap-3" variants={fadeInUp}>
                   <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
@@ -678,19 +761,31 @@ export default function HomePage() {
               variants={staggerContainer}
             >
               <motion.h2 className="text-3xl md:text-4xl font-bold text-balance" variants={fadeInUp}>
-                {siteSettings.cta_title_ar || "هل أنت مستعد لبدء رحلتك نحو صحة أفضل؟"}
+                {renderFormattedText(
+                  getText("cta_title") ||
+                    (language === "ar"
+                      ? "هل أنت مستعد لبدء رحلتك نحو صحة أفضل؟"
+                      : "Are You Ready to Start Your Journey Towards Better Health?"),
+                )}
               </motion.h2>
               <motion.p className="text-lg text-muted-foreground text-balance" variants={fadeInUp}>
-                {siteSettings.cta_description_ar || "احجز موعدك الآن واحصل على استشارة طبية مجانية"}
+                {renderFormattedText(
+                  getText("cta_description") ||
+                    (language === "ar"
+                      ? "احجز موعدك الآن واحصل على استشارة طبية مجانية"
+                      : "Book Your Appointment Now and Get a Free Medical Consultation"),
+                )}
               </motion.p>
               <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" variants={fadeInUp}>
                 <Button size="lg" asChild>
-                  <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>احجز موعد</Link>
+                  <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                  </Link>
                 </Button>
                 <Button variant="outline" size="lg" asChild>
                   <Link href="tel:+966123456789">
                     <Phone className="ml-2 h-5 w-5" />
-                    اتصل بنا الآن
+                    {language === "ar" ? "اتصل بنا الآن" : "Contact Us Now"}
                   </Link>
                 </Button>
               </motion.div>

@@ -63,29 +63,36 @@ export async function PATCH(request: Request) {
     const body = await request.json()
     const { id, full_name, role, phone, password } = body
 
+    console.log("[v0] PATCH /api/users - Received data:", { id, full_name, role, phone, hasPassword: !!password })
+
     if (password) {
       if (password.length < 6) {
         return NextResponse.json({ error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }, { status: 400 })
       }
 
       const hashedPassword = await bcrypt.hash(password, 10)
+      console.log("[v0] Updating user WITH password")
 
-      await db.query("UPDATE profiles SET full_name = $1, role = $2, phone = $3, password = $4 WHERE id = $5", [
-        full_name,
-        role,
-        phone,
-        hashedPassword,
-        id,
-      ])
+      const result = await db.query(
+        "UPDATE profiles SET full_name = $1, role = $2, phone = $3, password = $4 WHERE id = $5",
+        [full_name, role, phone, hashedPassword, id],
+      )
+
+      console.log("[v0] Update result (with password):", result)
     } else {
-      await db.query("UPDATE profiles SET full_name = $1, role = $2, phone = $3 WHERE id = $4", [
+      console.log("[v0] Updating user WITHOUT password")
+
+      const result = await db.query("UPDATE profiles SET full_name = $1, role = $2, phone = $3 WHERE id = $4", [
         full_name,
         role,
         phone,
         id,
       ])
+
+      console.log("[v0] Update result (without password):", result)
     }
 
+    console.log("[v0] User update completed successfully")
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error("[v0] Error updating user:", error)

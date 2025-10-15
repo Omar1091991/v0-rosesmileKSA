@@ -197,6 +197,9 @@ export default function UsersPage() {
         ...(newPassword && { password: newPassword }),
       }
 
+      console.log("[v0] Sending update request for user:", selectedUser.email)
+      console.log("[v0] Update data:", { ...updateData, password: updateData.password ? "[HIDDEN]" : undefined })
+
       const response = await fetch("/api/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -204,6 +207,7 @@ export default function UsersPage() {
       })
 
       const data = await response.json()
+      console.log("[v0] Update response:", data)
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to update user")
@@ -218,7 +222,10 @@ export default function UsersPage() {
       setSelectedUser(null)
       setNewPassword("")
       setShowPassword(false)
+
+      console.log("[v0] Refetching users list...")
       await fetchUsers()
+      console.log("[v0] Users list refetched")
     } catch (error: any) {
       console.error("[v0] Error updating user:", error)
       toast({

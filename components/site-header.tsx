@@ -3,11 +3,31 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Settings } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
+import { LanguageSwitcher } from "@/components/language-switcher"
 
 export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [mainBookingFormId, setMainBookingFormId] = useState<string>("")
+
+  useEffect(() => {
+    async function fetchMainForm() {
+      try {
+        const response = await fetch("/api/booking-forms")
+        const forms = await response.json()
+        const mainForm = forms.find((f: any) => f.is_main)
+        if (mainForm) {
+          setMainBookingFormId(mainForm.id)
+        }
+      } catch (error) {
+        console.error("Error fetching booking forms:", error)
+      }
+    }
+    fetchMainForm()
+  }, [])
+
+  const bookingLink = mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"
 
   return (
     <>
@@ -49,6 +69,8 @@ export function SiteHeader() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
+
             <Button variant="outline" size="sm" asChild>
               <Link href="/dashboard">
                 <Settings className="ml-2 h-4 w-4" />
@@ -57,7 +79,7 @@ export function SiteHeader() {
             </Button>
 
             <Button size="sm" asChild>
-              <Link href="#booking">احجز موعد</Link>
+              <Link href={bookingLink}>احجز موعد</Link>
             </Button>
           </div>
 
@@ -114,14 +136,16 @@ export function SiteHeader() {
                 المقالات
               </Link>
               <div className="flex flex-col gap-2 pt-2">
+                <LanguageSwitcher />
+
                 <Button variant="outline" size="sm" asChild onClick={() => setIsMenuOpen(false)}>
                   <Link href="/dashboard">
                     <Settings className="ml-2 h-4 w-4" />
                     لوحة التحكم
                   </Link>
                 </Button>
-                <Button size="sm" asChild>
-                  <Link href="#booking">احجز موعد</Link>
+                <Button size="sm" asChild onClick={() => setIsMenuOpen(false)}>
+                  <Link href={bookingLink}>احجز موعد</Link>
                 </Button>
               </div>
             </nav>
