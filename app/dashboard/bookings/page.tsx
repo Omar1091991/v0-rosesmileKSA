@@ -1,22 +1,24 @@
 "use client"
 
+import { DialogContent } from "@/components/ui/dialog"
+
+import { DialogFooter } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { DialogDescription } from "@/components/ui/dialog"
+import { DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogClose, DialogOverlay, DialogPortal } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { Calendar, Trash2, CheckCircle, XCircle, Download, Phone, MessageSquare, Edit } from "lucide-react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
+import { CalendarIcon, Trash2, CheckCircle, XCircle, Download, Phone, MessageSquare, Edit, Filter } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"
+import { ar } from "date-fns/locale"
+import { format } from "date-fns"
 
 interface Booking {
   id: string
@@ -34,15 +36,40 @@ interface Booking {
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
   const [adminNotes, setAdminNotes] = useState("")
   const [contactAttempts, setContactAttempts] = useState(0)
+  const [dateFrom, setDateFrom] = useState<Date | undefined>()
+  const [dateTo, setDateTo] = useState<Date | undefined>()
   const { toast } = useToast()
 
   useEffect(() => {
     fetchBookings()
   }, [])
+
+  useEffect(() => {
+    if (!dateFrom && !dateTo) {
+      setFilteredBookings(bookings)
+      return
+    }
+
+    const filtered = bookings.filter((booking) => {
+      const bookingDate = new Date(booking.created_at)
+      if (dateFrom && dateTo) {
+        return bookingDate >= dateFrom && bookingDate <= dateTo
+      }
+      if (dateFrom) {
+        return bookingDate >= dateFrom
+      }
+      if (dateTo) {
+        return bookingDate <= dateTo
+      }
+      return true
+    })
+    setFilteredBookings(filtered)
+  }, [bookings, dateFrom, dateTo])
 
   const fetchBookings = async () => {
     try {
@@ -50,6 +77,7 @@ export default function BookingsPage() {
       if (response.ok) {
         const data = await response.json()
         setBookings(data)
+        setFilteredBookings(data)
       }
     } catch (error) {
       toast({
@@ -172,6 +200,8 @@ export default function BookingsPage() {
   }
 
   const exportToCSV = () => {
+    const dataToExport = dateFrom || dateTo ? filteredBookings : bookings
+
     const headers = [
       "الاسم",
       "رقم الجوال",
@@ -183,7 +213,7 @@ export default function BookingsPage() {
       "ملاحظات الإدارة",
       "تاريخ الإنشاء",
     ]
-    const rows = bookings.map((booking) => [
+    const rows = dataToExport.map((booking) => [
       booking.full_name,
       booking.phone,
       booking.service_name || "-",
@@ -192,20 +222,31 @@ export default function BookingsPage() {
       booking.contact_attempts || 0,
       booking.notes || "-",
       booking.admin_notes || "-",
-      new Date(booking.created_at).toLocaleDateString("ar-SA"),
+      format(new Date(booking.created_at), "yyyy-MM-dd", { locale: ar }),
     ])
 
     const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n")
     const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
     link.href = URL.createObjectURL(blob)
-    link.download = `bookings_${new Date().toISOString().split("T")[0]}.csv`
+
+    const fileName =
+      dateFrom || dateTo
+        ? `bookings_filtered_${new Date().toISOString().split("T")[0]}.csv`
+        : `bookings_all_${new Date().toISOString().split("T")[0]}.csv`
+
+    link.download = fileName
     link.click()
 
     toast({
       title: "نجح",
-      description: "تم تصدير الحجوزات بنجاح",
+      description: `تم تصدير ${dataToExport.length} حجز بنجاح`,
     })
+  }
+
+  const resetFilter = () => {
+    setDateFrom(undefined)
+    setDateTo(undefined)
   }
 
   const handleDelete = async (id: string) => {
@@ -255,22 +296,67 @@ export default function BookingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Calendar className="h-8 w-8" />
+            <CalendarIcon className="h-8 w-8" />
             إدارة الحجوزات
           </h1>
-          <p className="text-muted-foreground mt-2">عرض وإدارة حجوزات المرضى</p>
+          <p className="text-muted-foreground mt-2">
+            عرض وإدارة حجوزات المرضى ({filteredBookings.length} من {bookings.length})
+          </p>
         </div>
-        <Button onClick={exportToCSV} variant="outline">
-          <Download className="ml-2 h-4 w-4" />
-          تصدير الحجوزات
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">
+                <Filter className="ml-2 h-4 w-4" />
+                فلتر التاريخ
+                {(dateFrom || dateTo) && (
+                  <Badge className="mr-2" variant="secondary">
+                    نشط
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-4" align="end">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">من تاريخ</Label>
+                  <CalendarComponent
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    locale={ar}
+                    className="rounded-md border"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">إلى تاريخ</Label>
+                  <CalendarComponent
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    locale={ar}
+                    className="rounded-md border"
+                  />
+                </div>
+                <Button onClick={resetFilter} variant="outline" className="w-full bg-transparent">
+                  إعادة تعيين
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Button onClick={exportToCSV} variant="outline">
+            <Download className="ml-2 h-4 w-4" />
+            {dateFrom || dateTo ? "تصدير المفلترة" : "تصدير الكل"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {bookings.map((booking) => (
+        {filteredBookings.map((booking) => (
           <Card key={booking.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between flex-wrap gap-4">
@@ -370,47 +456,51 @@ export default function BookingsPage() {
         ))}
       </div>
 
-      {bookings.length === 0 && (
+      {filteredBookings.length === 0 && (
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">لا يوجد حجوزات حالياً</CardContent>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            {dateFrom || dateTo ? "لا توجد حجوزات في الفترة المحددة" : "لا يوجد حجوزات حالياً"}
+          </CardContent>
         </Card>
       )}
 
       <Dialog open={!!editingBooking} onOpenChange={() => setEditingBooking(null)}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogClose />
+        <DialogOverlay />
+        <DialogPortal>
+          <DialogContent>
             <DialogTitle>إضافة ملاحظات إدارية</DialogTitle>
             <DialogDescription>أضف ملاحظات حول هذا الحجز لمتابعة أفضل</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="contact-attempts">عدد محاولات التواصل</Label>
-              <Input
-                id="contact-attempts"
-                type="number"
-                value={contactAttempts}
-                onChange={(e) => setContactAttempts(Number.parseInt(e.target.value) || 0)}
-                min="0"
-              />
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="contact-attempts">عدد محاولات التواصل</Label>
+                <Input
+                  id="contact-attempts"
+                  type="number"
+                  value={contactAttempts}
+                  onChange={(e) => setContactAttempts(Number.parseInt(e.target.value) || 0)}
+                  min="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="admin-notes">ملاحظات الإدارة</Label>
+                <Textarea
+                  id="admin-notes"
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  placeholder="أضف ملاحظاتك هنا..."
+                  rows={4}
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="admin-notes">ملاحظات الإدارة</Label>
-              <Textarea
-                id="admin-notes"
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder="أضف ملاحظاتك هنا..."
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingBooking(null)}>
-              إلغاء
-            </Button>
-            <Button onClick={saveAdminNotes}>حفظ</Button>
-          </DialogFooter>
-        </DialogContent>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingBooking(null)}>
+                إلغاء
+              </Button>
+              <Button onClick={saveAdminNotes}>حفظ</Button>
+            </DialogFooter>
+          </DialogContent>
+        </DialogPortal>
       </Dialog>
     </div>
   )

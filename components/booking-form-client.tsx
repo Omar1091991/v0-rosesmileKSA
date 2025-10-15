@@ -39,39 +39,31 @@ export function BookingFormClient({ formId, googleSheetId, services }: BookingFo
     setLoading(true)
 
     try {
+      const selectedService = services.find((s) => s.id === formData.service_id)
+
       const bookingResponse = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
-          form_id: formId,
+          full_name: formData.full_name,
+          phone: formData.phone,
+          service_id: formData.service_id,
+          service_name: selectedService?.title_ar || "",
+          notes: formData.notes,
+          booking_form_id: formId,
           status: "pending",
         }),
       })
 
       if (!bookingResponse.ok) {
-        throw new Error("فشل في إنشاء الحجز")
+        const errorData = await bookingResponse.json()
+        throw new Error(errorData.error || "فشل في إنشاء الحجز")
       }
 
-      const { booking } = await bookingResponse.json()
-
-      if (googleSheetId) {
-        const selectedService = services.find((s) => s.id === formData.service_id)
-        await fetch("/api/google-sheets", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            spreadsheetId: googleSheetId,
-            values: {
-              date: new Date().toLocaleDateString("ar-SA"),
-              name: formData.full_name,
-              phone: formData.phone,
-              service: selectedService?.title_ar || "",
-              notes: formData.notes || "-",
-            },
-          }),
-        })
-      }
+      toast({
+        title: "نجح",
+        description: "تم إرسال طلب الحجز بنجاح",
+      })
 
       router.push("/booking-success")
     } catch (error: any) {
