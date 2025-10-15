@@ -7,6 +7,8 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json()
 
+    console.log("[v0] Login attempt for email:", email)
+
     if (!email || !password) {
       return NextResponse.json({ error: "البريد الإلكتروني وكلمة المرور مطلوبان" }, { status: 400 })
     }
@@ -14,16 +16,24 @@ export async function POST(request: Request) {
     // البحث عن المستخدم في قاعدة البيانات
     const result = await query("SELECT id, email, full_name, role, password FROM profiles WHERE email = $1", [email])
 
+    console.log("[v0] Query result rows:", result.rows.length)
+
     if (result.rows.length === 0) {
+      console.log("[v0] User not found")
       return NextResponse.json({ error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" }, { status: 401 })
     }
 
     const user = result.rows[0]
+    console.log("[v0] User found:", { email: user.email, role: user.role })
 
     // التحقق من كلمة المرور (في الإنتاج، استخدم bcrypt للتحقق من كلمة المرور المشفرة)
+    console.log("[v0] Comparing passwords - provided:", password, "stored:", user.password)
     if (user.password !== password) {
+      console.log("[v0] Password mismatch")
       return NextResponse.json({ error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" }, { status: 401 })
     }
+
+    console.log("[v0] Password match - creating session")
 
     // إنشاء جلسة جديدة
     const sessionId = createSession({
@@ -44,6 +54,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
+      sessionId,
       user: {
         id: user.id,
         email: user.email,

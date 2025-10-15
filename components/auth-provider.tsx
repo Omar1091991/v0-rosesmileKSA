@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "@/lib/auth"
+import { getSessionFromStorage, clearSessionFromStorage } from "@/lib/auth"
 
 interface AuthContextType {
   user: User | null
@@ -25,6 +25,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchSession = async () => {
     try {
+      const storedSession = getSessionFromStorage()
+      if (storedSession) {
+        setUser(storedSession.user)
+        setLoading(false)
+        return
+      }
+
       const response = await fetch("/api/auth/session")
       const data = await response.json()
       setUser(data.user || null)
@@ -43,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" })
+      clearSessionFromStorage()
       setUser(null)
     } catch (error) {
       console.error("[v0] Error logging out:", error)

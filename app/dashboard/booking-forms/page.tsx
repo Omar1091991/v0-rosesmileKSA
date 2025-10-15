@@ -405,7 +405,7 @@ export default function BookingFormsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="image_url">صورة النموذج</Label>
                   <Input type="file" accept="image/*" onChange={handleImageChange} />
-                  {imagePreview && (
+                  {imagePreview && typeof imagePreview === "string" && imagePreview.trim() !== "" && (
                     <div className="relative w-full aspect-video rounded-lg overflow-hidden">
                       <Image src={imagePreview || "/placeholder.svg"} alt="معاينة" fill className="object-cover" />
                     </div>
@@ -524,7 +524,7 @@ export default function BookingFormsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {form.image_url && (
+              {form.image_url && typeof form.image_url === "string" && form.image_url.trim() !== "" && (
                 <div className="relative w-full aspect-video rounded-lg overflow-hidden">
                   <Image src={form.image_url || "/placeholder.svg"} alt={form.name_ar} fill className="object-cover" />
                 </div>

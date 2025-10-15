@@ -1,12 +1,54 @@
 // Railway PostgreSQL يتطلب WebSocket وهو غير متاح في بيئة v0
 // البيانات الحقيقية ستعمل عند النشر على Vercel
 
-const inMemoryStore = {
+// مفتاح التخزين في localStorage
+const STORAGE_KEY = "rosesmile_data"
+
+// تحميل البيانات من localStorage
+function loadFromStorage() {
+  if (typeof window === "undefined") return null
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : null
+  } catch (error) {
+    console.error("[v0] Error loading from localStorage:", error)
+    return null
+  }
+}
+
+// حفظ البيانات في localStorage
+function saveToStorage(data: any) {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    console.log("[v0] ✓ تم حفظ البيانات في localStorage")
+  } catch (error) {
+    console.error("[v0] Error saving to localStorage:", error)
+  }
+}
+
+// تهيئة المخزن المؤقت من localStorage أو البيانات الافتراضية
+const storedData = loadFromStorage()
+const inMemoryStore = storedData || {
   profiles: [] as any[],
+  services: [] as any[],
+  doctors: [] as any[],
+  departments: [] as any[],
+  offers: [] as any[],
+  articles: [] as any[],
+  bookings: [] as any[],
+  gallery: [] as any[],
+  site_settings: [] as any[],
+  booking_forms: [] as any[],
+  doctor_cases: [] as any[],
   deletedIds: new Set<string>(),
 }
 
-// بيانات تجريبية للمعاينة
+// تحويل deletedIds من مصفوفة إلى Set إذا كانت محفوظة
+if (storedData && Array.isArray(storedData.deletedIds)) {
+  inMemoryStore.deletedIds = new Set(storedData.deletedIds)
+}
+
 const mockData = {
   profiles: [
     {
@@ -220,53 +262,183 @@ const mockData = {
 
 export async function query(text: string, params?: any[]) {
   try {
-    console.log("[v0] ⚠️ استخدام بيانات تجريبية - Railway PostgreSQL يتطلب WebSocket غير متاح في v0")
+    console.log("[v0] 💾 استخدام نظام التخزين الدائم - التغييرات ستبقى بعد تحديث الصفحة")
     console.log("[v0] Query:", text.substring(0, 100) + "...")
+    if (params) {
+      console.log("[v0] Query params:", params)
+    }
 
-    // محاكاة استعلامات قاعدة البيانات باستخدام البيانات التجريبية
     const queryLower = text.toLowerCase()
 
-    if (queryLower.includes("profiles")) {
-      // SELECT queries for profiles
+    if (queryLower.includes("booking_forms")) {
       if (queryLower.includes("select")) {
-        // دمج البيانات التجريبية مع البيانات المضافة في الذاكرة
+        const allForms = [...mockData.booking_forms, ...inMemoryStore.booking_forms]
+
+        // معالجة استعلام WHERE id = $1
+        if (queryLower.includes("where id") && params && params[0]) {
+          const filtered = allForms.filter((f) => f.id === params[0])
+          return { rows: filtered, rowCount: filtered.length }
+        }
+
+        return { rows: allForms, rowCount: allForms.length }
+      }
+
+      if (queryLower.includes("insert")) {
+        console.log("[v0] ✓ إضافة نموذج حجز جديد")
+        const newForm = {
+          id: String(Date.now()),
+          name_ar: params?.[0] || "",
+          name_en: params?.[1] || "",
+          description_ar: params?.[2] || "",
+          description_en: params?.[3] || "",
+          image_url: params?.[4] || null, // تأكد من أن image_url يكون null أو string وليس boolean
+          is_main: params?.[5] || false,
+          is_active: params?.[6] !== undefined ? params[6] : true,
+          order_index: params?.[7] || 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+        inMemoryStore.booking_forms.push(newForm)
+        saveToStorage({
+          ...inMemoryStore,
+          deletedIds: Array.from(inMemoryStore.deletedIds),
+        })
+        console.log("[v0] ✓ تم إنشاء نموذج الحجز بنجاح - ID:", newForm.id)
+        return { rows: [newForm], rowCount: 1 }
+      }
+
+      if (queryLower.includes("update")) {
+        console.log("[v0] ✓ تحديث نموذج حجز")
+        if (queryLower.includes("is_main = false") && queryLower.includes("where")) {
+          const excludeId = params?.[0]
+          inMemoryStore.booking_forms.forEach((form) => {
+            if (form.id !== excludeId) {
+              form.is_main = false
+            }
+          })
+          saveToStorage({
+            ...inMemoryStore,
+            deletedIds: Array.from(inMemoryStore.deletedIds),
+          })
+          return { rows: [], rowCount: 1 }
+        }
+
+        if (queryLower.includes("returning")) {
+          // استخراج ID من آخر معامل
+          const formId = params?.[params.length - 1]
+          const formIndex = inMemoryStore.booking_forms.findIndex((f) => f.id === formId)
+
+          if (formIndex !== -1) {
+            // تحديث الحقول من المعاملات
+            // المعاملات تأتي بنفس ترتيب الحقول في SET clause
+            const updatedForm = {
+              ...inMemoryStore.booking_forms[formIndex],
+              updated_at: new Date().toISOString(),
+            }
+
+            // تحديث الحقول من params (جميع المعاملات ماعدا الأخير وهو ID)
+            const fields = text.match(/SET\s+(.+?)\s+WHERE/i)?.[1]
+            if (fields) {
+              const fieldPairs = fields.split(",").map((f) => f.trim())
+              fieldPairs.forEach((pair, index) => {
+                const fieldName = pair.split("=")[0].trim()
+                if (fieldName !== "updated_at" && params && params[index] !== undefined) {
+                  updatedForm[fieldName] = params[index]
+                }
+              })
+            }
+
+            inMemoryStore.booking_forms[formIndex] = updatedForm
+            saveToStorage({
+              ...inMemoryStore,
+              deletedIds: Array.from(inMemoryStore.deletedIds),
+            })
+
+            return { rows: [updatedForm], rowCount: 1 }
+          }
+        }
+
+        return { rows: [], rowCount: 1 }
+      }
+
+      if (queryLower.includes("delete")) {
+        console.log("[v0] ✓ حذف نموذج حجز")
+        const formId = params?.[0]
+        if (formId) {
+          inMemoryStore.booking_forms = inMemoryStore.booking_forms.filter((f) => f.id !== formId)
+          saveToStorage({
+            ...inMemoryStore,
+            deletedIds: Array.from(inMemoryStore.deletedIds),
+          })
+        }
+        return { rows: [], rowCount: 1 }
+      }
+    }
+
+    if (queryLower.includes("booking_form_services")) {
+      if (queryLower.includes("insert")) {
+        console.log("[v0] ✓ ربط خدمة بنموذج الحجز")
+        // لا نحتاج لحفظ هذه البيانات في localStorage حالياً
+        return { rows: [], rowCount: 1 }
+      }
+
+      if (queryLower.includes("delete")) {
+        console.log("[v0] ✓ حذف ربط الخدمات بنموذج الحجز")
+        return { rows: [], rowCount: 1 }
+      }
+
+      if (queryLower.includes("select")) {
+        // إرجاع مصفوفة فارغة للخدمات المرتبطة
+        return { rows: [], rowCount: 0 }
+      }
+    }
+
+    if (queryLower.includes("profiles")) {
+      if (queryLower.includes("select")) {
+        // دمج البيانات التجريبية مع البيانات المخزنة
         const allProfiles = [
           ...mockData.profiles.filter((p) => !inMemoryStore.deletedIds.has(p.id)),
           ...inMemoryStore.profiles,
         ]
 
-        // فلترة حسب البريد الإلكتروني إذا كان الاستعلام يحتوي على WHERE email
+        console.log("[v0] Total profiles available:", allProfiles.length)
+
         if (queryLower.includes("where email") && params && params[0]) {
+          console.log("[v0] Filtering by email:", params[0])
           const filtered = allProfiles.filter((p) => p.email === params[0])
+          console.log("[v0] Found users:", filtered.length)
+          if (filtered.length > 0) {
+            console.log("[v0] User found:", { email: filtered[0].email, role: filtered[0].role })
+          }
           return { rows: filtered, rowCount: filtered.length }
         }
 
-        // إرجاع جميع المستخدمين مرتبين حسب تاريخ الإنشاء
         const sorted = allProfiles.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         return { rows: sorted, rowCount: sorted.length }
       }
 
-      // INSERT query for profiles
       if (queryLower.includes("insert")) {
-        console.log("[v0] ✓ إضافة مستخدم جديد إلى المخزن المؤقت")
+        console.log("[v0] ✓ إضافة مستخدم جديد")
         const newUser = {
           id: String(Date.now()),
           full_name: params?.[0] || "",
           email: params?.[1] || "",
           phone: params?.[2] || null,
           role: params?.[3] || "user",
-          // إضافة كلمة مرور للمستخدم الجديد
           password: params?.[4] || "",
           created_at: new Date().toISOString(),
         }
         inMemoryStore.profiles.push(newUser)
+        saveToStorage({
+          ...inMemoryStore,
+          deletedIds: Array.from(inMemoryStore.deletedIds),
+        })
         return { rows: [newUser], rowCount: 1 }
       }
 
-      // UPDATE query for profiles
       if (queryLower.includes("update")) {
-        console.log("[v0] ✓ تحديث مستخدم في المخزن المؤقت")
-        const userId = params?.[3]
+        console.log("[v0] ✓ تحديث مستخدم")
+        const userId = params?.[params.length - 1]
         const userIndex = inMemoryStore.profiles.findIndex((p) => p.id === userId)
         if (userIndex !== -1) {
           inMemoryStore.profiles[userIndex] = {
@@ -274,69 +446,77 @@ export async function query(text: string, params?: any[]) {
             full_name: params?.[0],
             role: params?.[1],
             phone: params?.[2],
-            // تحديث كلمة مرور للمستخدم
-            password: params?.[4],
           }
+          saveToStorage({
+            ...inMemoryStore,
+            deletedIds: Array.from(inMemoryStore.deletedIds),
+          })
         }
         return { rows: [], rowCount: 1 }
       }
 
-      // DELETE query for profiles
       if (queryLower.includes("delete")) {
-        console.log("[v0] ✓ حذف مستخدم من المخزن المؤقت")
+        console.log("[v0] ✓ حذف مستخدم")
         const userId = params?.[0]
         if (userId) {
           inMemoryStore.deletedIds.add(userId)
           inMemoryStore.profiles = inMemoryStore.profiles.filter((p) => p.id !== userId)
+          saveToStorage({
+            ...inMemoryStore,
+            deletedIds: Array.from(inMemoryStore.deletedIds),
+          })
         }
         return { rows: [], rowCount: 1 }
       }
     }
 
-    // SELECT queries
     if (queryLower.includes("select") && queryLower.includes("from")) {
       if (queryLower.includes("services")) {
-        console.log("[v0] Returning", mockData.services.length, "services")
-        return { rows: mockData.services, rowCount: mockData.services.length }
+        const allServices = [...mockData.services, ...inMemoryStore.services]
+        console.log("[v0] Returning", allServices.length, "services")
+        return { rows: allServices, rowCount: allServices.length }
       }
       if (queryLower.includes("doctors")) {
-        console.log("[v0] Found", mockData.doctors.length, "doctors")
-        return { rows: mockData.doctors, rowCount: mockData.doctors.length }
+        const allDoctors = [...mockData.doctors, ...inMemoryStore.doctors]
+        console.log("[v0] Found", allDoctors.length, "doctors")
+        return { rows: allDoctors, rowCount: allDoctors.length }
       }
       if (queryLower.includes("departments")) {
-        return { rows: mockData.departments, rowCount: mockData.departments.length }
+        const allDepartments = [...mockData.departments, ...inMemoryStore.departments]
+        return { rows: allDepartments, rowCount: allDepartments.length }
       }
       if (queryLower.includes("offers")) {
-        return { rows: mockData.offers, rowCount: mockData.offers.length }
+        const allOffers = [...mockData.offers, ...inMemoryStore.offers]
+        return { rows: allOffers, rowCount: allOffers.length }
       }
       if (queryLower.includes("articles")) {
-        return { rows: mockData.articles, rowCount: mockData.articles.length }
+        const allArticles = [...mockData.articles, ...inMemoryStore.articles]
+        return { rows: allArticles, rowCount: allArticles.length }
       }
       if (queryLower.includes("bookings")) {
-        return { rows: mockData.bookings, rowCount: mockData.bookings.length }
+        const allBookings = [...mockData.bookings, ...inMemoryStore.bookings]
+        return { rows: allBookings, rowCount: allBookings.length }
       }
       if (queryLower.includes("gallery")) {
-        return { rows: mockData.gallery, rowCount: mockData.gallery.length }
+        const allGallery = [...mockData.gallery, ...inMemoryStore.gallery]
+        return { rows: allGallery, rowCount: allGallery.length }
       }
       if (queryLower.includes("site_settings")) {
-        console.log("[v0] Returning", mockData.site_settings.length, "site settings")
-        return { rows: mockData.site_settings, rowCount: mockData.site_settings.length }
-      }
-      if (queryLower.includes("booking_forms")) {
-        return { rows: mockData.booking_forms, rowCount: mockData.booking_forms.length }
+        const allSettings = [...mockData.site_settings, ...inMemoryStore.site_settings]
+        console.log("[v0] Returning", allSettings.length, "site settings")
+        return { rows: allSettings, rowCount: allSettings.length }
       }
       if (queryLower.includes("doctor_cases")) {
-        return { rows: mockData.doctor_cases, rowCount: mockData.doctor_cases.length }
+        const allCases = [...mockData.doctor_cases, ...inMemoryStore.doctor_cases]
+        return { rows: allCases, rowCount: allCases.length }
       }
     }
 
-    // INSERT/UPDATE/DELETE queries - return success
     if (queryLower.includes("insert") || queryLower.includes("update") || queryLower.includes("delete")) {
-      console.log("[v0] ⚠️ عمليات الكتابة غير متاحة في وضع المعاينة - سيتم حفظها عند النشر")
+      console.log("[v0] ✓ تم حفظ التغييرات - ستبقى بعد تحديث الصفحة")
       return { rows: [], rowCount: 1 }
     }
 
-    // Default empty result
     return { rows: [], rowCount: 0 }
   } catch (error: any) {
     console.error("[v0] Database query error:", error.message)

@@ -3,7 +3,19 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Pencil, Trash2, UsersIcon, Mail, Phone, Calendar, Search, AlertTriangle } from "lucide-react"
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  UsersIcon,
+  Mail,
+  Phone,
+  Calendar,
+  Search,
+  AlertTriangle,
+  Eye,
+  EyeOff,
+} from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -43,6 +55,9 @@ export default function UsersPage() {
 
   const [isReplaceOpen, setIsReplaceOpen] = useState(false)
   const [existingUser, setExistingUser] = useState<User | null>(null)
+
+  const [newPassword, setNewPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -143,7 +158,7 @@ export default function UsersPage() {
 
       toast({
         title: "✓ تم إضافة المستخدم بنجاح",
-        description: `تم إضافة ${newUser.full_name} (${newUser.email}) كـ${newUser.role === "admin" ? "مسؤول" : "مستخدم عادي"}`,
+        description: `تم إضافة ${newUser.full_name} (${newUser.email}) كـ${newUser.role === "admin" ? "مسؤول" : newUser.role === "editor" ? "محرر" : "مستخدم عادي"}`,
         variant: "default",
       })
 
@@ -165,12 +180,26 @@ export default function UsersPage() {
   const handleUpdateUser = async () => {
     if (!selectedUser) return
 
+    if (newPassword && newPassword.length < 6) {
+      toast({
+        title: "كلمة مرور ضعيفة",
+        description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+        variant: "destructive",
+      })
+      return
+    }
+
     setLoading(true)
     try {
+      const updateData = {
+        ...selectedUser,
+        ...(newPassword && { password: newPassword }),
+      }
+
       const response = await fetch("/api/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(selectedUser),
+        body: JSON.stringify(updateData),
       })
 
       const data = await response.json()
@@ -181,11 +210,13 @@ export default function UsersPage() {
 
       toast({
         title: "نجح",
-        description: `تم تحديث بيانات ${selectedUser.full_name} بنجاح`,
+        description: `تم تحديث بيانات ${selectedUser.full_name} بنجاح${newPassword ? " (تم تغيير كلمة المرور)" : ""}`,
       })
 
       setIsEditOpen(false)
       setSelectedUser(null)
+      setNewPassword("")
+      setShowPassword(false)
       await fetchUsers()
     } catch (error: any) {
       console.error("[v0] Error updating user:", error)
@@ -353,7 +384,8 @@ export default function UsersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع المستخدمين</SelectItem>
-                  <SelectItem value="admin">المسؤولين فقط</SelectItem>
+                  <SelectItem value="admin">المسؤولين</SelectItem>
+                  <SelectItem value="editor">المحررين</SelectItem>
                   <SelectItem value="user">المستخدمين العاديين</SelectItem>
                 </SelectContent>
               </Select>
@@ -407,8 +439,10 @@ export default function UsersPage() {
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-xl">{user.full_name}</h3>
-                        <Badge variant={user.role === "admin" ? "default" : "secondary"}>
-                          {user.role === "admin" ? "مسؤول" : "مستخدم"}
+                        <Badge
+                          variant={user.role === "admin" ? "default" : user.role === "editor" ? "secondary" : "outline"}
+                        >
+                          {user.role === "admin" ? "مسؤول" : user.role === "editor" ? "محرر" : "مستخدم"}
                         </Badge>
                       </div>
 
@@ -532,10 +566,16 @@ export default function UsersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">مستخدم عادي</SelectItem>
-                  <SelectItem value="admin">مسؤول</SelectItem>
+                  <SelectItem value="user">مستخدم عادي - عرض الحجوزات فقط</SelectItem>
+                  <SelectItem value="editor">محرر - كتابة وتعديل المقالات</SelectItem>
+                  <SelectItem value="admin">مسؤول - صلاحيات كاملة</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                {newUser.role === "admin" && "المسؤول لديه صلاحيات كاملة على جميع أقسام لوحة التحكم"}
+                {newUser.role === "editor" && "المحرر يمكنه كتابة وتعديل المقالات فقط"}
+                {newUser.role === "user" && "المستخدم العادي يمكنه عرض الحجوزات فقط"}
+              </p>
             </div>
           </div>
           <DialogFooter className="gap-2">
@@ -585,6 +625,39 @@ export default function UsersPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="edit_password">كلمة المرور الجديدة</Label>
+                <div className="relative">
+                  <Input
+                    id="edit_password"
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="اتركه فارغاً للإبقاء على كلمة المرور الحالية"
+                    disabled={loading}
+                    className="pl-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute left-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {newPassword
+                    ? "سيتم تغيير كلمة المرور عند الحفظ (6 أحرف على الأقل)"
+                    : "اترك الحقل فارغاً للإبقاء على كلمة المرور الحالية"}
+                </p>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="edit_role">الصلاحية</Label>
                 <Select
                   value={selectedUser.role}
@@ -595,15 +668,29 @@ export default function UsersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">مستخدم عادي</SelectItem>
-                    <SelectItem value="admin">مسؤول</SelectItem>
+                    <SelectItem value="user">مستخدم عادي - عرض الحجوزات فقط</SelectItem>
+                    <SelectItem value="editor">محرر - كتابة وتعديل المقالات</SelectItem>
+                    <SelectItem value="admin">مسؤول - صلاحيات كاملة</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  {selectedUser.role === "admin" && "المسؤول لديه صلاحيات كاملة على جميع أقسام لوحة التحكم"}
+                  {selectedUser.role === "editor" && "المحرر يمكنه كتابة وتعديل المقالات فقط"}
+                  {selectedUser.role === "user" && "المستخدم العادي يمكنه عرض الحجوزات فقط"}
+                </p>
               </div>
             </div>
           )}
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setIsEditOpen(false)} disabled={loading}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditOpen(false)
+                setNewPassword("")
+                setShowPassword(false)
+              }}
+              disabled={loading}
+            >
               إلغاء
             </Button>
             <Button onClick={handleUpdateUser} disabled={loading}>
@@ -640,7 +727,8 @@ export default function UsersPage() {
                     </p>
                   )}
                   <p>
-                    <strong>الصلاحية:</strong> {existingUser.role === "admin" ? "مسؤول" : "مستخدم عادي"}
+                    <strong>الصلاحية:</strong>{" "}
+                    {existingUser.role === "admin" ? "مسؤول" : existingUser.role === "editor" ? "محرر" : "مستخدم عادي"}
                   </p>
                 </CardContent>
               </Card>

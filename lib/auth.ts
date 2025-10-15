@@ -22,6 +22,8 @@ export function createSession(user: User): string {
     expiresAt,
   })
 
+  saveSessionToStorage(sessionId, user)
+
   return sessionId
 }
 
@@ -43,6 +45,7 @@ export function getSession(sessionId: string): Session | null {
 
 export function deleteSession(sessionId: string): void {
   sessions.delete(sessionId)
+  clearSessionFromStorage()
 }
 
 export function hasPermission(role: string, requiredPermission: string): boolean {
@@ -60,4 +63,42 @@ export function hasPermission(role: string, requiredPermission: string): boolean
   }
 
   return userPermissions.includes(requiredPermission)
+}
+
+export function saveSessionToStorage(sessionId: string, user: User): void {
+  if (typeof window !== "undefined") {
+    const sessionData = {
+      sessionId,
+      user,
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+    }
+    localStorage.setItem("rosesmile_session", JSON.stringify(sessionData))
+  }
+}
+
+export function getSessionFromStorage(): { sessionId: string; user: User } | null {
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("rosesmile_session")
+    if (stored) {
+      try {
+        const data = JSON.parse(stored)
+        // التحقق من انتهاء الصلاحية
+        if (data.expiresAt > Date.now()) {
+          return { sessionId: data.sessionId, user: data.user }
+        } else {
+          localStorage.removeItem("rosesmile_session")
+        }
+      } catch (error) {
+        console.error("[v0] Error parsing session from storage:", error)
+        localStorage.removeItem("rosesmile_session")
+      }
+    }
+  }
+  return null
+}
+
+export function clearSessionFromStorage(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("rosesmile_session")
+  }
 }

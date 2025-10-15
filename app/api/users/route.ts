@@ -66,14 +66,30 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json()
-    const { id, full_name, role, phone } = body
+    const { id, full_name, role, phone, password } = body
 
-    await db.query("UPDATE profiles SET full_name = $1, role = $2, phone = $3 WHERE id = $4", [
-      full_name,
-      role,
-      phone,
-      id,
-    ])
+    if (password) {
+      if (password.length < 6) {
+        return NextResponse.json({ error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }, { status: 400 })
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10)
+
+      await db.query("UPDATE profiles SET full_name = $1, role = $2, phone = $3, password = $4 WHERE id = $5", [
+        full_name,
+        role,
+        phone,
+        hashedPassword,
+        id,
+      ])
+    } else {
+      await db.query("UPDATE profiles SET full_name = $1, role = $2, phone = $3 WHERE id = $4", [
+        full_name,
+        role,
+        phone,
+        id,
+      ])
+    }
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

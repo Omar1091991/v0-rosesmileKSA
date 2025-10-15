@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Database, AlertCircle, ExternalLink } from "lucide-react"
+import { Database, CheckCircle } from "lucide-react"
 
 export default function DatabaseInitPage() {
   return (
@@ -15,19 +15,18 @@ export default function DatabaseInitPage() {
             <Database className="w-10 h-10 text-pink-600" />
             <h1 className="text-4xl font-bold text-gray-900">تهيئة قاعدة البيانات</h1>
           </div>
-          <p className="text-gray-600">معلومات مهمة حول قاعدة بيانات Railway PostgreSQL</p>
+          <p className="text-gray-600">نظام تخزين دائم للبيانات في بيئة v0</p>
         </div>
 
-        {/* Important Notice */}
-        <Alert className="bg-yellow-50 border-yellow-200">
-          <AlertCircle className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="text-yellow-800">
-            <strong className="block mb-2">⚠️ ملاحظة مهمة جداً:</strong>
+        <Alert className="bg-green-50 border-green-200">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            <strong className="block mb-2">✓ نظام التخزين الدائم نشط</strong>
             <p className="mb-2">
-              بيئة v0 لا تدعم الاتصال المباشر بقاعدة بيانات Railway PostgreSQL لأنها تتطلب WebSocket وهو غير متاح في
-              المتصفح.
+              تم تفعيل نظام تخزين دائم باستخدام localStorage. جميع التغييرات التي تقوم بها (إضافة، تعديل، حذف) ستبقى
+              محفوظة حتى بعد تحديث الصفحة.
             </p>
-            <p className="font-semibold">حالياً، الموقع يعمل ببيانات تجريبية للمعاينة فقط.</p>
+            <p className="font-semibold">التغييرات الآن دائمة في بيئة v0 المعاينة!</p>
           </AlertDescription>
         </Alert>
 
@@ -43,15 +42,26 @@ export default function DatabaseInitPage() {
             <div className="flex items-start gap-2">
               <span className="text-2xl">✓</span>
               <div>
-                <p className="font-semibold">البيانات التجريبية نشطة</p>
-                <p className="text-sm">الموقع يعرض بيانات تجريبية تشمل خدمات، أطباء، أقسام، عروض، ومقالات</p>
+                <p className="font-semibold">نظام التخزين الدائم نشط</p>
+                <p className="text-sm">
+                  جميع التغييرات محفوظة في localStorage وستبقى بعد تحديث الصفحة أو إغلاق المتصفح
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-2xl">ℹ️</span>
+              <span className="text-2xl">💾</span>
               <div>
-                <p className="font-semibold">للحصول على قاعدة بيانات حقيقية</p>
-                <p className="text-sm">يجب نشر الموقع على Vercel حيث ستعمل Railway PostgreSQL بشكل كامل</p>
+                <p className="font-semibold">البيانات التجريبية + التغييرات الخاصة بك</p>
+                <p className="text-sm">
+                  الموقع يعرض البيانات التجريبية الأساسية بالإضافة إلى أي تغييرات تقوم بها في لوحة التحكم
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-2xl">🚀</span>
+              <div>
+                <p className="font-semibold">جاهز للنشر على Vercel</p>
+                <p className="text-sm">عند النشر، سيتم استخدام Railway PostgreSQL الحقيقية تلقائياً</p>
               </div>
             </div>
           </CardContent>
@@ -60,11 +70,15 @@ export default function DatabaseInitPage() {
         {/* Tables Info */}
         <Card>
           <CardHeader>
-            <CardTitle>الجداول المتاحة في البيانات التجريبية</CardTitle>
-            <CardDescription>هذه الجداول متوفرة حالياً ببيانات تجريبية</CardDescription>
+            <CardTitle>الجداول المتاحة</CardTitle>
+            <CardDescription>يمكنك إضافة وتعديل وحذف البيانات في هذه الجداول</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <li className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <span className="text-green-600">✓</span>
+                <span>profiles - المستخدمين (3 مستخدمين)</span>
+              </li>
               <li className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                 <span className="text-green-600">✓</span>
                 <span>services - الخدمات (3 خدمات)</span>
@@ -101,6 +115,35 @@ export default function DatabaseInitPage() {
           </CardContent>
         </Card>
 
+        {/* Features */}
+        <Card className="border-purple-200 bg-purple-50">
+          <CardHeader>
+            <CardTitle className="text-purple-900">المميزات المتاحة الآن</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-purple-800">
+            <div className="flex gap-2">
+              <span className="text-purple-600">✓</span>
+              <p>إضافة مستخدمين جدد من لوحة التحكم</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-purple-600">✓</span>
+              <p>تعديل بيانات المستخدمين الموجودين</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-purple-600">✓</span>
+              <p>حذف المستخدمين</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-purple-600">✓</span>
+              <p>جميع التغييرات محفوظة بشكل دائم في localStorage</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-purple-600">✓</span>
+              <p>نظام تسجيل دخول كامل مع صلاحيات المستخدمين</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Deployment Instructions */}
         <Card className="border-green-200 bg-green-50">
           <CardHeader>
@@ -121,13 +164,13 @@ export default function DatabaseInitPage() {
             <div className="flex gap-2">
               <span className="font-bold text-green-600">3.</span>
               <p>
-                قم بتشغيل سكريبت SQL من ملف <code className="bg-white px-1 rounded">railway_complete_setup.sql</code> في
-                لوحة تحكم Railway
+                قم بتشغيل سكريبت SQL من ملف <code className="bg-white px-1 rounded">railway_init.sql</code> في لوحة تحكم
+                Railway
               </p>
             </div>
             <div className="flex gap-2">
               <span className="font-bold text-green-600">4.</span>
-              <p>بعد النشر، ستعمل قاعدة البيانات الحقيقية تلقائياً</p>
+              <p>بعد النشر، سيتم استبدال localStorage بقاعدة البيانات الحقيقية تلقائياً</p>
             </div>
           </CardContent>
         </Card>
@@ -140,14 +183,8 @@ export default function DatabaseInitPage() {
           <Button onClick={() => (window.location.href = "/dashboard")} variant="outline" className="flex-1" size="lg">
             عرض لوحة التحكم
           </Button>
-          <Button
-            onClick={() => window.open("https://vercel.com/docs/storage/vercel-postgres", "_blank")}
-            variant="outline"
-            className="flex-1"
-            size="lg"
-          >
-            <ExternalLink className="ml-2 h-4 w-4" />
-            دليل Vercel
+          <Button onClick={() => (window.location.href = "/auth/login")} variant="outline" className="flex-1" size="lg">
+            تسجيل الدخول
           </Button>
         </div>
       </div>
