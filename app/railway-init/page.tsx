@@ -9,6 +9,7 @@ export default function RailwayInitPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState("")
+  const [step, setStep] = useState<"init" | "password" | "done">("init")
 
   const initializeDatabase = async () => {
     setLoading(true)
@@ -16,6 +17,7 @@ export default function RailwayInitPage() {
     setSuccess(false)
 
     try {
+      setStep("init")
       const response = await fetch("/api/railway/init", {
         method: "POST",
       })
@@ -26,6 +28,18 @@ export default function RailwayInitPage() {
         throw new Error(data.error || "فشل في إنشاء قاعدة البيانات")
       }
 
+      setStep("password")
+      const passwordResponse = await fetch("/api/railway/add-password", {
+        method: "POST",
+      })
+
+      const passwordData = await passwordResponse.json()
+
+      if (!passwordResponse.ok) {
+        throw new Error(passwordData.error || "فشل في إضافة عمود كلمة المرور")
+      }
+
+      setStep("done")
       setSuccess(true)
       setTimeout(() => {
         window.location.href = "/dashboard"
@@ -43,6 +57,13 @@ export default function RailwayInitPage() {
         <Database className="w-16 h-16 mx-auto mb-4 text-blue-600" />
         <h1 className="text-2xl font-bold mb-2">تهيئة قاعدة بيانات Railway</h1>
         <p className="text-gray-600 mb-6">اضغط على الزر أدناه لإنشاء جميع الجداول المطلوبة في قاعدة بيانات Railway</p>
+
+        {loading && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700">
+            {step === "init" && <p>جاري إنشاء الجداول...</p>}
+            {step === "password" && <p>جاري إضافة عمود كلمة المرور...</p>}
+          </div>
+        )}
 
         {success && (
           <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
