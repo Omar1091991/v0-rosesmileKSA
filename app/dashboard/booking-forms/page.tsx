@@ -75,6 +75,8 @@ export default function BookingFormsPage() {
     description_en: "",
     image_url: "",
   })
+  const [creatingSheet, setCreatingSheet] = useState(false)
+  const [sheetMode, setSheetMode] = useState<"auto" | "manual">("auto")
 
   useEffect(() => {
     fetchForms()
@@ -392,6 +394,51 @@ export default function BookingFormsPage() {
     }
   }
 
+  const handleCreateSheet = async () => {
+    if (!formData.name_ar) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال اسم النموذج أولاً",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setCreatingSheet(true)
+    try {
+      const response = await fetch("/api/google-sheets/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sheetName: `نموذج حجز - ${formData.name_ar}` }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        setFormData({ ...formData, google_sheet_id: result.sheetId })
+        toast({
+          title: "نجح",
+          description: "تم إنشاء Google Sheet بنجاح",
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: "خطأ",
+          description: error.error || "فشل في إنشاء Google Sheet",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("[v0] Error creating sheet:", error)
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء إنشاء Google Sheet",
+        variant: "destructive",
+      })
+    } finally {
+      setCreatingSheet(false)
+    }
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-96">جاري التحميل...</div>
   }
@@ -408,6 +455,12 @@ export default function BookingFormsPage() {
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
+          <Link href="/dashboard/google-auth">
+            <Button variant="outline" className="flex-1 sm:flex-none bg-transparent">
+              إعادة مصادقة Google
+            </Button>
+          </Link>
+
           <Button
             onClick={testGoogleConnection}
             disabled={testingConnection}
@@ -471,21 +524,77 @@ export default function BookingFormsPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="google_sheet_id">معرف Google Sheet (اختياري)</Label>
-                  <Input
-                    id="google_sheet_id"
-                    value={formData.google_sheet_id}
-                    onChange={(e) => setFormData({ ...formData, google_sheet_id: e.target.value })}
-                    placeholder="سيتم إنشاؤه تلقائياً إذا تُرك فارغاً"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    إذا تركت هذا الحقل فارغاً، سيتم إنشاء Google Sheet جديد تلقائياً وربطه بالنموذج
-                  </p>
+                <div className="space-y-3">
+                  <Label>ربط Google Sheet</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={sheetMode === "auto" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSheetMode("auto")}
+                      className="flex-1"
+                    >
+                      إنشاء جديد تلقائياً
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={sheetMode === "manual" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSheetMode("manual")}
+                      className="flex-1"
+                    >
+                      ربط موجود يدوياً
+                    </Button>
+                  </div>
+
+                  {sheetMode === "auto" ? (
+                    <div className="space-y-2">
+                      <Button
+                        type="button"
+                        onClick={handleCreateSheet}
+                        disabled={creatingSheet || !formData.name_ar}
+                        variant="outline"
+                        className="w-full bg-transparent"
+                      >
+                        {creatingSheet ? "جاري الإنشاء..." : "إنشاء Google Sheet الآن"}
+                      </Button>
+                      {formData.google_sheet_id && (
+                        <div className="p-3 bg-green-50 dark:bg-green-950 rounded-md">
+                          <p className="text-sm text-green-800 dark:text-green-200">تم إنشاء Google Sheet بنجاح</p>
+                          <a
+                            href={`https://docs.google.com/spreadsheets/d/${formData.google_sheet_id}/edit`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1 mt-1"
+                          >
+                            فتح الجدول
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        سيتم إنشاء Google Sheet جديد تلقائياً مع صف رأس منسق وصلاحيات مشاركة
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Input
+                        id="google_sheet_id"
+                        value={formData.google_sheet_id}
+                        onChange={(e) => setFormData({ ...formData, google_sheet_id: e.target.value })}
+                        placeholder="أدخل معرف Google Sheet"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        احصل على المعرف من رابط الـ Sheet (الجزء بين /d/ و /edit)
+                        <br />
+                        مثال: https://docs.google.com/spreadsheets/d/<strong>1ABC123xyz</strong>/edit
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>صورة النموذج</Label>
+                  <Label htmlFor="image_url">صورة النموذج</Label>
                   <Input type="file" accept="image/*" onChange={handleImageChange} />
                   {imagePreview && (
                     <div className="relative w-full aspect-video rounded-lg overflow-hidden">
@@ -608,12 +717,7 @@ export default function BookingFormsPage() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <strong>ربط Google Sheets:</strong> لربط نموذج الحجز بـ Google Sheet، أضف معرف الـ Sheet في حقل "معرف Google
-          Sheet" عند إنشاء أو تعديل النموذج. يمكنك الحصول على المعرف من رابط الـ Sheet (الجزء بين /d/ و /edit).
-          <br />
-          <span className="text-xs text-muted-foreground mt-1 block">
-            مثال: https://docs.google.com/spreadsheets/d/1ABC123xyz/edit
-          </span>
+          <strong>ربط Google Sheets:</strong> يمكنك إنشاء Google Sheet جديد تلقائياً أو ربط Sheet موجود يدوياً.
           <br />
           <span className="text-xs font-medium mt-2 block">
             Service Account Email: rosesmile-sheets-connectorv0@medical-rose-smile.iam.gserviceaccount.com
@@ -621,6 +725,9 @@ export default function BookingFormsPage() {
           <span className="text-xs text-muted-foreground block">
             امنح هذا الإيميل صلاحيات "محرر" على Google Sheet لتمكين الربط التلقائي
           </span>
+          <Link href="/dashboard/google-auth" className="text-xs text-primary hover:underline block mt-2">
+            إعادة مصادقة Google →
+          </Link>
         </AlertDescription>
       </Alert>
 
