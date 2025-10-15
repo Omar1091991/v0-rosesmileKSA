@@ -23,10 +23,18 @@ const nextConfig = {
         path: false,
         os: false,
         'pg-native': false,
+        'pg-connection-string': false,
+        pg: false,
+        'pg-pool': false,
+      }
+      
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'pg': false,
+        'pg-connection-string': false,
+        'pg-pool': false,
       }
     }
-    
-    config.externals = [...(config.externals || []), 'pg', 'pg-connection-string', 'pg-pool']
     
     return config
   },
