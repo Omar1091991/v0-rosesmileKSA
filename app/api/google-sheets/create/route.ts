@@ -11,13 +11,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "اسم الجدول مطلوب" }, { status: 400 })
     }
 
+    console.log("[v0] Creating Google Sheet with name:", sheetName)
+    console.log("[v0] Using service account:", GOOGLE_CREDENTIALS.client_email)
+    console.log("[v0] Project ID:", GOOGLE_CREDENTIALS.project_id)
+
     const auth = new google.auth.GoogleAuth({
       credentials: GOOGLE_CREDENTIALS,
-      scopes: ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"],
+      scopes: [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/drive.file",
+      ],
     })
 
     const sheets = google.sheets({ version: "v4", auth })
     const drive = google.drive({ version: "v3", auth })
+
+    console.log("[v0] Attempting to create spreadsheet...")
 
     // Try to create the spreadsheet
     const createResponse = await sheets.spreadsheets.create({
@@ -41,7 +51,10 @@ export async function POST(request: Request) {
       throw new Error("فشل في إنشاء Google Sheet")
     }
 
+    console.log("[v0] Spreadsheet created successfully:", spreadsheetId)
+
     // Add header row
+    console.log("[v0] Adding header row...")
     await sheets.spreadsheets.values.update({
       spreadsheetId,
       range: "الحجوزات!A1:G1",
@@ -52,6 +65,7 @@ export async function POST(request: Request) {
     })
 
     // Format header row
+    console.log("[v0] Formatting header row...")
     await sheets.spreadsheets.batchUpdate({
       spreadsheetId,
       requestBody: {
@@ -82,6 +96,7 @@ export async function POST(request: Request) {
     })
 
     // Make the sheet publicly writable
+    console.log("[v0] Setting permissions...")
     await drive.permissions.create({
       fileId: spreadsheetId,
       requestBody: {
@@ -92,6 +107,8 @@ export async function POST(request: Request) {
 
     const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`
 
+    console.log("[v0] Google Sheet created successfully:", sheetUrl)
+
     return NextResponse.json({
       success: true,
       sheetId: spreadsheetId,
@@ -100,23 +117,31 @@ export async function POST(request: Request) {
     })
   } catch (error: any) {
     console.error("[v0] Error creating Google Sheet:", error)
+    console.error("[v0] Error details:", {
+      message: error.message,
+      code: error.code,
+      errors: error.errors,
+      response: error.response?.data,
+    })
 
     let errorMessage = "فشل في إنشاء Google Sheet"
     let helpText = ""
     let helpLink = ""
 
-    if (error.message?.includes("permission") || error.code === 403) {
+    if (error.message?.includes("permission") || error.code === 403 || error.message?.includes("forbidden")) {
       errorMessage = "لا توجد صلاحيات كافية - يجب تفعيل Google APIs"
-      helpText =
-        "يجب تفعيل Google Sheets API و Google Drive API في Google Cloud Console. اذهب إلى صفحة إعدادات Google للحصول على التعليمات الكاملة."
-      helpLink = "/dashboard/google-setup"
+      helpText = `يجب تفعيل Google Sheets API و Google Drive API في مشروع Google Cloud (${GOOGLE_CREDENTIALS.project_id}). اضغط على الرابط أدناه للتفعيل.`
+      helpLink = `/google-sheets-guide`
     } else if (error.code === 401) {
       errorMessage = "خطأ في المصادقة"
-      helpText = "تحقق من صحة بيانات Service Account"
-    } else if (error.message?.includes("API has not been used")) {
-      errorMessage = "Google Sheets API غير مفعّل"
-      helpText = "يجب تفعيل Google Sheets API في مشروع Google Cloud"
-      helpLink = `https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=${GOOGLE_CREDENTIALS.project_id}`
+      helpText = "تحقق من صحة بيانات Service Account في ملف google-credentials.json"
+    } else if (error.message?.includes("API has not been used") || error.message?.includes("not enabled")) {
+      errorMessage = "Google APIs غير مفعّلة"
+      helpText = `يجب تفعيل Google Sheets API و Google Drive API في مشروع ${GOOGLE_CREDENTIALS.project_id}`
+      helpLink = `/google-sheets-guide`
+    } else if (error.message?.includes("quota")) {
+      errorMessage = "تم تجاوز حد الاستخدام"
+      helpText = "تم تجاوز حد استخدام Google Sheets API. حاول مرة أخرى لاحقاً."
     }
 
     return NextResponse.json(
@@ -127,6 +152,16 @@ export async function POST(request: Request) {
         helpLink,
         projectId: GOOGLE_CREDENTIALS.project_id,
         serviceAccountEmail: GOOGLE_CREDENTIALS.client_email,
+        requiredAPIs: [
+          {
+            name: "Google Sheets API",
+            url: `https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=${GOOGLE_CREDENTIALS.project_id}`,
+          },
+          {
+            name: "Google Drive API",
+            url: `https://console.cloud.google.com/apis/library/drive.googleapis.com?project=${GOOGLE_CREDENTIALS.project_id}`,
+          },
+        ],
       },
       { status: error.code || 500 },
     )
