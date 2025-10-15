@@ -4,12 +4,40 @@ import { NextResponse } from "next/server"
 export async function GET() {
   try {
     console.log("[v0] GET /api/site-settings - Fetching settings...")
+
+    const tableCheck = await query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'site_settings'
+      )
+    `)
+
+    if (!tableCheck.rows[0].exists) {
+      console.log("[v0] site_settings table does not exist")
+      return NextResponse.json(
+        {
+          error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة من /railway-init",
+        },
+        { status: 500 },
+      )
+    }
+
     const result = await query("SELECT * FROM site_settings ORDER BY key")
 
     console.log("[v0] Successfully fetched", result.rows.length, "settings")
     return NextResponse.json(result.rows)
   } catch (error: any) {
     console.error("[v0] Error fetching site settings:", error)
+
+    if (error.message?.includes('relation "site_settings" does not exist')) {
+      return NextResponse.json(
+        {
+          error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة من /railway-init",
+        },
+        { status: 500 },
+      )
+    }
+
     return NextResponse.json({ error: error.message || "فشل في جلب إعدادات الموقع" }, { status: 500 })
   }
 }
@@ -21,10 +49,10 @@ export async function POST(request: Request) {
     console.log("[v0] Request body:", body)
 
     const result = await query(
-      `INSERT INTO site_settings (key, value, type)
-       VALUES ($1, $2, $3)
+      `INSERT INTO site_settings (key, value_ar, value_en, type)
+       VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [body.key, body.value, body.type || "text"],
+      [body.key, body.value_ar, body.value_en || body.value_ar, body.type || "text"],
     )
 
     console.log("[v0] Successfully created setting:", result.rows[0])
