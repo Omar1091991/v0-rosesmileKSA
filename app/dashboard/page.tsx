@@ -1,76 +1,67 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Stethoscope, Briefcase, Calendar, FileText, ImageIcon } from "lucide-react"
-import { db } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
 export default async function DashboardPage() {
-  let stats
+  let stats = [
+    { title: "المستخدمين", value: 0, icon: Users, color: "text-blue-600" },
+    { title: "الخدمات", value: 0, icon: Briefcase, color: "text-green-600" },
+    { title: "الأطباء", value: 0, icon: Stethoscope, color: "text-purple-600" },
+    { title: "العروض", value: 0, icon: FileText, color: "text-orange-600" },
+    { title: "الحجوزات", value: 0, icon: Calendar, color: "text-red-600" },
+    { title: "المقالات", value: 0, icon: ImageIcon, color: "text-indigo-600" },
+  ]
+
   try {
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Database query timeout")), 5000))
-
-    const queries = Promise.all([
-      db.query("SELECT COUNT(*) FROM profiles"),
-      db.query("SELECT COUNT(*) FROM services"),
-      db.query("SELECT COUNT(*) FROM doctors"),
-      db.query("SELECT COUNT(*) FROM offers"),
-      db.query("SELECT COUNT(*) FROM bookings"),
-      db.query("SELECT COUNT(*) FROM articles"),
-    ])
-
-    const [usersCount, servicesCount, doctorsCount, offersCount, bookingsCount, articlesCount] = (await Promise.race([
-      queries,
-      timeout,
-    ])) as any[]
-
-    stats = [
-      {
-        title: "المستخدمين",
-        value: Number.parseInt(usersCount.rows[0].count) || 0,
-        icon: Users,
-        color: "text-blue-600",
-      },
-      {
-        title: "الخدمات",
-        value: Number.parseInt(servicesCount.rows[0].count) || 0,
-        icon: Briefcase,
-        color: "text-green-600",
-      },
-      {
-        title: "الأطباء",
-        value: Number.parseInt(doctorsCount.rows[0].count) || 0,
-        icon: Stethoscope,
-        color: "text-purple-600",
-      },
-      {
-        title: "العروض",
-        value: Number.parseInt(offersCount.rows[0].count) || 0,
-        icon: FileText,
-        color: "text-orange-600",
-      },
-      {
-        title: "الحجوزات",
-        value: Number.parseInt(bookingsCount.rows[0].count) || 0,
-        icon: Calendar,
-        color: "text-red-600",
-      },
-      {
-        title: "المقالات",
-        value: Number.parseInt(articlesCount.rows[0].count) || 0,
-        icon: ImageIcon,
-        color: "text-indigo-600",
-      },
-    ]
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/database/test`, {
+      cache: "no-store",
+    })
+    if (response.ok) {
+      const data = await response.json()
+      if (data.tables) {
+        stats = [
+          {
+            title: "المستخدمين",
+            value: data.tables.find((t: any) => t.name === "profiles")?.count || 0,
+            icon: Users,
+            color: "text-blue-600",
+          },
+          {
+            title: "الخدمات",
+            value: data.tables.find((t: any) => t.name === "services")?.count || 0,
+            icon: Briefcase,
+            color: "text-green-600",
+          },
+          {
+            title: "الأطباء",
+            value: data.tables.find((t: any) => t.name === "doctors")?.count || 0,
+            icon: Stethoscope,
+            color: "text-purple-600",
+          },
+          {
+            title: "العروض",
+            value: data.tables.find((t: any) => t.name === "offers")?.count || 0,
+            icon: FileText,
+            color: "text-orange-600",
+          },
+          {
+            title: "الحجوزات",
+            value: data.tables.find((t: any) => t.name === "bookings")?.count || 0,
+            icon: Calendar,
+            color: "text-red-600",
+          },
+          {
+            title: "المقالات",
+            value: data.tables.find((t: any) => t.name === "articles")?.count || 0,
+            icon: ImageIcon,
+            color: "text-indigo-600",
+          },
+        ]
+      }
+    }
   } catch (error) {
     console.error("[v0] Dashboard stats error:", error)
-    stats = [
-      { title: "المستخدمين", value: 0, icon: Users, color: "text-blue-600" },
-      { title: "الخدمات", value: 0, icon: Briefcase, color: "text-green-600" },
-      { title: "الأطباء", value: 0, icon: Stethoscope, color: "text-purple-600" },
-      { title: "العروض", value: 0, icon: FileText, color: "text-orange-600" },
-      { title: "الحجوزات", value: 0, icon: Calendar, color: "text-red-600" },
-      { title: "المقالات", value: 0, icon: ImageIcon, color: "text-indigo-600" },
-    ]
   }
 
   return (

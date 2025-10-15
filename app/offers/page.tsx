@@ -4,13 +4,21 @@ import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Tag } from "lucide-react"
-import { db } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
 export default async function OffersPage() {
-  const result = await db.query("SELECT * FROM offers WHERE is_active = true ORDER BY created_at DESC")
-  const offers = result.rows
+  let offers = []
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/offers`, {
+      cache: "no-store",
+    })
+    if (response.ok) {
+      offers = await response.json()
+    }
+  } catch (error) {
+    console.error("[v0] Error fetching offers:", error)
+  }
 
   return (
     <div className="flex min-h-screen flex-col">

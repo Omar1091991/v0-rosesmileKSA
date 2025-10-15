@@ -2,13 +2,21 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
-import { db } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
 export default async function DepartmentsPage() {
-  const result = await db.query("SELECT * FROM departments WHERE is_active = true ORDER BY order_index")
-  const departments = result.rows
+  let departments = []
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/departments`, {
+      cache: "no-store",
+    })
+    if (response.ok) {
+      departments = await response.json()
+    }
+  } catch (error) {
+    console.error("[v0] Error fetching departments:", error)
+  }
 
   return (
     <div className="flex min-h-screen flex-col">

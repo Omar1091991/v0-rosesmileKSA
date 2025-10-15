@@ -2,14 +2,35 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
-import { db } from "@/lib/db"
 import { AnimatedSection } from "@/components/animated-section"
 
 export const dynamic = "force-dynamic"
 
+async function getServices() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    const res = await fetch(`${baseUrl}/api/services`, {
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!res.ok) {
+      console.error("[v0] Failed to fetch services:", res.status)
+      return []
+    }
+
+    const data = await res.json()
+    return Array.isArray(data) ? data.filter((s: any) => s.is_active) : []
+  } catch (error) {
+    console.error("[v0] Error fetching services:", error)
+    return []
+  }
+}
+
 export default async function ServicesPage() {
-  const result = await db.query("SELECT * FROM services WHERE is_active = true ORDER BY order_index")
-  const services = result.rows
+  const services = await getServices()
 
   return (
     <div className="flex min-h-screen flex-col">

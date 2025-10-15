@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server"
-import { query } from "@/lib/db"
+
+async function getDbQuery() {
+  try {
+    const db = await import("@/lib/db")
+    return db.query
+  } catch (error) {
+    console.error("[v0] Failed to load database module:", error)
+    return null
+  }
+}
 
 export async function GET() {
   try {
@@ -11,6 +20,18 @@ export async function GET() {
         {
           settings: [],
           error: "قاعدة البيانات غير مهيأة",
+        },
+        { status: 200 },
+      )
+    }
+
+    const query = await getDbQuery()
+    if (!query) {
+      console.error("[v0] Database module not available")
+      return NextResponse.json(
+        {
+          settings: [],
+          error: "قاعدة البيانات غير متاحة",
         },
         { status: 200 },
       )
@@ -66,6 +87,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const query = await getDbQuery()
+    if (!query) {
+      return NextResponse.json({ error: "قاعدة البيانات غير متاحة" }, { status: 200 })
+    }
+
     const body = await request.json()
     const result = await query(
       `INSERT INTO site_settings (key, value_ar, value_en, type)
@@ -83,6 +109,11 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const query = await getDbQuery()
+    if (!query) {
+      return NextResponse.json({ error: "قاعدة البيانات غير متاحة" }, { status: 200 })
+    }
+
     const body = await request.json()
     const { id, ...updates } = body
 
@@ -104,6 +135,11 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const query = await getDbQuery()
+    if (!query) {
+      return NextResponse.json({ error: "قاعدة البيانات غير متاحة" }, { status: 200 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 

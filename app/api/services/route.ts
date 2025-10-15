@@ -1,20 +1,42 @@
-import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
+
+async function getDbQuery() {
+  try {
+    const { query } = await import("@/lib/db")
+    return query
+  } catch (error) {
+    console.error("[v0] Failed to load database module:", error)
+    return null
+  }
+}
 
 export async function GET() {
   try {
-    const result = await db.query("SELECT * FROM services ORDER BY order_index")
-    return NextResponse.json(result.rows)
+    const query = await getDbQuery()
+
+    if (!query) {
+      return NextResponse.json([], { status: 200 })
+    }
+
+    const result = await query("SELECT * FROM services ORDER BY order_index")
+    return NextResponse.json(result.rows, { status: 200 })
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("[v0] Error in GET /api/services:", error)
+    return NextResponse.json([], { status: 200 })
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const query = await getDbQuery()
+
+    if (!query) {
+      return NextResponse.json({ error: "Database not available" }, { status: 200 })
+    }
+
     const body = await request.json()
 
-    const result = await db.query(
+    const result = await query(
       `INSERT INTO services (title_ar, title_en, description_ar, description_en, icon, image_url, is_active, order_index)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
@@ -30,17 +52,24 @@ export async function POST(request: Request) {
       ],
     )
 
-    return NextResponse.json(result.rows[0])
+    return NextResponse.json(result.rows[0], { status: 200 })
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("[v0] Error in POST /api/services:", error)
+    return NextResponse.json({ error: error.message }, { status: 200 })
   }
 }
 
 export async function PATCH(request: Request) {
   try {
+    const query = await getDbQuery()
+
+    if (!query) {
+      return NextResponse.json({ error: "Database not available" }, { status: 200 })
+    }
+
     const body = await request.json()
 
-    const result = await db.query(
+    const result = await query(
       `UPDATE services 
        SET title_ar = $1, title_en = $2, description_ar = $3, description_en = $4, 
            icon = $5, image_url = $6, is_active = $7, order_index = $8
@@ -59,14 +88,21 @@ export async function PATCH(request: Request) {
       ],
     )
 
-    return NextResponse.json(result.rows[0])
+    return NextResponse.json(result.rows[0], { status: 200 })
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("[v0] Error in PATCH /api/services:", error)
+    return NextResponse.json({ error: error.message }, { status: 200 })
   }
 }
 
 export async function DELETE(request: Request) {
   try {
+    const query = await getDbQuery()
+
+    if (!query) {
+      return NextResponse.json({ error: "Database not available" }, { status: 200 })
+    }
+
     const body = await request.json()
     const { id } = body
 
@@ -74,9 +110,10 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Service ID is required" }, { status: 400 })
     }
 
-    await db.query("DELETE FROM services WHERE id = $1", [id])
-    return NextResponse.json({ success: true })
+    await query("DELETE FROM services WHERE id = $1", [id])
+    return NextResponse.json({ success: true }, { status: 200 })
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("[v0] Error in DELETE /api/services:", error)
+    return NextResponse.json({ error: error.message }, { status: 200 })
   }
 }
