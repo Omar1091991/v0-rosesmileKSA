@@ -1,21 +1,41 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertTriangle, CheckCircle2, ExternalLink } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { AlertTriangle, CheckCircle2, Info } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export default function GoogleAuthPage() {
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState<{ success: boolean; message: string } | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const success = searchParams.get("success")
+    const error = searchParams.get("error")
+    const info = searchParams.get("info")
+
+    if (success) {
+      setStatus({ success: true, message: "تم إعادة المصادقة بنجاح" })
+    } else if (error) {
+      setStatus({ success: false, message: "حدث خطأ أثناء إعادة المصادقة" })
+    } else if (info === "service-account") {
+      setStatus({
+        success: true,
+        message: "النظام يستخدم Service Account. لا حاجة لإعادة المصادقة اليدوية.",
+      })
+    }
+  }, [searchParams])
 
   const handleReauth = () => {
-    setLoading(true)
-    // توجيه المستخدم إلى صفحة OAuth
-    window.location.href = "/api/google-auth"
+    setStatus({
+      success: true,
+      message:
+        "النظام يستخدم Google Service Account. الاتصال دائم ولا يحتاج إعادة مصادقة. تأكد من أن ملف credentials.json موجود وصحيح.",
+    })
   }
 
   const testConnection = async () => {
@@ -36,21 +56,21 @@ export default function GoogleAuthPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-6 w-6 text-yellow-500" />
-            إعادة المصادقة مع جوجل
+            <Info className="h-6 w-6 text-blue-500" />
+            إعدادات Google Sheets
           </CardTitle>
-          <CardDescription>إعادة إعداد الاتصال مع خدمات جوجل</CardDescription>
+          <CardDescription>التحقق من اتصال Google Sheets</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <Alert className="bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
-            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-            <AlertDescription className="text-yellow-800 dark:text-yellow-200">
-              <strong className="block mb-2">تحذير مهم</strong>
+          <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertDescription className="text-blue-800 dark:text-blue-200">
+              <strong className="block mb-2">معلومات مهمة</strong>
               <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>هذا الإجراء سيتطلب في تحديث الاتصال مع خدمات جوجل الحالي</li>
-                <li>قد تحتاج إلى منح صلاحيات الوصول مرة أخرى</li>
-                <li>يرجى عدم تكرار هذا الإجراء إلا عند الضرورة القصوى</li>
-                <li>تأكد من وجود نسخة احتياطية من البيانات المهمة</li>
+                <li>النظام يستخدم Google Service Account للاتصال بـ Google Sheets</li>
+                <li>Service Account Email: rosesmile-sheets@rosesmile-sheets.iam.gserviceaccount.com</li>
+                <li>يجب منح هذا البريد صلاحيات التعديل على Google Sheets المراد استخدامها</li>
+                <li>الاتصال دائم ولا يحتاج إعادة مصادقة يدوية</li>
               </ul>
             </AlertDescription>
           </Alert>
@@ -66,27 +86,32 @@ export default function GoogleAuthPage() {
 
           <div className="space-y-3">
             <Button onClick={testConnection} disabled={loading} variant="outline" className="w-full bg-transparent">
-              {loading ? "جاري الاختبار..." : "اختبار الاتصال الحالي"}
+              {loading ? "جاري الاختبار..." : "اختبار الاتصال"}
             </Button>
 
-            <Button onClick={handleReauth} disabled={loading} className="w-full">
-              <ExternalLink className="ml-2 h-4 w-4" />
-              {loading ? "جاري إعادة المصادقة..." : "إعادة المصادقة مع جوجل"}
+            <Button onClick={handleReauth} disabled={loading} variant="secondary" className="w-full">
+              <Info className="ml-2 h-4 w-4" />
+              عرض معلومات الاتصال
             </Button>
           </div>
 
           <div className="text-sm text-muted-foreground space-y-2">
             <p>
-              <strong>ملاحظة:</strong> بعد النقر على الزر أعلاه، سيتم فتح صفحة مصادقة جوجل في نافذة جديدة.
+              <strong>كيفية منح الصلاحيات:</strong>
             </p>
-            <p>اتبع التعليمات لإكمال عملية المصادقة.</p>
-            <p className="text-xs">
-              البريد الإلكتروني المستخدم: <strong>omar1091991@gmail.com</strong>
-            </p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>افتح Google Sheet المراد ربطه</li>
+              <li>انقر على "مشاركة" في الزاوية العلوية</li>
+              <li>
+                أضف البريد: <code className="text-xs">rosesmile-sheets@rosesmile-sheets.iam.gserviceaccount.com</code>
+              </li>
+              <li>اختر صلاحية "محرر" (Editor)</li>
+              <li>انقر على "إرسال"</li>
+            </ol>
           </div>
 
-          <Button variant="ghost" onClick={() => router.back()} className="w-full">
-            العودة إلى الصفحة السابقة
+          <Button variant="ghost" onClick={() => router.push("/dashboard/booking-forms")} className="w-full">
+            العودة إلى نماذج الحجز
           </Button>
         </CardContent>
       </Card>

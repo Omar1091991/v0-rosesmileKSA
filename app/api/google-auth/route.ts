@@ -2,6 +2,27 @@ import { NextResponse } from "next/server"
 import { google } from "googleapis"
 import { createClient } from "@/lib/supabase/server"
 
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const code = searchParams.get("code")
+
+    // إذا كان هناك code، نكمل عملية OAuth
+    if (code) {
+      // هنا يمكن معالجة الـ code وحفظ الـ tokens
+      // لكن نحن نستخدم Service Account، لذا نوجه للصفحة الرئيسية
+      return NextResponse.redirect(new URL("/dashboard/google-auth?success=true", request.url))
+    }
+
+    // إذا لم يكن هناك code، نبدأ OAuth flow
+    // لكن نحن نستخدم Service Account، لذا نوجه مباشرة لصفحة التعليمات
+    return NextResponse.redirect(new URL("/dashboard/google-auth?info=service-account", request.url))
+  } catch (error) {
+    console.error("[v0] Error in Google Auth GET:", error)
+    return NextResponse.redirect(new URL("/dashboard/google-auth?error=true", request.url))
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
