@@ -17,6 +17,7 @@ export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
   const [doctors, setDoctors] = useState<any[]>([])
   const [offers, setOffers] = useState<any[]>([])
+  const [articles, setArticles] = useState<any[]>([])
   const [user, setUser] = useState<any>(null)
   const [siteSettings, setSiteSettings] = useState<Record<string, string>>({})
   const [mainBookingFormId, setMainBookingFormId] = useState<string>("")
@@ -24,14 +25,16 @@ export default function HomePage() {
   const servicesScrollRef = useRef<HTMLDivElement>(null)
   const doctorsScrollRef = useRef<HTMLDivElement>(null)
   const offersScrollRef = useRef<HTMLDivElement>(null)
+  const articlesScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [servicesRes, doctorsRes, offersRes, settingsRes, formsRes] = await Promise.all([
+        const [servicesRes, doctorsRes, offersRes, articlesRes, settingsRes, formsRes] = await Promise.all([
           fetch("/api/services"),
           fetch("/api/doctors"),
           fetch("/api/offers"),
+          fetch("/api/articles"),
           fetch("/api/site-settings"),
           fetch("/api/booking-forms"),
         ])
@@ -39,12 +42,14 @@ export default function HomePage() {
         const servicesData = await servicesRes.json()
         const doctorsData = await doctorsRes.json()
         const offersData = await offersRes.json()
+        const articlesData = await articlesRes.json()
         const settingsData = await settingsRes.json()
         const formsData = await formsRes.json()
 
         setServices(servicesData.filter((s: any) => s.is_active))
         setDoctors(doctorsData.filter((d: any) => d.is_active))
         setOffers(offersData.filter((o: any) => o.is_active))
+        setArticles(articlesData.filter((a: any) => a.is_published))
 
         const mainForm = formsData.find((f: any) => f.is_main)
         if (mainForm) {
@@ -514,6 +519,104 @@ export default function HomePage() {
                 <Button variant="secondary" size="lg" asChild>
                   <Link href="/offers">
                     عرض جميع العروض
+                    <ArrowLeft className="mr-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </motion.div>
+            </div>
+          </section>
+        )}
+
+        {/* Articles Section */}
+        {articles && articles.length > 0 && (
+          <section className="py-16 md:py-24">
+            <div className="container">
+              <motion.div
+                className="text-center space-y-4 mb-12"
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true }}
+                variants={fadeInUp}
+              >
+                <h2 className="text-3xl md:text-4xl font-bold">
+                  {siteSettings.articles_title_ar || "مقالاتنا الطبية"}
+                </h2>
+                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                  {siteSettings.articles_description_ar || "اقرأ أحدث المقالات والنصائح الطبية"}
+                </p>
+              </motion.div>
+
+              <div className="relative">
+                <button
+                  onClick={() => scroll(articlesScrollRef, "left")}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg"
+                  aria-label="السابق"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+
+                <div
+                  ref={articlesScrollRef}
+                  className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  {articles.map((article) => (
+                    <motion.div
+                      key={article.id}
+                      className="flex-shrink-0 w-80"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                    >
+                      <Card className="hover:shadow-lg transition-shadow h-full">
+                        <CardContent className="pt-6 space-y-4">
+                          <Link href={`/articles/${article.id}`} className="block">
+                            {article.image_url && (
+                              <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
+                                <Image
+                                  src={article.image_url || "/placeholder.svg"}
+                                  alt={article.title_ar}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+                          </Link>
+                          <h3 className="text-xl font-semibold line-clamp-2">{article.title_ar}</h3>
+                          <p className="text-muted-foreground leading-relaxed line-clamp-3">
+                            {article.content_ar?.substring(0, 150)}...
+                          </p>
+                          <Button variant="outline" size="sm" asChild className="w-full bg-transparent">
+                            <Link href={`/articles/${article.id}`}>
+                              اقرأ المزيد
+                              <ArrowLeft className="mr-2 h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => scroll(articlesScrollRef, "right")}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg"
+                  aria-label="التالي"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+              </div>
+
+              <motion.div
+                className="text-center mt-12"
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true }}
+                variants={fadeIn}
+              >
+                <Button variant="outline" size="lg" asChild>
+                  <Link href="/articles">
+                    عرض جميع المقالات
                     <ArrowLeft className="mr-2 h-5 w-5" />
                   </Link>
                 </Button>

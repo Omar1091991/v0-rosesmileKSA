@@ -14,11 +14,25 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { CalendarIcon, Trash2, CheckCircle, XCircle, Download, Phone, MessageSquare, Edit, Filter } from "lucide-react"
+import {
+  CalendarIcon,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Download,
+  Phone,
+  MessageSquare,
+  Edit,
+  Filter,
+  FileText,
+  FileSpreadsheet,
+} from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { ar } from "date-fns/locale"
 import { format } from "date-fns"
+import jsPDF from "jspdf"
+import * as XLSX from "xlsx"
 
 interface Booking {
   id: string
@@ -244,6 +258,157 @@ export default function BookingsPage() {
     })
   }
 
+  const exportToPDF = () => {
+    const dataToExport = dateFrom || dateTo ? filteredBookings : bookings
+
+    const doc = new jsPDF()
+
+    // إضافة خط عربي (استخدام خط افتراضي)
+    doc.setFont("helvetica")
+    doc.setFontSize(16)
+
+    // العنوان
+    doc.text("Bookings Report - Rose Smile", 105, 15, { align: "center" })
+    doc.setFontSize(10)
+    doc.text(`Generated: ${format(new Date(), "yyyy-MM-dd HH:mm")}`, 105, 22, { align: "center" })
+
+    if (dateFrom || dateTo) {
+      const dateRange = `Period: ${dateFrom ? format(dateFrom, "yyyy-MM-dd") : "Start"} to ${dateTo ? format(dateTo, "yyyy-MM-dd") : "End"}`
+      doc.text(dateRange, 105, 28, { align: "center" })
+    }
+
+    // الجدول
+    let yPosition = 40
+    doc.setFontSize(9)
+
+    // رأس الجدول
+    doc.setFillColor(41, 98, 255)
+    doc.rect(10, yPosition, 190, 8, "F")
+    doc.setTextColor(255, 255, 255)
+    doc.text("Name", 12, yPosition + 5)
+    doc.text("Phone", 50, yPosition + 5)
+    doc.text("Service", 85, yPosition + 5)
+    doc.text("Status", 120, yPosition + 5)
+    doc.text("Contacted", 145, yPosition + 5)
+    doc.text("Date", 175, yPosition + 5)
+
+    yPosition += 10
+    doc.setTextColor(0, 0, 0)
+
+    // البيانات
+    dataToExport.forEach((booking, index) => {
+      if (yPosition > 280) {
+        doc.addPage()
+        yPosition = 20
+      }
+
+      // تلوين الصفوف بالتناوب
+      if (index % 2 === 0) {
+        doc.setFillColor(245, 245, 245)
+        doc.rect(10, yPosition - 4, 190, 8, "F")
+      }
+
+      doc.text(booking.full_name.substring(0, 15), 12, yPosition)
+      doc.text(booking.phone, 50, yPosition)
+      doc.text((booking.service_name || "-").substring(0, 12), 85, yPosition)
+      doc.text(booking.status, 120, yPosition)
+      doc.text(booking.contacted ? "Yes" : "No", 145, yPosition)
+      doc.text(format(new Date(booking.created_at), "yyyy-MM-dd"), 175, yPosition)
+
+      yPosition += 8
+    })
+
+    // التذييل
+    const pageCount = doc.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.setTextColor(128, 128, 128)
+      doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: "center" })
+      doc.text(`Total Bookings: ${dataToExport.length}`, 195, 290, { align: "right" })
+    }
+
+    const fileName =
+      dateFrom || dateTo
+        ? `bookings_filtered_${new Date().toISOString().split("T")[0]}.pdf`
+        : `bookings_all_${new Date().toISOString().split("T")[0]}.pdf`
+
+    doc.save(fileName)
+
+    toast({
+      title: "نجح",
+      description: `تم تصدير ${dataToExport.length} حجز إلى PDF بنجاح`,
+    })
+  }
+
+  const exportToExcel = () => {
+    const dataToExport = dateFrom || dateTo ? filteredBookings : bookings
+
+    const worksheetData = [
+      [
+        "الاسم الكامل",
+        "رقم الجوال",
+        "الخدمة",
+        "الحالة",
+        "تم التواصل",
+        "محاولات التواصل",
+        "ملاحظات العميل",
+        "ملاحظات الإدارة",
+        "تاريخ الإنشاء",
+      ],
+      ...dataToExport.map((booking) => [
+        booking.full_name,
+        booking.phone,
+        booking.service_name || "-",
+        booking.status === "confirmed"
+          ? "مؤكد"
+          : booking.status === "pending"
+            ? "قيد الانتظار"
+            : booking.status === "cancelled"
+              ? "ملغي"
+              : booking.status === "completed"
+                ? "مكتمل"
+                : booking.status,
+        booking.contacted ? "نعم" : "لا",
+        booking.contact_attempts || 0,
+        booking.notes || "-",
+        booking.admin_notes || "-",
+        format(new Date(booking.created_at), "yyyy-MM-dd HH:mm", { locale: ar }),
+      ]),
+    ]
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
+
+    // تنسيق العرض
+    const columnWidths = [
+      { wch: 20 }, // الاسم
+      { wch: 15 }, // الجوال
+      { wch: 20 }, // الخدمة
+      { wch: 12 }, // الحالة
+      { wch: 12 }, // تم التواصل
+      { wch: 15 }, // محاولات التواصل
+      { wch: 30 }, // ملاحظات العميل
+      { wch: 30 }, // ملاحظات الإدارة
+      { wch: 18 }, // التاريخ
+    ]
+    worksheet["!cols"] = columnWidths
+
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "الحجوزات")
+
+    const fileName =
+      dateFrom || dateTo
+        ? `bookings_filtered_${new Date().toISOString().split("T")[0]}.xlsx`
+        : `bookings_all_${new Date().toISOString().split("T")[0]}.xlsx`
+
+    XLSX.writeFile(workbook, fileName)
+
+    toast({
+      title: "نجح",
+      description: `تم تصدير ${dataToExport.length} حجز إلى Excel بنجاح`,
+    })
+  }
+
   const resetFilter = () => {
     setDateFrom(undefined)
     setDateTo(undefined)
@@ -348,10 +513,30 @@ export default function BookingsPage() {
             </PopoverContent>
           </Popover>
 
-          <Button onClick={exportToCSV} variant="outline">
-            <Download className="ml-2 h-4 w-4" />
-            {dateFrom || dateTo ? "تصدير المفلترة" : "تصدير الكل"}
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">
+                <Download className="ml-2 h-4 w-4" />
+                {dateFrom || dateTo ? "تصدير المفلترة" : "تصدير الكل"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48" align="end">
+              <div className="space-y-2">
+                <Button variant="ghost" className="w-full justify-start" onClick={exportToExcel}>
+                  <FileSpreadsheet className="ml-2 h-4 w-4 text-green-600" />
+                  تصدير Excel
+                </Button>
+                <Button variant="ghost" className="w-full justify-start" onClick={exportToPDF}>
+                  <FileText className="ml-2 h-4 w-4 text-red-600" />
+                  تصدير PDF
+                </Button>
+                <Button variant="ghost" className="w-full justify-start" onClick={exportToCSV}>
+                  <Download className="ml-2 h-4 w-4 text-blue-600" />
+                  تصدير CSV
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
