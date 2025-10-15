@@ -455,6 +455,13 @@ export default function BookingFormsPage() {
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
+          <Link href="/google-sheets-guide">
+            <Button variant="outline" className="flex-1 sm:flex-none bg-transparent">
+              <Info className="ml-2 h-4 w-4" />
+              دليل Google Sheets
+            </Button>
+          </Link>
+
           <Link href="/dashboard/google-auth">
             <Button variant="outline" className="flex-1 sm:flex-none bg-transparent">
               إعادة مصادقة Google

@@ -42,6 +42,9 @@ export function SiteHeader() {
             <Link href="/offers" className="text-sm font-medium hover:text-primary transition-colors">
               العروض
             </Link>
+            <Link href="/articles" className="text-sm font-medium hover:text-primary transition-colors">
+              المقالات
+            </Link>
           </nav>
 
           {/* CTA Buttons */}
@@ -102,6 +105,13 @@ export function SiteHeader() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 العروض
+              </Link>
+              <Link
+                href="/articles"
+                className="text-sm font-medium hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                المقالات
               </Link>
               <div className="flex flex-col gap-2 pt-2">
                 <Button variant="outline" size="sm" asChild onClick={() => setIsMenuOpen(false)}>
