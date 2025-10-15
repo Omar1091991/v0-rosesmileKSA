@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/lib/db"
 import { AnimatedSection } from "@/components/animated-section"
 
+export const dynamic = "force-dynamic"
+
 export default async function ServicesPage() {
   const result = await db.query("SELECT * FROM services WHERE is_active = true ORDER BY order_index")
   const services = result.rows

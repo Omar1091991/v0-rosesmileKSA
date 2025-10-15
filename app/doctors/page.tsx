@@ -7,6 +7,8 @@ import { db } from "@/lib/db"
 import { AnimatedSection } from "@/components/animated-section"
 import Link from "next/link"
 
+export const dynamic = "force-dynamic"
+
 export default async function DoctorsPage() {
   const result = await db.query("SELECT * FROM doctors WHERE is_active = true ORDER BY order_index")
   const doctors = result.rows

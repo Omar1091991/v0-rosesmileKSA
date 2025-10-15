@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Tag } from "lucide-react"
 import { db } from "@/lib/db"
 
+export const dynamic = "force-dynamic"
+
 export default async function OffersPage() {
   const result = await db.query("SELECT * FROM offers WHERE is_active = true ORDER BY created_at DESC")
   const offers = result.rows

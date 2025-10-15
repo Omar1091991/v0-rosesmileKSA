@@ -9,6 +9,8 @@ import { notFound } from "next/navigation"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 
+export const dynamic = "force-dynamic"
+
 export default async function DoctorDetailPage({ params }: { params: { id: string } }) {
   const doctorResult = await db.query("SELECT * FROM doctors WHERE id = $1", [params.id])
 

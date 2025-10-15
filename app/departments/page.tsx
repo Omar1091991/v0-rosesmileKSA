@@ -4,6 +4,8 @@ import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/lib/db"
 
+export const dynamic = "force-dynamic"
+
 export default async function DepartmentsPage() {
   const result = await db.query("SELECT * FROM departments WHERE is_active = true ORDER BY order_index")
   const departments = result.rows

@@ -4,6 +4,8 @@ import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BookingFormClient } from "@/components/booking-form-client"
 
+export const dynamic = "force-dynamic"
+
 interface BookingFormPageProps {
   params: {
     id: string
