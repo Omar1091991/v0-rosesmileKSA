@@ -92,7 +92,6 @@ CREATE TABLE booking_forms (
   description_ar TEXT,
   description_en TEXT,
   image_url TEXT,
-  google_sheet_id TEXT,
   is_main BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
   order_index INTEGER DEFAULT 0,

@@ -8,50 +8,47 @@ export async function GET() {
     if (!process.env.DATABASE_PUBLIC_URL && !process.env.DATABASE_URL) {
       console.error("[v0] DATABASE_URL not configured")
       return NextResponse.json({
-        error: "قاعدة البيانات غير مهيأة",
         settings: [],
+        error: "قاعدة البيانات غير مهيأة",
       })
     }
 
-    const tableCheck = await query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_name = 'site_settings'
-      )
-    `)
+    let tableExists = false
+    try {
+      const tableCheck = await query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'site_settings'
+        )
+      `)
+      tableExists = tableCheck.rows[0].exists
+      console.log("[v0] Table exists:", tableExists)
+    } catch (tableError: any) {
+      console.error("[v0] Error checking table:", tableError.message)
+      return NextResponse.json({
+        settings: [],
+        error: "فشل في التحقق من جدول الإعدادات",
+      })
+    }
 
-    if (!tableCheck.rows[0].exists) {
+    if (!tableExists) {
       console.log("[v0] site_settings table does not exist")
       return NextResponse.json({
-        error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة من /railway-init",
         settings: [],
+        error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة",
       })
     }
 
     const result = await query("SELECT * FROM site_settings ORDER BY key")
-
     console.log("[v0] Successfully fetched", result.rows.length, "settings")
-    return NextResponse.json(result.rows)
+
+    return NextResponse.json({ settings: result.rows })
   } catch (error: any) {
-    console.error("[v0] Error fetching site settings:", error)
-
-    if (error.message?.includes('relation "site_settings" does not exist')) {
-      return NextResponse.json({
-        error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة من /railway-init",
-        settings: [],
-      })
-    }
-
-    if (error.message?.includes("DATABASE_URL") || error.message?.includes("connection")) {
-      return NextResponse.json({
-        error: "فشل الاتصال بقاعدة البيانات. يرجى التحقق من إعدادات Railway.",
-        settings: [],
-      })
-    }
+    console.error("[v0] Error in GET /api/site-settings:", error)
 
     return NextResponse.json({
-      error: error.message || "فشل في جلب إعدادات الموقع",
       settings: [],
+      error: error.message || "فشل في جلب إعدادات الموقع",
     })
   }
 }

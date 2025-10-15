@@ -24,18 +24,9 @@ export function SocialMediaLinks() {
 
         console.log("[v0] Response status:", response.status)
 
-        if (!response.ok) {
-          console.error("[v0] Error fetching social media settings: HTTP", response.status)
-          const text = await response.text()
-          console.error("[v0] Response text:", text)
-          return
-        }
-
         const contentType = response.headers.get("content-type")
         if (!contentType || !contentType.includes("application/json")) {
           console.error("[v0] Error: Response is not JSON, content-type:", contentType)
-          const text = await response.text()
-          console.error("[v0] Response text:", text)
           return
         }
 
@@ -44,9 +35,6 @@ export function SocialMediaLinks() {
 
         if (data.error) {
           console.error("[v0] Error in response:", data.error)
-          if (Array.isArray(data.settings)) {
-            setSocialLinks([])
-          }
           return
         }
 
@@ -68,13 +56,12 @@ export function SocialMediaLinks() {
         const links: SocialLink[] = []
 
         platforms.forEach((platform) => {
-          const urlSetting = settings.find((s: any) => s.key === `${platform.key}_url`)
-          const visibleSetting = settings.find((s: any) => s.key === `${platform.key}_visible`)
+          const urlSetting = settings.find((s: any) => s.key === platform.key)
 
-          if (urlSetting?.value_ar && visibleSetting?.value_ar === "true") {
+          if (urlSetting?.value) {
             links.push({
               platform: platform.key,
-              url: urlSetting.value_ar,
+              url: urlSetting.value,
               visible: true,
               icon: platform.icon,
             })
