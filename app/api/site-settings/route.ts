@@ -7,10 +7,13 @@ export async function GET() {
 
     if (!process.env.DATABASE_PUBLIC_URL && !process.env.DATABASE_URL) {
       console.error("[v0] DATABASE_URL not configured")
-      return NextResponse.json({
-        settings: [],
-        error: "قاعدة البيانات غير مهيأة",
-      })
+      return NextResponse.json(
+        {
+          settings: [],
+          error: "قاعدة البيانات غير مهيأة",
+        },
+        { status: 200 },
+      )
     }
 
     let tableExists = false
@@ -25,31 +28,40 @@ export async function GET() {
       console.log("[v0] Table exists:", tableExists)
     } catch (tableError: any) {
       console.error("[v0] Error checking table:", tableError.message)
-      return NextResponse.json({
-        settings: [],
-        error: "فشل في التحقق من جدول الإعدادات",
-      })
+      return NextResponse.json(
+        {
+          settings: [],
+          error: "فشل في التحقق من جدول الإعدادات",
+        },
+        { status: 200 },
+      )
     }
 
     if (!tableExists) {
       console.log("[v0] site_settings table does not exist")
-      return NextResponse.json({
-        settings: [],
-        error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة",
-      })
+      return NextResponse.json(
+        {
+          settings: [],
+          error: "جدول الإعدادات غير موجود. يرجى تشغيل سكريبت التهيئة",
+        },
+        { status: 200 },
+      )
     }
 
     const result = await query("SELECT * FROM site_settings ORDER BY key")
     console.log("[v0] Successfully fetched", result.rows.length, "settings")
 
-    return NextResponse.json({ settings: result.rows })
+    return NextResponse.json({ settings: result.rows }, { status: 200 })
   } catch (error: any) {
     console.error("[v0] Error in GET /api/site-settings:", error)
 
-    return NextResponse.json({
-      settings: [],
-      error: error.message || "فشل في جلب إعدادات الموقع",
-    })
+    return NextResponse.json(
+      {
+        settings: [],
+        error: error.message || "فشل في جلب إعدادات الموقع",
+      },
+      { status: 200 },
+    )
   }
 }
 
@@ -67,10 +79,10 @@ export async function POST(request: Request) {
     )
 
     console.log("[v0] Successfully created setting:", result.rows[0])
-    return NextResponse.json(result.rows[0])
+    return NextResponse.json(result.rows[0], { status: 200 })
   } catch (error: any) {
     console.error("[v0] Error creating site setting:", error)
-    return NextResponse.json({ error: error.message || "فشل في إضافة الإعداد" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "فشل في إضافة الإعداد" }, { status: 200 })
   }
 }
 
@@ -91,10 +103,10 @@ export async function PATCH(request: Request) {
     )
 
     console.log("[v0] Successfully updated setting:", result.rows[0])
-    return NextResponse.json(result.rows[0])
+    return NextResponse.json(result.rows[0], { status: 200 })
   } catch (error: any) {
     console.error("[v0] Error updating site setting:", error)
-    return NextResponse.json({ error: error.message || "فشل في تحديث الإعداد" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "فشل في تحديث الإعداد" }, { status: 200 })
   }
 }
 
@@ -104,14 +116,14 @@ export async function DELETE(request: Request) {
     const id = searchParams.get("id")
 
     if (!id) {
-      return NextResponse.json({ error: "معرف الإعداد مطلوب" }, { status: 400 })
+      return NextResponse.json({ error: "معرف الإعداد مطلوب" }, { status: 200 })
     }
 
     await query("DELETE FROM site_settings WHERE id = $1", [id])
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true }, { status: 200 })
   } catch (error: any) {
     console.error("[v0] Error deleting site setting:", error)
-    return NextResponse.json({ error: error.message || "فشل في حذف الإعداد" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "فشل في حذف الإعداد" }, { status: 200 })
   }
 }

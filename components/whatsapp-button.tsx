@@ -10,11 +10,27 @@ export function WhatsAppButton() {
   useEffect(() => {
     async function fetchSettings() {
       try {
+        console.log("[v0] Fetching WhatsApp settings...")
         const response = await fetch("/api/site-settings")
-        const data = await response.json()
 
-        const whatsappSetting = data.find((s: any) => s.key === "whatsapp_number")
-        const visibilitySetting = data.find((s: any) => s.key === "whatsapp_visible")
+        if (!response.ok) {
+          console.error("[v0] WhatsApp settings API returned:", response.status)
+          return
+        }
+
+        const contentType = response.headers.get("content-type")
+        if (!contentType || !contentType.includes("application/json")) {
+          console.error("[v0] WhatsApp settings API returned non-JSON response")
+          return
+        }
+
+        const data = await response.json()
+        console.log("[v0] WhatsApp settings data:", data)
+
+        const settings = Array.isArray(data) ? data : data.settings || []
+
+        const whatsappSetting = settings.find((s: any) => s.key === "whatsapp_number")
+        const visibilitySetting = settings.find((s: any) => s.key === "whatsapp_visible")
 
         if (whatsappSetting?.value_ar) {
           setWhatsappNumber(whatsappSetting.value_ar)

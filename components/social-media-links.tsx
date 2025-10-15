@@ -24,6 +24,11 @@ export function SocialMediaLinks() {
 
         console.log("[v0] Response status:", response.status)
 
+        if (!response.ok) {
+          console.error("[v0] API returned error status:", response.status)
+          return
+        }
+
         const contentType = response.headers.get("content-type")
         if (!contentType || !contentType.includes("application/json")) {
           console.error("[v0] Error: Response is not JSON, content-type:", contentType)
@@ -58,10 +63,10 @@ export function SocialMediaLinks() {
         platforms.forEach((platform) => {
           const urlSetting = settings.find((s: any) => s.key === platform.key)
 
-          if (urlSetting?.value) {
+          if (urlSetting?.value_ar || urlSetting?.value) {
             links.push({
               platform: platform.key,
-              url: urlSetting.value,
+              url: urlSetting.value_ar || urlSetting.value,
               visible: true,
               icon: platform.icon,
             })

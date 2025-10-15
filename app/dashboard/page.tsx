@@ -7,7 +7,9 @@ export const dynamic = "force-dynamic"
 export default async function DashboardPage() {
   let stats
   try {
-    const [usersCount, servicesCount, doctorsCount, offersCount, bookingsCount, articlesCount] = await Promise.all([
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Database query timeout")), 5000))
+
+    const queries = Promise.all([
       db.query("SELECT COUNT(*) FROM profiles"),
       db.query("SELECT COUNT(*) FROM services"),
       db.query("SELECT COUNT(*) FROM doctors"),
@@ -15,6 +17,11 @@ export default async function DashboardPage() {
       db.query("SELECT COUNT(*) FROM bookings"),
       db.query("SELECT COUNT(*) FROM articles"),
     ])
+
+    const [usersCount, servicesCount, doctorsCount, offersCount, bookingsCount, articlesCount] = (await Promise.race([
+      queries,
+      timeout,
+    ])) as any[]
 
     stats = [
       {
