@@ -43,8 +43,6 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const { toast } = useToast()
 
-  const [showTempDataBanner, setShowTempDataBanner] = useState(true)
-
   const [newUser, setNewUser] = useState({
     email: "",
     password: "",
@@ -125,6 +123,7 @@ export default function UsersPage() {
   const createUser = async () => {
     setLoading(true)
     try {
+      console.log("[v0] Sending user creation request:", newUser)
       const response = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -132,6 +131,7 @@ export default function UsersPage() {
       })
 
       const data = await response.json()
+      console.log("[v0] User creation response:", data)
 
       if (!response.ok) {
         let errorTitle = "فشل في إضافة المستخدم"
@@ -157,13 +157,14 @@ export default function UsersPage() {
       }
 
       toast({
-        title: "✓ تم إضافة المستخدم بنجاح",
+        title: "تم إضافة المستخدم بنجاح",
         description: `تم إضافة ${newUser.full_name} (${newUser.email}) كـ${newUser.role === "admin" ? "مسؤول" : newUser.role === "editor" ? "محرر" : "مستخدم عادي"}`,
         variant: "default",
       })
 
       setIsAddOpen(false)
       setNewUser({ email: "", password: "", full_name: "", phone: "", role: "user" })
+
       await fetchUsers()
     } catch (error: any) {
       console.error("[v0] Error creating user:", error)
@@ -315,33 +316,6 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      {showTempDataBanner && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-4"
-        >
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">وضع المعاينة - بيانات مؤقتة</h3>
-              <p className="text-sm text-amber-800 dark:text-amber-200">
-                التغييرات التي تجريها (إضافة، تعديل، حذف) مخزنة مؤقتاً في الذاكرة وستختفي عند تحديث الصفحة. عند النشر على
-                Vercel، ستعمل قاعدة البيانات الحقيقية وسيتم حفظ جميع التغييرات بشكل دائم.
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowTempDataBanner(false)}
-              className="text-amber-600 hover:text-amber-700 dark:text-amber-400"
-            >
-              إخفاء
-            </Button>
-          </div>
-        </motion.div>
-      )}
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -1,7 +1,6 @@
 "use client"
 
 import { DialogContent } from "@/components/ui/dialog"
-
 import { DialogFooter } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
@@ -26,6 +25,9 @@ import {
   Filter,
   FileText,
   FileSpreadsheet,
+  ChevronLeft,
+  ChevronRight,
+  FileCheck,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
@@ -33,6 +35,7 @@ import { ar } from "date-fns/locale"
 import { format } from "date-fns"
 import jsPDF from "jspdf"
 import * as XLSX from "xlsx"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Booking {
   id: string
@@ -45,11 +48,19 @@ interface Booking {
   contacted?: boolean
   admin_notes?: string
   contact_attempts?: number
+  booking_form_id?: string
   created_at: string
+}
+
+interface BookingForm {
+  id: string
+  name_ar: string
+  name_en: string
 }
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [bookingForms, setBookingForms] = useState<BookingForm[]>([])
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
@@ -57,33 +68,59 @@ export default function BookingsPage() {
   const [contactAttempts, setContactAttempts] = useState(0)
   const [dateFrom, setDateFrom] = useState<Date | undefined>()
   const [dateTo, setDateTo] = useState<Date | undefined>()
+  const [filterBookingForm, setFilterBookingForm] = useState<string>("all")
+  const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [filterContacted, setFilterContacted] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
   const { toast } = useToast()
 
   useEffect(() => {
     fetchBookings()
+    fetchBookingForms()
   }, [])
 
   useEffect(() => {
-    if (!dateFrom && !dateTo) {
-      setFilteredBookings(bookings)
-      return
+    let filtered = [...bookings]
+
+    if (dateFrom || dateTo) {
+      filtered = filtered.filter((booking) => {
+        const bookingDate = new Date(booking.created_at)
+        if (dateFrom && dateTo) {
+          return bookingDate >= dateFrom && bookingDate <= dateTo
+        }
+        if (dateFrom) {
+          return bookingDate >= dateFrom
+        }
+        if (dateTo) {
+          return bookingDate <= dateTo
+        }
+        return true
+      })
     }
 
-    const filtered = bookings.filter((booking) => {
-      const bookingDate = new Date(booking.created_at)
-      if (dateFrom && dateTo) {
-        return bookingDate >= dateFrom && bookingDate <= dateTo
-      }
-      if (dateFrom) {
-        return bookingDate >= dateFrom
-      }
-      if (dateTo) {
-        return bookingDate <= dateTo
-      }
-      return true
-    })
+    if (filterBookingForm !== "all") {
+      filtered = filtered.filter((booking) => booking.booking_form_id === filterBookingForm)
+    }
+
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((booking) => booking.status === filterStatus)
+    }
+
+    if (filterContacted !== "all") {
+      const isContacted = filterContacted === "contacted"
+      filtered = filtered.filter((booking) => booking.contacted === isContacted)
+    }
+
     setFilteredBookings(filtered)
-  }, [bookings, dateFrom, dateTo])
+    setCurrentPage(1)
+  }, [bookings, dateFrom, dateTo, filterBookingForm, filterStatus, filterContacted])
+
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentBookings = filteredBookings.slice(startIndex, endIndex)
 
   const fetchBookings = async () => {
     try {
@@ -102,6 +139,24 @@ export default function BookingsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchBookingForms = async () => {
+    try {
+      const response = await fetch("/api/booking-forms")
+      if (response.ok) {
+        const data = await response.json()
+        setBookingForms(data)
+      }
+    } catch (error) {
+      console.error("Error fetching booking forms:", error)
+    }
+  }
+
+  const getBookingFormName = (bookingFormId?: string) => {
+    if (!bookingFormId) return "-"
+    const form = bookingForms.find((f) => f.id === bookingFormId)
+    return form ? form.name_ar : "-"
   }
 
   const updateStatus = async (id: string, status: string) => {
@@ -225,6 +280,7 @@ export default function BookingsPage() {
       "مرات المحاولة",
       "الملاحظات",
       "ملاحظات الإدارة",
+      "نموذج الحجز",
       "تاريخ الإنشاء",
     ]
     const rows = dataToExport.map((booking) => [
@@ -236,6 +292,7 @@ export default function BookingsPage() {
       booking.contact_attempts || 0,
       booking.notes || "-",
       booking.admin_notes || "-",
+      getBookingFormName(booking.booking_form_id),
       format(new Date(booking.created_at), "yyyy-MM-dd", { locale: ar }),
     ])
 
@@ -263,11 +320,9 @@ export default function BookingsPage() {
 
     const doc = new jsPDF()
 
-    // إضافة خط عربي (استخدام خط افتراضي)
     doc.setFont("helvetica")
     doc.setFontSize(16)
 
-    // العنوان
     doc.text("Bookings Report - Rose Smile", 105, 15, { align: "center" })
     doc.setFontSize(10)
     doc.text(`Generated: ${format(new Date(), "yyyy-MM-dd HH:mm")}`, 105, 22, { align: "center" })
@@ -277,11 +332,9 @@ export default function BookingsPage() {
       doc.text(dateRange, 105, 28, { align: "center" })
     }
 
-    // الجدول
     let yPosition = 40
     doc.setFontSize(9)
 
-    // رأس الجدول
     doc.setFillColor(41, 98, 255)
     doc.rect(10, yPosition, 190, 8, "F")
     doc.setTextColor(255, 255, 255)
@@ -290,19 +343,18 @@ export default function BookingsPage() {
     doc.text("Service", 85, yPosition + 5)
     doc.text("Status", 120, yPosition + 5)
     doc.text("Contacted", 145, yPosition + 5)
-    doc.text("Date", 175, yPosition + 5)
+    doc.text("Booking Form", 170, yPosition + 5)
+    doc.text("Date", 195, yPosition + 5)
 
     yPosition += 10
     doc.setTextColor(0, 0, 0)
 
-    // البيانات
     dataToExport.forEach((booking, index) => {
       if (yPosition > 280) {
         doc.addPage()
         yPosition = 20
       }
 
-      // تلوين الصفوف بالتناوب
       if (index % 2 === 0) {
         doc.setFillColor(245, 245, 245)
         doc.rect(10, yPosition - 4, 190, 8, "F")
@@ -313,12 +365,12 @@ export default function BookingsPage() {
       doc.text((booking.service_name || "-").substring(0, 12), 85, yPosition)
       doc.text(booking.status, 120, yPosition)
       doc.text(booking.contacted ? "Yes" : "No", 145, yPosition)
-      doc.text(format(new Date(booking.created_at), "yyyy-MM-dd"), 175, yPosition)
+      doc.text(getBookingFormName(booking.booking_form_id), 170, yPosition)
+      doc.text(format(new Date(booking.created_at), "yyyy-MM-dd"), 195, yPosition)
 
       yPosition += 8
     })
 
-    // التذييل
     const pageCount = doc.getNumberOfPages()
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i)
@@ -354,6 +406,7 @@ export default function BookingsPage() {
         "محاولات التواصل",
         "ملاحظات العميل",
         "ملاحظات الإدارة",
+        "نموذج الحجز",
         "تاريخ الإنشاء",
       ],
       ...dataToExport.map((booking) => [
@@ -373,23 +426,24 @@ export default function BookingsPage() {
         booking.contact_attempts || 0,
         booking.notes || "-",
         booking.admin_notes || "-",
+        getBookingFormName(booking.booking_form_id),
         format(new Date(booking.created_at), "yyyy-MM-dd HH:mm", { locale: ar }),
       ]),
     ]
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
 
-    // تنسيق العرض
     const columnWidths = [
-      { wch: 20 }, // الاسم
-      { wch: 15 }, // الجوال
-      { wch: 20 }, // الخدمة
-      { wch: 12 }, // الحالة
-      { wch: 12 }, // تم التواصل
-      { wch: 15 }, // محاولات التواصل
-      { wch: 30 }, // ملاحظات العميل
-      { wch: 30 }, // ملاحظات الإدارة
-      { wch: 18 }, // التاريخ
+      { wch: 20 },
+      { wch: 15 },
+      { wch: 20 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 30 },
+      { wch: 30 },
+      { wch: 20 },
+      { wch: 18 },
     ]
     worksheet["!cols"] = columnWidths
 
@@ -412,6 +466,9 @@ export default function BookingsPage() {
   const resetFilter = () => {
     setDateFrom(undefined)
     setDateTo(undefined)
+    setFilterBookingForm("all")
+    setFilterStatus("all")
+    setFilterContacted("all")
   }
 
   const handleDelete = async (id: string) => {
@@ -507,7 +564,7 @@ export default function BookingsPage() {
                   />
                 </div>
                 <Button onClick={resetFilter} variant="outline" className="w-full bg-transparent">
-                  إعادة تعيين
+                  إعادة تعيين الكل
                 </Button>
               </div>
             </PopoverContent>
@@ -517,7 +574,7 @@ export default function BookingsPage() {
             <PopoverTrigger asChild>
               <Button variant="outline">
                 <Download className="ml-2 h-4 w-4" />
-                {dateFrom || dateTo ? "تصدير المفلترة" : "تصدير الكل"}
+                تصدير
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-48" align="end">
@@ -540,16 +597,82 @@ export default function BookingsPage() {
         </div>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            الفلاتر
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label className="text-sm mb-2 block">نموذج الحجز</Label>
+              <Select value={filterBookingForm} onValueChange={setFilterBookingForm}>
+                <SelectTrigger>
+                  <SelectValue placeholder="الكل" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">الكل</SelectItem>
+                  {bookingForms.map((form) => (
+                    <SelectItem key={form.id} value={form.id}>
+                      {form.name_ar}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm mb-2 block">الحالة</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="الكل" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">الكل</SelectItem>
+                  <SelectItem value="pending">قيد الانتظار</SelectItem>
+                  <SelectItem value="confirmed">مؤكد</SelectItem>
+                  <SelectItem value="completed">مكتمل</SelectItem>
+                  <SelectItem value="cancelled">ملغي</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm mb-2 block">حالة التواصل</Label>
+              <Select value={filterContacted} onValueChange={setFilterContacted}>
+                <SelectTrigger>
+                  <SelectValue placeholder="الكل" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">الكل</SelectItem>
+                  <SelectItem value="contacted">تم التواصل</SelectItem>
+                  <SelectItem value="not_contacted">لم يتم التواصل</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-end">
+              <Button onClick={resetFilter} variant="outline" className="w-full bg-transparent">
+                إعادة تعيين
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 gap-4">
-        {filteredBookings.map((booking) => (
-          <Card key={booking.id}>
+        {currentBookings.map((booking) => (
+          <Card key={booking.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-4 flex-wrap">
-                  <span>{booking.full_name}</span>
+                  <span className="text-lg">{booking.full_name}</span>
                   {getStatusBadge(booking.status)}
                   {booking.contacted && (
-                    <Badge variant="outline" className="bg-green-50">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      <Phone className="h-3 w-3 ml-1" />
                       تم التواصل
                     </Badge>
                   )}
@@ -610,7 +733,7 @@ export default function BookingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">رقم الجوال</p>
                   <p className="font-medium">{booking.phone}</p>
@@ -620,19 +743,29 @@ export default function BookingsPage() {
                   <p className="font-medium">{booking.service_name || "-"}</p>
                 </div>
                 <div>
+                  <p className="text-muted-foreground">نموذج الحجز</p>
+                  <p className="font-medium flex items-center gap-1">
+                    <FileCheck className="h-4 w-4 text-primary" />
+                    {getBookingFormName(booking.booking_form_id)}
+                  </p>
+                </div>
+                <div>
                   <p className="text-muted-foreground">مرات المحاولة</p>
                   <p className="font-medium">{booking.contact_attempts || 0}</p>
                 </div>
               </div>
+              <div className="mt-4 text-sm text-muted-foreground">
+                <p>تاريخ الإنشاء: {format(new Date(booking.created_at), "yyyy-MM-dd HH:mm", { locale: ar })}</p>
+              </div>
               {booking.notes && (
-                <div className="mt-4">
-                  <p className="text-muted-foreground text-sm">ملاحظات العميل</p>
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                  <p className="text-muted-foreground text-sm font-medium mb-1">ملاحظات العميل</p>
                   <p className="text-sm">{booking.notes}</p>
                 </div>
               )}
               {booking.admin_notes && (
-                <div className="mt-4">
-                  <p className="text-muted-foreground text-sm">ملاحظات الإدارة</p>
+                <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
+                  <p className="text-muted-foreground text-sm font-medium mb-1">ملاحظات الإدارة</p>
                   <p className="text-sm">{booking.admin_notes}</p>
                 </div>
               )}
@@ -641,10 +774,57 @@ export default function BookingsPage() {
         ))}
       </div>
 
+      {filteredBookings.length > 0 && (
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="text-sm text-muted-foreground">
+                عرض {startIndex + 1} - {Math.min(endIndex, filteredBookings.length)} من {filteredBookings.length} حجز
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  السابق
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="min-w-[2.5rem]"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  التالي
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {filteredBookings.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            {dateFrom || dateTo ? "لا توجد حجوزات في الفترة المحددة" : "لا يوجد حجوزات حالياً"}
+            {dateFrom || dateTo || filterBookingForm !== "all" || filterStatus !== "all" || filterContacted !== "all"
+              ? "لا توجد حجوزات تطابق الفلاتر المحددة"
+              : "لا يوجد حجوزات حالياً"}
           </CardContent>
         </Card>
       )}

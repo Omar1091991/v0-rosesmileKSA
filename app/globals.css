@@ -5,7 +5,8 @@
 
 :root {
   /* Rose Smile brand colors - Navy Blue and Pink from logo */
-  --background: oklch(0.99 0.005 280);
+  /* تغيير لون الخلفية من الأبيض إلى #ffe1f3 (وردي فاتح) */
+  --background: #ffe1f3;
   --foreground: oklch(0.25 0.04 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.25 0.04 260);

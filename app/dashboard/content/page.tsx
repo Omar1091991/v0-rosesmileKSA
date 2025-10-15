@@ -207,29 +207,57 @@ const CONTENT_SECTIONS = [
       },
     ],
   },
+]
+
+const BACKGROUND_COLOR_SECTIONS = [
   {
-    section: "colors",
-    title: "ألوان الكتابة",
+    section: "global_backgrounds",
+    title: "ألوان الخلفية العامة",
     fields: [
-      { key: "primary_color", label: "اللون الأساسي (الوردي)", type: "color", defaultValue: "#ec4899" },
-      { key: "secondary_color", label: "اللون الثانوي (الأزرق)", type: "color", defaultValue: "#3b82f6" },
-      { key: "heading_color", label: "لون العناوين", type: "color", defaultValue: "#1f2937" },
-      { key: "text_color", label: "لون النصوص", type: "color", defaultValue: "#4b5563" },
+      { key: "site_background_color", label: "لون خلفية الموقع بالكامل", type: "color", defaultValue: "#ffe1f3" },
+      { key: "header_background_color", label: "لون خلفية رأس الصفحة", type: "color", defaultValue: "#ffffff" },
+      { key: "footer_background_color", label: "لون خلفية تذييل الصفحة", type: "color", defaultValue: "#1f2937" },
     ],
   },
   {
-    section: "working_hours",
-    title: "ساعات العمل",
+    section: "section_backgrounds",
+    title: "ألوان خلفية الأقسام",
     fields: [
-      { key: "working_hours_title_ar", label: "عنوان ساعات العمل", type: "text", defaultValue: "ساعات العمل" },
-      { key: "saturday_hours", label: "السبت", type: "text", defaultValue: "9:00 ص - 9:00 م" },
-      { key: "sunday_hours", label: "الأحد", type: "text", defaultValue: "9:00 ص - 9:00 م" },
-      { key: "monday_hours", label: "الاثنين", type: "text", defaultValue: "9:00 ص - 9:00 م" },
-      { key: "tuesday_hours", label: "الثلاثاء", type: "text", defaultValue: "9:00 ص - 9:00 م" },
-      { key: "wednesday_hours", label: "الأربعاء", type: "text", defaultValue: "9:00 ص - 9:00 م" },
-      { key: "thursday_hours", label: "الخميس", type: "text", defaultValue: "9:00 ص - 9:00 م" },
-      { key: "friday_hours", label: "الجمعة", type: "text", defaultValue: "مغلق" },
-      { key: "working_hours_note", label: "ملاحظة (اختياري)", type: "textarea", defaultValue: "" },
+      { key: "hero_background_color", label: "لون خلفية القسم الرئيسي", type: "color", defaultValue: "#ffffff" },
+      { key: "features_background_color", label: "لون خلفية قسم المميزات", type: "color", defaultValue: "#f9fafb" },
+      { key: "services_background_color", label: "لون خلفية قسم الخدمات", type: "color", defaultValue: "#ffffff" },
+      { key: "doctors_background_color", label: "لون خلفية قسم الأطباء", type: "color", defaultValue: "#f9fafb" },
+      {
+        key: "why_choose_us_background_color",
+        label: "لون خلفية قسم لماذا تختارنا",
+        type: "color",
+        defaultValue: "#ffffff",
+      },
+      { key: "cta_background_color", label: "لون خلفية قسم دعوة للعمل", type: "color", defaultValue: "#ec4899" },
+      {
+        key: "working_hours_background_color",
+        label: "لون خلفية قسم ساعات العمل",
+        type: "color",
+        defaultValue: "#f9fafb",
+      },
+    ],
+  },
+  {
+    section: "text_colors",
+    title: "ألوان النصوص حسب القسم",
+    fields: [
+      { key: "hero_title_color", label: "لون عنوان القسم الرئيسي", type: "color", defaultValue: "#1f2937" },
+      { key: "hero_description_color", label: "لون وصف القسم الرئيسي", type: "color", defaultValue: "#4b5563" },
+      { key: "features_title_color", label: "لون عنوان قسم المميزات", type: "color", defaultValue: "#1f2937" },
+      { key: "features_text_color", label: "لون نص قسم المميزات", type: "color", defaultValue: "#4b5563" },
+      { key: "services_title_color", label: "لون عنوان قسم الخدمات", type: "color", defaultValue: "#1f2937" },
+      { key: "services_text_color", label: "لون نص قسم الخدمات", type: "color", defaultValue: "#4b5563" },
+      { key: "doctors_title_color", label: "لون عنوان قسم الأطباء", type: "color", defaultValue: "#1f2937" },
+      { key: "doctors_text_color", label: "لون نص قسم الأطباء", type: "color", defaultValue: "#4b5563" },
+      { key: "working_hours_title_color", label: "لون عنوان ساعات العمل", type: "color", defaultValue: "#1f2937" },
+      { key: "working_hours_text_color", label: "لون نص ساعات العمل", type: "color", defaultValue: "#4b5563" },
+      { key: "cta_title_color", label: "لون عنوان دعوة للعمل", type: "color", defaultValue: "#ffffff" },
+      { key: "cta_text_color", label: "لون نص دعوة للعمل", type: "color", defaultValue: "#ffffff" },
     ],
   },
 ]
@@ -355,6 +383,7 @@ export default function ContentManagementPage() {
   const [settings, setSettings] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [savingSection, setSavingSection] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<Record<string, string>>({})
   const { toast } = useToast()
 
@@ -461,6 +490,68 @@ export default function ContentManagementPage() {
     }
   }
 
+  async function handleSaveSection(sectionFields: string[]) {
+    setSavingSection(sectionFields[0]) // Use the first field key as a general indicator for the section
+    try {
+      console.log("[v0] Saving section settings...", sectionFields)
+
+      const promises = sectionFields.map(async (key) => {
+        const setting = settings[key]
+        if (!setting) return
+
+        console.log("[v0] Saving setting:", key, setting)
+
+        if (setting.id) {
+          const response = await fetch("/api/site-settings", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(setting),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(`فشل في تحديث ${key}: ${errorData.error}`)
+          }
+
+          return response
+        } else {
+          const response = await fetch("/api/site-settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(setting),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(`فشل في إنشاء ${key}: ${errorData.error}`)
+          }
+
+          return response
+        }
+      })
+
+      await Promise.all(promises)
+
+      console.log("[v0] Section settings saved successfully")
+
+      toast({
+        title: "نجح",
+        description: "تم حفظ التغييرات بنجاح",
+      })
+
+      await fetchSettings() // Refresh settings after saving
+    } catch (error: any) {
+      console.error("[v0] Error saving section settings:", error)
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في حفظ التغييرات",
+        variant: "destructive",
+      })
+    } finally {
+      setSavingSection(null)
+    }
+  }
+
   function handleChange(key: string, value: string, type: string) {
     setSettings((prev) => ({
       ...prev,
@@ -468,7 +559,7 @@ export default function ContentManagementPage() {
         ...prev[key],
         key,
         value_ar: value,
-        value_en: value,
+        value_en: value, // Assuming value_en should also be updated for consistency
         type,
       },
     }))
@@ -537,10 +628,21 @@ export default function ContentManagementPage() {
       </motion.div>
 
       <Tabs defaultValue="content" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="content">
             <FileText className="ml-2 h-4 w-4" />
             المحتوى والنصوص
+          </TabsTrigger>
+          <TabsTrigger value="colors">
+            <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+              />
+            </svg>
+            ألوان الخلفيات
           </TabsTrigger>
           <TabsTrigger value="animations">
             <Sparkles className="ml-2 h-4 w-4" />
@@ -549,39 +651,177 @@ export default function ContentManagementPage() {
         </TabsList>
 
         <TabsContent value="content" className="space-y-6 mt-6">
-          {CONTENT_SECTIONS.map((section, sectionIndex) => (
-            <motion.div
-              key={section.section}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: sectionIndex * 0.1 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>{section.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {section.fields.map((field) => (
-                    <div key={field.key} className="space-y-2">
-                      <Label htmlFor={field.key}>{field.label}</Label>
-                      {field.type === "text" && (
-                        <Input
-                          id={field.key}
-                          value={settings[field.key]?.value_ar || field.defaultValue}
-                          onChange={(e) => handleChange(field.key, e.target.value, field.type)}
-                          placeholder={field.defaultValue}
-                        />
+          {CONTENT_SECTIONS.map((section, sectionIndex) => {
+            const sectionFieldKeys = section.fields.map((f) => f.key)
+            const isSavingThisSection = savingSection && sectionFieldKeys.includes(savingSection)
+
+            return (
+              <motion.div
+                key={section.section}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: sectionIndex * 0.1 }}
+              >
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>{section.title}</CardTitle>
+                    <Button
+                      onClick={() => handleSaveSection(sectionFieldKeys)}
+                      disabled={isSavingThisSection || saving}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {isSavingThisSection ? (
+                        <>
+                          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                          جاري الحفظ...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="ml-2 h-4 w-4" />
+                          حفظ {section.title}
+                        </>
                       )}
-                      {field.type === "textarea" && (
-                        <Textarea
-                          id={field.key}
-                          value={settings[field.key]?.value_ar || field.defaultValue}
-                          onChange={(e) => handleChange(field.key, e.target.value, field.type)}
-                          placeholder={field.defaultValue}
-                          rows={3}
-                        />
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {section.fields.map((field) => (
+                      <div key={field.key} className="space-y-2">
+                        <Label htmlFor={field.key}>{field.label}</Label>
+                        {field.type === "text" && (
+                          <Input
+                            id={field.key}
+                            value={settings[field.key]?.value_ar || field.defaultValue}
+                            onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                            placeholder={field.defaultValue}
+                          />
+                        )}
+                        {field.type === "textarea" && (
+                          <Textarea
+                            id={field.key}
+                            value={settings[field.key]?.value_ar || field.defaultValue}
+                            onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                            placeholder={field.defaultValue}
+                            rows={3}
+                          />
+                        )}
+                        {field.type === "color" && (
+                          <div className="flex gap-2">
+                            <Input
+                              id={field.key}
+                              type="color"
+                              value={settings[field.key]?.value_ar || field.defaultValue}
+                              onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                              className="w-20 h-10"
+                            />
+                            <Input
+                              type="text"
+                              value={settings[field.key]?.value_ar || field.defaultValue}
+                              onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                              placeholder={field.defaultValue}
+                              className="flex-1"
+                            />
+                          </div>
+                        )}
+                        {field.type === "select" && (
+                          <Select
+                            value={settings[field.key]?.value_ar || field.defaultValue}
+                            onValueChange={(value) => handleChange(field.key, value, field.type)}
+                          >
+                            <SelectTrigger id={field.key}>
+                              <SelectValue placeholder="اختر خياراً" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {field.options?.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {field.type === "image" && (
+                          <div className="space-y-2">
+                            <Input
+                              id={field.key}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageUpload(field.key, e)}
+                            />
+                            {imagePreview[field.key] && (
+                              <div className="relative w-full aspect-square max-w-xs rounded-lg overflow-hidden border">
+                                <img
+                                  src={imagePreview[field.key] || "/placeholder.svg"}
+                                  alt={field.label}
+                                  className="w-full h-full object-cover"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="absolute top-2 right-2"
+                                  onClick={() => {
+                                    handleChange(field.key, "", field.type)
+                                    setImagePreview((prev) => {
+                                      const newPrev = { ...prev }
+                                      delete newPrev[field.key]
+                                      return newPrev
+                                    })
+                                  }}
+                                >
+                                  حذف
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
+        </TabsContent>
+
+        <TabsContent value="colors" className="space-y-6 mt-6">
+          {BACKGROUND_COLOR_SECTIONS.map((section, sectionIndex) => {
+            const sectionFieldKeys = section.fields.map((f) => f.key)
+            const isSavingThisSection = savingSection && sectionFieldKeys.includes(savingSection)
+
+            return (
+              <motion.div
+                key={section.section}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: sectionIndex * 0.1 }}
+              >
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>{section.title}</CardTitle>
+                    <Button
+                      onClick={() => handleSaveSection(sectionFieldKeys)}
+                      disabled={isSavingThisSection || saving}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {isSavingThisSection ? (
+                        <>
+                          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                          جاري الحفظ...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="ml-2 h-4 w-4" />
+                          حفظ {section.title}
+                        </>
                       )}
-                      {field.type === "color" && (
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {section.fields.map((field) => (
+                      <div key={field.key} className="space-y-2">
+                        <Label htmlFor={field.key}>{field.label}</Label>
                         <div className="flex gap-2">
                           <Input
                             id={field.key}
@@ -597,135 +837,118 @@ export default function ContentManagementPage() {
                             placeholder={field.defaultValue}
                             className="flex-1"
                           />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleChange(field.key, field.defaultValue, field.type)}
+                          >
+                            إعادة تعيين
+                          </Button>
                         </div>
-                      )}
-                      {field.type === "select" && (
-                        <Select
-                          value={settings[field.key]?.value_ar || field.defaultValue}
-                          onValueChange={(value) => handleChange(field.key, value, field.type)}
-                        >
-                          <SelectTrigger id={field.key}>
-                            <SelectValue placeholder="اختر خياراً" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {field.options?.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                      {field.type === "image" && (
-                        <div className="space-y-2">
-                          <Input
-                            id={field.key}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleImageUpload(field.key, e)}
-                          />
-                          {imagePreview[field.key] && (
-                            <div className="relative w-full aspect-square max-w-xs rounded-lg overflow-hidden border">
-                              <img
-                                src={imagePreview[field.key] || "/placeholder.svg"}
-                                alt={field.label}
-                                className="w-full h-full object-cover"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="absolute top-2 right-2"
-                                onClick={() => {
-                                  handleChange(field.key, "", field.type)
-                                  setImagePreview((prev) => {
-                                    const newPrev = { ...prev }
-                                    delete newPrev[field.key]
-                                    return newPrev
-                                  })
-                                }}
-                              >
-                                حذف
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                        <div
+                          className="w-full h-16 rounded-lg border-2 border-dashed"
+                          style={{ backgroundColor: settings[field.key]?.value_ar || field.defaultValue }}
+                        />
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
         </TabsContent>
 
         <TabsContent value="animations" className="space-y-6 mt-6">
-          {ANIMATION_SECTIONS.map((section, sectionIndex) => (
-            <motion.div
-              key={section.section}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: sectionIndex * 0.1 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5" />
-                    {section.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {section.fields.map((field) => (
-                    <div key={field.key} className="space-y-2">
-                      <Label htmlFor={field.key}>{field.label}</Label>
-                      {field.type === "select" && (
-                        <Select
-                          value={settings[field.key]?.value_ar || field.defaultValue}
-                          onValueChange={(value) => handleChange(field.key, value, field.type)}
-                        >
-                          <SelectTrigger id={field.key}>
-                            <SelectValue placeholder="اختر نوع التأثير" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {field.options?.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+          {ANIMATION_SECTIONS.map((section, sectionIndex) => {
+            const sectionFieldKeys = section.fields.map((f) => f.key)
+            const isSavingThisSection = savingSection && sectionFieldKeys.includes(savingSection)
+
+            return (
+              <motion.div
+                key={section.section}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: sectionIndex * 0.1 }}
+              >
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5" />
+                      {section.title}
+                    </CardTitle>
+                    <Button
+                      onClick={() => handleSaveSection(sectionFieldKeys)}
+                      disabled={isSavingThisSection || saving}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {isSavingThisSection ? (
+                        <>
+                          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                          جاري الحفظ...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="ml-2 h-4 w-4" />
+                          حفظ {section.title}
+                        </>
                       )}
-                      {field.type === "number" && (
-                        <Input
-                          id={field.key}
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="5"
-                          value={settings[field.key]?.value_ar || field.defaultValue}
-                          onChange={(e) => handleChange(field.key, e.target.value, field.type)}
-                        />
-                      )}
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {section.fields.map((field) => (
+                      <div key={field.key} className="space-y-2">
+                        <Label htmlFor={field.key}>{field.label}</Label>
+                        {field.type === "select" && (
+                          <Select
+                            value={settings[field.key]?.value_ar || field.defaultValue}
+                            onValueChange={(value) => handleChange(field.key, value, field.type)}
+                          >
+                            <SelectTrigger id={field.key}>
+                              <SelectValue placeholder="اختر نوع التأثير" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {field.options?.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {field.type === "number" && (
+                          <Input
+                            id={field.key}
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            max="5"
+                            value={settings[field.key]?.value_ar || field.defaultValue}
+                            onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                          />
+                        )}
+                      </div>
+                    ))}
+                    <div className="mt-6 p-6 border rounded-lg bg-muted/50">
+                      <p className="text-sm text-muted-foreground mb-4">معاينة التأثير:</p>
+                      <AnimationPreview
+                        type={settings[section.fields[0].key]?.value_ar || section.fields[0].defaultValue}
+                        duration={
+                          section.fields.find((f) => f.key.includes("duration"))
+                            ? Number.parseFloat(
+                                settings[section.fields.find((f) => f.key.includes("duration"))!.key]?.value_ar ||
+                                  section.fields.find((f) => f.key.includes("duration"))!.defaultValue,
+                              )
+                            : 0.6
+                        }
+                      />
                     </div>
-                  ))}
-                  <div className="mt-6 p-6 border rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground mb-4">معاينة التأثير:</p>
-                    <AnimationPreview
-                      type={settings[section.fields[0].key]?.value_ar || section.fields[0].defaultValue}
-                      duration={
-                        section.fields.find((f) => f.key.includes("duration"))
-                          ? Number.parseFloat(
-                              settings[section.fields.find((f) => f.key.includes("duration"))!.key]?.value_ar ||
-                                section.fields.find((f) => f.key.includes("duration"))!.defaultValue,
-                            )
-                          : 0.6
-                      }
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
         </TabsContent>
       </Tabs>
     </div>

@@ -24,28 +24,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "البريد الإلكتروني وكلمة المرور والاسم الكامل مطلوبة" }, { status: 400 })
     }
 
-    // التحقق من صحة البريد الإلكتروني
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       return NextResponse.json({ error: "البريد الإلكتروني غير صحيح" }, { status: 400 })
     }
 
-    // التحقق من طول كلمة المرور
     if (password.length < 6) {
       return NextResponse.json({ error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }, { status: 400 })
     }
 
-    // التحقق من عدم وجود المستخدم مسبقاً
     const existingUser = await db.query("SELECT email FROM profiles WHERE email = $1", [email])
 
     if (existingUser.rows.length > 0) {
       return NextResponse.json({ error: "البريد الإلكتروني مستخدم بالفعل" }, { status: 409 })
     }
 
-    // تشفير كلمة المرور
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // إنشاء مستخدم جديد
     const result = await db.query(
       `INSERT INTO profiles (full_name, email, phone, role, password) 
        VALUES ($1, $2, $3, $4, $5) 

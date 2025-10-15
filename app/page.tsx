@@ -201,7 +201,9 @@ export default function HomePage() {
                 <motion.div key={index} variants={scaleIn}>
                   <Card className={`border-none shadow-none bg-gradient-to-br ${feature.gradient} h-full`}>
                     <CardContent className="pt-6 space-y-4">
-                      <h3 className="text-xl font-semibold text-[#E91E63]">{feature.title}</h3>
+                      <h3 className="text-xl font-semibold text-[#E91E63]">
+                        {feature.title.replace(/^\d+[\s.:-]*/, "")}
+                      </h3>
                       <p className="text-[#2196F3] leading-relaxed">{feature.description}</p>
                     </CardContent>
                   </Card>

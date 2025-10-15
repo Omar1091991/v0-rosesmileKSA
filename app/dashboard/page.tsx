@@ -1,7 +1,29 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Stethoscope, Briefcase, Calendar, FileText, ImageIcon } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Users, Stethoscope, Briefcase, Calendar, FileText, ImageIcon, Phone, User, Clock } from "lucide-react"
 
 export const dynamic = "force-dynamic"
+
+interface Booking {
+  id: string
+  full_name: string
+  phone: string
+  service_name: string
+  service_id: string
+  notes: string
+  status: string
+  booking_form_id: string | null
+  created_at: string
+  contacted: boolean
+  contact_attempts: number
+  admin_notes: string
+}
+
+interface BookingForm {
+  id: string
+  name_ar: string
+  name_en: string
+}
 
 export default async function DashboardPage() {
   let stats = [
@@ -12,6 +34,10 @@ export default async function DashboardPage() {
     { title: "الحجوزات", value: 0, icon: Calendar, color: "text-red-600" },
     { title: "المقالات", value: 0, icon: ImageIcon, color: "text-indigo-600" },
   ]
+
+  let recentBookings: Booking[] = []
+  let bookingForms: BookingForm[] = []
+  let bookingsDate = ""
 
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || ""
@@ -68,6 +94,113 @@ export default async function DashboardPage() {
     console.error("[v0] Dashboard stats error:", error)
   }
 
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || ""
+    const bookingsUrl = baseUrl ? `${baseUrl}/api/bookings` : "/api/bookings"
+    const formsUrl = baseUrl ? `${baseUrl}/api/booking-forms` : "/api/booking-forms"
+
+    // Fetch bookings and booking forms in parallel
+    const [bookingsResponse, formsResponse] = await Promise.all([
+      fetch(bookingsUrl, { cache: "no-store" }),
+      fetch(formsUrl, { cache: "no-store" }),
+    ])
+
+    if (bookingsResponse.ok) {
+      const allBookings: Booking[] = await bookingsResponse.json()
+
+      if (formsResponse.ok) {
+        bookingForms = await formsResponse.json()
+      }
+
+      if (allBookings.length > 0) {
+        // Get today's date in YYYY-MM-DD format
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const todayStr = today.toISOString().split("T")[0]
+
+        // Filter today's bookings
+        const todaysBookings = allBookings.filter((booking) => {
+          const bookingDate = new Date(booking.created_at)
+          const bookingDateStr = bookingDate.toISOString().split("T")[0]
+          return bookingDateStr === todayStr
+        })
+
+        if (todaysBookings.length > 0) {
+          // Show today's bookings (up to 5)
+          recentBookings = todaysBookings.slice(0, 5)
+          bookingsDate = "اليوم"
+        } else {
+          // Show the most recent bookings from the last day that had bookings (up to 5)
+          recentBookings = allBookings.slice(0, 5)
+          if (recentBookings.length > 0) {
+            const lastBookingDate = new Date(recentBookings[0].created_at)
+            const daysDiff = Math.floor((today.getTime() - lastBookingDate.getTime()) / (1000 * 60 * 60 * 24))
+
+            if (daysDiff === 0) {
+              bookingsDate = "اليوم"
+            } else if (daysDiff === 1) {
+              bookingsDate = "أمس"
+            } else {
+              bookingsDate = lastBookingDate.toLocaleDateString("ar-SA", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("[v0] Dashboard bookings error:", error)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "confirmed":
+        return "bg-green-100 text-green-800 hover:bg-green-100"
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+      case "cancelled":
+        return "bg-red-100 text-red-800 hover:bg-red-100"
+      case "completed":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100"
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+    }
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "confirmed":
+        return "مؤكد"
+      case "pending":
+        return "قيد الانتظار"
+      case "cancelled":
+        return "ملغي"
+      case "completed":
+        return "مكتمل"
+      default:
+        return status
+    }
+  }
+
+  const getBookingFormName = (bookingFormId: string | null) => {
+    if (!bookingFormId) return "غير محدد"
+    const form = bookingForms.find((f) => f.id === bookingFormId)
+    return form ? form.name_ar : "غير محدد"
+  }
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleString("ar-SA", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -91,10 +224,70 @@ export default async function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>آخر الحجوزات</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>آخر الحجوزات</CardTitle>
+            {bookingsDate && <Badge variant="outline">{bookingsDate}</Badge>}
+          </div>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground text-center py-8">لا توجد حجوزات جديدة</p>
+          {recentBookings.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">لا توجد حجوزات</p>
+          ) : (
+            <div className="space-y-4">
+              {recentBookings.map((booking) => (
+                <Card key={booking.id} className="border-l-4 border-l-primary">
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-semibold">{booking.full_name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground" dir="ltr">
+                            {booking.phone}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{booking.service_name}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">{formatDateTime(booking.created_at)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {getBookingFormName(booking.booking_form_id)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={getStatusColor(booking.status)}>{getStatusText(booking.status)}</Badge>
+                          {booking.contacted && (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              تم التواصل
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {booking.notes && (
+                      <div className="mt-4 pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">
+                          <span className="font-semibold">ملاحظات: </span>
+                          {booking.notes}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
