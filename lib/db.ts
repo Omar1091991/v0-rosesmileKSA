@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs"
 
+const USE_REAL_DB = typeof process !== "undefined" && process.env.DATABASE_URL
+
 // نظام التخزين المحلي الدائم
 const STORAGE_KEY = "rosesmile_database"
 
@@ -15,6 +17,22 @@ interface InMemoryStore {
   offers: any[]
   articles: any[]
   gallery: any[]
+}
+
+async function queryRealDatabase(text: string, params?: any[]) {
+  if (typeof window !== "undefined") {
+    throw new Error("Database queries can only run on the server")
+  }
+
+  try {
+    const { neon } = await import("@neondatabase/serverless")
+    const sql = neon(process.env.DATABASE_URL!)
+    const result = await sql.query(text, params || [])
+    return result
+  } catch (error) {
+    console.error("[v0] خطأ في قاعدة البيانات الحقيقية:", error)
+    throw error
+  }
 }
 
 function loadFromStorage(): InMemoryStore | null {
@@ -75,6 +93,15 @@ if (!storedData || inMemoryStore.profiles.length === 0) {
 }
 
 export async function query(text: string, params?: any[]) {
+  if (USE_REAL_DB && typeof window === "undefined") {
+    try {
+      return await queryRealDatabase(text, params)
+    } catch (error) {
+      console.error("[v0] فشل الاتصال بقاعدة البيانات الحقيقية، استخدام localStorage:", error)
+      // العودة إلى localStorage في حالة الفشل
+    }
+  }
+
   // عند النشر على Vercel مع قاعدة بيانات حقيقية، يمكن تعديل هذا الملف لاستخدام PostgreSQL
 
   const queryLower = text.toLowerCase().trim()
