@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs"
 export async function GET() {
   try {
     const result = await db.query(
-      "SELECT id, full_name, email, phone, role, created_at FROM profiles ORDER BY created_at DESC",
+      "SELECT id, full_name, email, phone, role, created_at FROM users ORDER BY created_at DESC",
     )
 
     return NextResponse.json(result.rows)
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }, { status: 400 })
     }
 
-    const existingUser = await db.query("SELECT email FROM profiles WHERE email = $1", [email])
+    const existingUser = await db.query("SELECT email FROM users WHERE email = $1", [email])
 
     if (existingUser.rows.length > 0) {
       return NextResponse.json({ error: "البريد الإلكتروني مستخدم بالفعل" }, { status: 409 })
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const result = await db.query(
-      `INSERT INTO profiles (full_name, email, phone, role, password) 
+      `INSERT INTO users (full_name, email, phone, role, password) 
        VALUES ($1, $2, $3, $4, $5) 
        RETURNING id, full_name, email, phone, role`,
       [full_name, email, phone || null, role || "user", hashedPassword],
@@ -74,7 +74,7 @@ export async function PATCH(request: Request) {
       console.log("[v0] Updating user WITH password")
 
       const result = await db.query(
-        "UPDATE profiles SET full_name = $1, role = $2, phone = $3, password = $4 WHERE id = $5",
+        "UPDATE users SET full_name = $1, role = $2, phone = $3, password = $4 WHERE id = $5",
         [full_name, role, phone, hashedPassword, id],
       )
 
@@ -82,7 +82,7 @@ export async function PATCH(request: Request) {
     } else {
       console.log("[v0] Updating user WITHOUT password")
 
-      const result = await db.query("UPDATE profiles SET full_name = $1, role = $2, phone = $3 WHERE id = $4", [
+      const result = await db.query("UPDATE users SET full_name = $1, role = $2, phone = $3 WHERE id = $4", [
         full_name,
         role,
         phone,
@@ -109,7 +109,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 })
     }
 
-    await db.query("DELETE FROM profiles WHERE id = $1", [userId])
+    await db.query("DELETE FROM users WHERE id = $1", [userId])
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

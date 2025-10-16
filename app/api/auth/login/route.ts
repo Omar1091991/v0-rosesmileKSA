@@ -14,8 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "البريد الإلكتروني وكلمة المرور مطلوبان" }, { status: 400 })
     }
 
-    // البحث عن المستخدم في قاعدة البيانات
-    const result = await query("SELECT id, email, full_name, role, password FROM profiles WHERE email = $1", [email])
+    const result = await query("SELECT id, email, full_name, role, password FROM users WHERE email = $1", [email])
 
     console.log("[v0] Query result rows:", result.rows.length)
 

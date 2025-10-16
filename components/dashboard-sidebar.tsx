@@ -69,7 +69,7 @@ export function DashboardSidebar() {
   }
 
   const canAccessMenuItem = (permission: string) => {
-    if (!user) return false
+    if (!user) return true // السماح بالوصول لجميع القوائم عند تعطيل المصادقة
     if (permission === "*") return true
     if (user.role === "admin") return true
     if (permission === "editor" && (user.role === "editor" || user.role === "admin")) return true
@@ -129,8 +129,6 @@ export function DashboardSidebar() {
 
         <nav className="space-y-1">
           {menuItems.map((item) => {
-            if (!canAccessMenuItem(item.permission)) return null
-
             const isActive = pathname === item.href
             return (
               <Link
