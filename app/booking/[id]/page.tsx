@@ -24,7 +24,13 @@ export default async function BookingFormPage({ params }: BookingFormPageProps) 
     notFound()
   }
 
-  const form = formResult.rows[0]
+  const dbForm = formResult.rows[0]
+
+  const form = {
+    ...dbForm,
+    name_ar: dbForm.title_ar,
+    name_en: dbForm.title_en,
+  }
 
   const servicesResult = await db.query(
     `

@@ -153,11 +153,15 @@ CREATE TABLE bookings (
 -- جدول نماذج الحجز
 CREATE TABLE booking_forms (
   id SERIAL PRIMARY KEY,
-  title_ar VARCHAR(255) NOT NULL,
+  name_ar VARCHAR(255) NOT NULL,
+  name_en VARCHAR(255),
+  title_ar VARCHAR(255),
   title_en VARCHAR(255),
   description_ar TEXT,
   description_en TEXT,
+  image_url TEXT,
   fields JSONB NOT NULL DEFAULT '[]',
+  is_main BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
   order_index INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

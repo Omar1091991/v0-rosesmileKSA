@@ -22,9 +22,12 @@ export async function GET(request: Request) {
         [id],
       )
 
+      const dbForm = formResult.rows[0]
       const form = {
-        ...formResult.rows[0],
-        booking_form_services: servicesResult.rows.map((s) => ({ services: s })),
+        ...dbForm,
+        name_ar: dbForm.title_ar,
+        name_en: dbForm.title_en,
+        booking_form_services: servicesResult.rows.map((s) => ({ service_id: s.id, services: s })),
       }
 
       return NextResponse.json(form)
@@ -33,7 +36,7 @@ export async function GET(request: Request) {
     const formsResult = await db.query("SELECT * FROM booking_forms ORDER BY order_index")
     const forms = []
 
-    for (const form of formsResult.rows) {
+    for (const dbForm of formsResult.rows) {
       const servicesResult = await db.query(
         `
         SELECT s.id, s.title_ar, s.title_en
@@ -41,12 +44,14 @@ export async function GET(request: Request) {
         JOIN services s ON bfs.service_id = s.id
         WHERE bfs.booking_form_id = $1
       `,
-        [form.id],
+        [dbForm.id],
       )
 
       forms.push({
-        ...form,
-        booking_form_services: servicesResult.rows.map((s) => ({ services: s })),
+        ...dbForm,
+        name_ar: dbForm.title_ar,
+        name_en: dbForm.title_en,
+        booking_form_services: servicesResult.rows.map((s) => ({ service_id: s.id, services: s })),
       })
     }
 
@@ -64,25 +69,21 @@ export async function POST(request: Request) {
 
     console.log("[v0] Creating booking form with data:", formData)
 
-    if (formData.is_main) {
-      await db.query("UPDATE booking_forms SET is_main = false WHERE is_main = true")
-    }
-
     const result = await db.query(
       `
-      INSERT INTO booking_forms (name_ar, name_en, description_ar, description_en, image_url, is_main, is_active, order_index)
+      INSERT INTO booking_forms (title_ar, title_en, description_ar, description_en, image_url, fields, is_active, order_index)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `,
       [
-        formData.name_ar,
-        formData.name_en,
+        formData.title_ar || formData.name_ar,
+        formData.title_en || formData.name_en,
         formData.description_ar,
         formData.description_en,
-        formData.image_url,
-        formData.is_main,
-        formData.is_active,
-        formData.order_index,
+        formData.image_url || null,
+        formData.fields || "[]",
+        formData.is_active !== false,
+        formData.order_index || 0,
       ],
     )
 
@@ -109,17 +110,39 @@ export async function PATCH(request: Request) {
     const body = await request.json()
     const { id, service_ids, ...formData } = body
 
-    if (formData.is_main) {
-      await db.query("UPDATE booking_forms SET is_main = false WHERE is_main = true AND id != $1", [id])
+    const fieldMapping: Record<string, string> = {
+      name_ar: "title_ar",
+      name_en: "title_en",
+      title_ar: "title_ar",
+      title_en: "title_en",
+      description_ar: "description_ar",
+      description_en: "description_en",
+      image_url: "image_url",
+      fields: "fields",
+      is_active: "is_active",
+      order_index: "order_index",
     }
 
-    const fields = Object.keys(formData)
-    const values = Object.values(formData)
-    const setClause = fields.map((field, index) => `${field} = $${index + 1}`).join(", ")
+    const dbFields: string[] = []
+    const dbValues: any[] = []
+
+    Object.entries(formData).forEach(([key, value]) => {
+      const dbColumn = fieldMapping[key]
+      if (dbColumn) {
+        dbFields.push(dbColumn)
+        dbValues.push(value)
+      }
+    })
+
+    if (dbFields.length === 0) {
+      return NextResponse.json({ error: "لا توجد حقول للتحديث" }, { status: 400 })
+    }
+
+    const setClause = dbFields.map((field, index) => `${field} = $${index + 1}`).join(", ")
 
     const result = await db.query(
-      `UPDATE booking_forms SET ${setClause}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`,
-      [...values, id],
+      `UPDATE booking_forms SET ${setClause}, updated_at = NOW() WHERE id = $${dbFields.length + 1} RETURNING *`,
+      [...dbValues, id],
     )
 
     if (service_ids !== undefined) {

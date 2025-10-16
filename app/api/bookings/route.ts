@@ -4,7 +4,13 @@ import { NextResponse } from "next/server"
 export async function GET() {
   try {
     const result = await db.query("SELECT * FROM bookings ORDER BY created_at DESC")
-    return NextResponse.json(result.rows)
+
+    const bookings = result.rows.map((booking) => ({
+      ...booking,
+      full_name: booking.patient_name,
+    }))
+
+    return NextResponse.json(bookings)
   } catch (error: any) {
     console.error("[v0] Error fetching bookings:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -14,25 +20,21 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    console.log("[v0] Received booking data:", body)
 
     const result = await db.query(
-      `INSERT INTO bookings (full_name, phone, service_name, service_id, notes, status, booking_form_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO bookings (patient_name, phone, service, notes, status)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [
-        body.full_name,
+        body.full_name || body.patient_name, // Accept both field names
         body.phone,
-        body.service_name,
-        body.service_id,
+        body.service_name || body.service || "", // Accept both field names
         body.notes || "",
         body.status || "pending",
-        body.booking_form_id || null,
       ],
     )
 
     const booking = result.rows[0]
-    console.log("[v0] Booking created in database:", booking)
 
     return NextResponse.json({ booking })
   } catch (error: any) {
