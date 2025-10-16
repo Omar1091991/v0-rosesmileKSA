@@ -14,6 +14,7 @@ import {
   ImageIcon,
   LayoutDashboard,
   LogOut,
+  Database,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
@@ -41,6 +42,7 @@ const menuItems = [
   { title: "الحجوزات", href: "/dashboard/bookings", icon: Calendar, permission: "*" },
   { title: "المقالات", href: "/dashboard/articles", icon: FileText, permission: "editor" },
   { title: "معرض الصور", href: "/dashboard/gallery", icon: ImageIcon, permission: "admin" },
+  { title: "إعداد قاعدة البيانات", href: "/dashboard/database-setup", icon: Database, permission: "admin" }, // إضافة رابط إعداد قاعدة البيانات
 ]
 
 export function DashboardSidebar() {

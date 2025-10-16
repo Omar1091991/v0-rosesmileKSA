@@ -26,7 +26,7 @@ export async function GET() {
       )
     }
 
-    const result = await query("SELECT * FROM site_settings ORDER BY key")
+    const result = await query("SELECT * FROM site_settings ORDER BY setting_key")
     console.log("[v0] Successfully fetched", result.rows.length, "settings")
 
     return NextResponse.json({ settings: result.rows }, { status: 200 })
@@ -51,10 +51,15 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const result = await query(
-      `INSERT INTO site_settings (key, value_ar, value_en, type)
+      `INSERT INTO site_settings (setting_key, setting_value, setting_type, category)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [body.key, body.value_ar, body.value_en || body.value_ar, body.type || "text"],
+      [
+        body.setting_key || body.key,
+        body.setting_value || body.value,
+        body.setting_type || body.type || "text",
+        body.category || "general",
+      ],
     )
 
     return NextResponse.json(result.rows[0], { status: 200 })

@@ -40,10 +40,7 @@ export default async function DashboardPage() {
   let bookingsDate = ""
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || ""
-    const apiUrl = baseUrl ? `${baseUrl}/api/database/test` : "/api/database/test"
-
-    const response = await fetch(apiUrl, {
+    const response = await fetch("/api/database/test", {
       cache: "no-store",
     })
 
@@ -53,7 +50,7 @@ export default async function DashboardPage() {
         stats = [
           {
             title: "المستخدمين",
-            value: data.tables.profiles?.count || 0,
+            value: data.tables.users?.count || 0,
             icon: Users,
             color: "text-blue-600",
           },
@@ -95,14 +92,10 @@ export default async function DashboardPage() {
   }
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || ""
-    const bookingsUrl = baseUrl ? `${baseUrl}/api/bookings` : "/api/bookings"
-    const formsUrl = baseUrl ? `${baseUrl}/api/booking-forms` : "/api/booking-forms"
-
     // Fetch bookings and booking forms in parallel
     const [bookingsResponse, formsResponse] = await Promise.all([
-      fetch(bookingsUrl, { cache: "no-store" }),
-      fetch(formsUrl, { cache: "no-store" }),
+      fetch("/api/bookings", { cache: "no-store" }),
+      fetch("/api/booking-forms", { cache: "no-store" }),
     ])
 
     if (bookingsResponse.ok) {

@@ -6,7 +6,7 @@ export async function GET() {
     console.log("[v0] Testing database connection...")
 
     const tables = [
-      "profiles",
+      "users",
       "services",
       "doctors",
       "departments",
