@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs"
 
-const USE_REAL_DB = typeof process !== "undefined" && process.env.DATABASE_URL
+const USE_REAL_DB =
+  typeof window === "undefined" && typeof process !== "undefined" && process.env.DATABASE_URL !== undefined
 
 // نظام التخزين المحلي الدائم
 const STORAGE_KEY = "rosesmile_database"
@@ -25,28 +26,51 @@ async function queryRealDatabase(text: string, params?: any[]) {
   }
 
   try {
-    console.log("[v0] محاولة الاتصال بقاعدة البيانات الحقيقية...")
+    console.log("[v0] 🔄 محاولة الاتصال بقاعدة بيانات Railway...")
+    console.log("[v0] 📝 الاستعلام:", text)
+    console.log("[v0] 📊 المعاملات:", params)
+
     const { neon } = await import("@neondatabase/serverless")
     const sql = neon(process.env.DATABASE_URL!)
 
-    // Neon يستخدم tagged template literals، لذا نحتاج لتحويل الاستعلام
-    // نستبدل $1, $2, etc. بالقيم الفعلية
+    // Neon يدعم استعلامات SQL مباشرة مع المعاملات
     let query = text
-    if (params && params.length > 0) {
-      params.forEach((param, index) => {
+    const queryParams = params || []
+
+    // تحويل الاستعلام إلى صيغة آمنة
+    if (queryParams.length > 0) {
+      // استبدال $1, $2, etc. بالقيم الفعلية بشكل آمن
+      queryParams.forEach((param, index) => {
         const placeholder = `$${index + 1}`
-        const value = typeof param === "string" ? `'${param.replace(/'/g, "''")}'` : param
-        query = query.replace(placeholder, String(value))
+        let value: string
+
+        if (param === null || param === undefined) {
+          value = "NULL"
+        } else if (typeof param === "string") {
+          // تنظيف النص من علامات الاقتباس المزدوجة
+          value = `'${param.replace(/'/g, "''")}'`
+        } else if (typeof param === "boolean") {
+          value = param ? "true" : "false"
+        } else if (typeof param === "number") {
+          value = String(param)
+        } else {
+          value = `'${String(param).replace(/'/g, "''")}'`
+        }
+
+        query = query.replace(new RegExp(`\\${placeholder}\\b`, "g"), value)
       })
     }
 
-    console.log("[v0] تنفيذ الاستعلام:", query)
-    const result = await sql(query)
-    console.log("[v0] نجح الاستعلام، عدد النتائج:", result.length)
+    console.log("[v0] 🔍 الاستعلام النهائي:", query)
 
-    return { rows: result, rowCount: result.length }
-  } catch (error) {
-    console.error("[v0] خطأ في قاعدة البيانات الحقيقية:", error)
+    const result = await sql(query)
+    console.log("[v0] ✅ نجح الاستعلام، عدد النتائج:", Array.isArray(result) ? result.length : 0)
+    console.log("[v0] 📦 البيانات المسترجعة:", JSON.stringify(result).substring(0, 200))
+
+    return { rows: Array.isArray(result) ? result : [result], rowCount: Array.isArray(result) ? result.length : 1 }
+  } catch (error: any) {
+    console.error("[v0] ❌ خطأ في قاعدة البيانات الحقيقية:", error.message)
+    console.error("[v0] 📋 تفاصيل الخطأ:", error)
     throw error
   }
 }
@@ -109,18 +133,19 @@ if (!storedData || inMemoryStore.profiles.length === 0) {
 }
 
 export async function query(text: string, params?: any[]) {
-  if (USE_REAL_DB && typeof window === "undefined") {
+  if (USE_REAL_DB) {
     try {
-      console.log("[v0] استخدام قاعدة بيانات Railway...")
-      return await queryRealDatabase(text, params)
-    } catch (error) {
-      console.error("[v0] فشل الاتصال بقاعدة البيانات الحقيقية، استخدام localStorage:", error)
+      console.log("[v0] 🚀 استخدام قاعدة بيانات Railway...")
+      const result = await queryRealDatabase(text, params)
+      console.log("[v0] ✅ تم الاستعلام بنجاح من Railway")
+      return result
+    } catch (error: any) {
+      console.error("[v0] ⚠️ فشل الاتصال بقاعدة البيانات الحقيقية:", error.message)
+      console.log("[v0] 🔄 التحويل إلى localStorage...")
       // العودة إلى localStorage في حالة الفشل
     }
-  }
-
-  if (typeof window === "undefined") {
-    console.log("[v0] استخدام localStorage (بيئة التطوير)")
+  } else {
+    console.log("[v0] 💾 استخدام localStorage (بيئة التطوير أو DATABASE_URL غير متوفر)")
   }
 
   const queryLower = text.toLowerCase().trim()
