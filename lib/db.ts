@@ -25,10 +25,26 @@ async function queryRealDatabase(text: string, params?: any[]) {
   }
 
   try {
+    console.log("[v0] محاولة الاتصال بقاعدة البيانات الحقيقية...")
     const { neon } = await import("@neondatabase/serverless")
     const sql = neon(process.env.DATABASE_URL!)
-    const result = await sql.query(text, params || [])
-    return result
+
+    // Neon يستخدم tagged template literals، لذا نحتاج لتحويل الاستعلام
+    // نستبدل $1, $2, etc. بالقيم الفعلية
+    let query = text
+    if (params && params.length > 0) {
+      params.forEach((param, index) => {
+        const placeholder = `$${index + 1}`
+        const value = typeof param === "string" ? `'${param.replace(/'/g, "''")}'` : param
+        query = query.replace(placeholder, String(value))
+      })
+    }
+
+    console.log("[v0] تنفيذ الاستعلام:", query)
+    const result = await sql(query)
+    console.log("[v0] نجح الاستعلام، عدد النتائج:", result.length)
+
+    return { rows: result, rowCount: result.length }
   } catch (error) {
     console.error("[v0] خطأ في قاعدة البيانات الحقيقية:", error)
     throw error
@@ -95,6 +111,7 @@ if (!storedData || inMemoryStore.profiles.length === 0) {
 export async function query(text: string, params?: any[]) {
   if (USE_REAL_DB && typeof window === "undefined") {
     try {
+      console.log("[v0] استخدام قاعدة بيانات Railway...")
       return await queryRealDatabase(text, params)
     } catch (error) {
       console.error("[v0] فشل الاتصال بقاعدة البيانات الحقيقية، استخدام localStorage:", error)
@@ -102,7 +119,9 @@ export async function query(text: string, params?: any[]) {
     }
   }
 
-  // عند النشر على Vercel مع قاعدة بيانات حقيقية، يمكن تعديل هذا الملف لاستخدام PostgreSQL
+  if (typeof window === "undefined") {
+    console.log("[v0] استخدام localStorage (بيئة التطوير)")
+  }
 
   const queryLower = text.toLowerCase().trim()
 
