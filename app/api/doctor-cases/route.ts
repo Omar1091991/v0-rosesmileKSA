@@ -4,12 +4,16 @@ import { db } from "@/lib/db"
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const doctorId = searchParams.get("doctor_id")
+    const doctorIdParam = searchParams.get("doctor_id")
 
     let query = "SELECT * FROM doctor_cases"
     const params: any[] = []
 
-    if (doctorId) {
+    if (doctorIdParam) {
+      const doctorId = Number.parseInt(doctorIdParam, 10)
+      if (isNaN(doctorId)) {
+        return NextResponse.json({ error: "Invalid doctor_id parameter" }, { status: 400 })
+      }
       query += " WHERE doctor_id = $1"
       params.push(doctorId)
     }

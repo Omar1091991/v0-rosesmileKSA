@@ -15,28 +15,28 @@ export async function query(text: string, params?: any[]) {
   }
 
   try {
-    console.log("[v0] 🔄 تنفيذ استعلام:", text.substring(0, 100))
-
     let result
 
     if (params && params.length > 0) {
-      // استخدام sql.query() مع المعاملات
       result = await (sql as any).query(text, params)
     } else {
-      // استخدام sql.query() بدون معاملات
       result = await (sql as any).query(text, [])
     }
 
-    console.log("[v0] ✅ نجح الاستعلام - عدد النتائج:", result?.rows?.length || 0)
-
-    return {
-      rows: result?.rows || [],
-      rowCount: result?.rows?.length || 0,
+    if (Array.isArray(result)) {
+      return {
+        rows: result,
+        rowCount: result.length,
+      }
+    } else {
+      return {
+        rows: result?.rows || result || [],
+        rowCount: result?.rows?.length || result?.length || 0,
+      }
     }
   } catch (error: any) {
     console.error("[v0] ❌ خطأ في الاستعلام:", error.message)
-    console.error("[v0] الاستعلام:", text)
-    console.error("[v0] المعاملات:", params)
+    console.error("[v0] الاستعلام:", text.substring(0, 200))
     throw error
   }
 }

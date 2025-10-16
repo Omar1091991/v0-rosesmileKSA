@@ -70,7 +70,6 @@ export default function UsersPage() {
         setUsers(data)
       }
     } catch (error) {
-      console.error("[v0] Error fetching users:", error)
       toast({
         title: "خطأ",
         description: "فشل في جلب المستخدمين",
@@ -123,7 +122,6 @@ export default function UsersPage() {
   const createUser = async () => {
     setLoading(true)
     try {
-      console.log("[v0] Sending user creation request:", newUser)
       const response = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -131,7 +129,6 @@ export default function UsersPage() {
       })
 
       const data = await response.json()
-      console.log("[v0] User creation response:", data)
 
       if (!response.ok) {
         let errorTitle = "فشل في إضافة المستخدم"
@@ -167,7 +164,6 @@ export default function UsersPage() {
 
       await fetchUsers()
     } catch (error: any) {
-      console.error("[v0] Error creating user:", error)
       toast({
         title: "خطأ في الاتصال",
         description: "فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى",
@@ -197,9 +193,6 @@ export default function UsersPage() {
         ...(newPassword && { password: newPassword }),
       }
 
-      console.log("[v0] Sending update request for user:", selectedUser.email)
-      console.log("[v0] Update data:", { ...updateData, password: updateData.password ? "[HIDDEN]" : undefined })
-
       const response = await fetch("/api/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -207,7 +200,6 @@ export default function UsersPage() {
       })
 
       const data = await response.json()
-      console.log("[v0] Update response:", data)
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to update user")
@@ -223,11 +215,8 @@ export default function UsersPage() {
       setNewPassword("")
       setShowPassword(false)
 
-      console.log("[v0] Refetching users list...")
       await fetchUsers()
-      console.log("[v0] Users list refetched")
     } catch (error: any) {
-      console.error("[v0] Error updating user:", error)
       toast({
         title: "خطأ",
         description: error.message || "فشل في تحديث المستخدم",
@@ -260,7 +249,6 @@ export default function UsersPage() {
 
       await fetchUsers()
     } catch (error: any) {
-      console.error("[v0] Error deleting user:", error)
       toast({
         title: "خطأ",
         description: error.message || "فشل في حذف المستخدم",
@@ -290,7 +278,6 @@ export default function UsersPage() {
       setIsReplaceOpen(false)
       setExistingUser(null)
     } catch (error) {
-      console.error("[v0] Error replacing user:", error)
       toast({
         title: "خطأ",
         description: "فشل في استبدال المستخدم",

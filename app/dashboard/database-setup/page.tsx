@@ -4,12 +4,16 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Database, Play, CheckCircle, XCircle, Loader2, Key } from "lucide-react"
+import { Database, Play, CheckCircle, XCircle, Loader2, Key, Wrench } from "lucide-react"
 
 export default function DatabaseSetupPage() {
   const [isRunning, setIsRunning] = useState(false)
   const [output, setOutput] = useState<string[]>([])
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
+
+  const [isMigrating, setIsMigrating] = useState(false)
+  const [migrationOutput, setMigrationOutput] = useState<string[]>([])
+  const [migrationStatus, setMigrationStatus] = useState<"idle" | "success" | "error">("idle")
 
   const runScript = async () => {
     setIsRunning(true)
@@ -44,6 +48,33 @@ export default function DatabaseSetupPage() {
     }
   }
 
+  const runMigration = async () => {
+    setIsMigrating(true)
+    setMigrationOutput([])
+    setMigrationStatus("idle")
+
+    try {
+      const response = await fetch("/api/migrations/add-phone", {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setMigrationOutput([data.message])
+        setMigrationStatus("success")
+      } else {
+        setMigrationOutput([data.error || "حدث خطأ غير معروف"])
+        setMigrationStatus("error")
+      }
+    } catch (error) {
+      setMigrationOutput([`خطأ في الاتصال: ${error}`])
+      setMigrationStatus("error")
+    } finally {
+      setIsMigrating(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -66,6 +97,57 @@ export default function DatabaseSetupPage() {
           </div>
         </AlertDescription>
       </Alert>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wrench className="h-5 w-5" />
+            إصلاح سريع: إضافة عمود الهاتف
+          </CardTitle>
+          <CardDescription>
+            إذا كانت قاعدة البيانات موجودة بالفعل، استخدم هذا الزر لإضافة عمود phone إلى جدول المستخدمين
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button onClick={runMigration} disabled={isMigrating} variant="secondary" className="gap-2">
+              {isMigrating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري التنفيذ...
+                </>
+              ) : (
+                <>
+                  <Wrench className="h-5 w-5" />
+                  تشغيل Migration
+                </>
+              )}
+            </Button>
+
+            {migrationStatus === "success" && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-semibold">تم بنجاح</span>
+              </div>
+            )}
+
+            {migrationStatus === "error" && (
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-semibold">فشل</span>
+              </div>
+            )}
+          </div>
+
+          {migrationOutput.length > 0 && (
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+              {migrationOutput.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
