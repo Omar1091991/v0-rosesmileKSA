@@ -1,7 +1,8 @@
-// نظام قاعدة البيانات مع التخزين الدائم
+import bcrypt from "bcryptjs"
+
+// نظام التخزين المحلي الدائم
 const STORAGE_KEY = "rosesmile_database"
 
-// تعريف أنواع البيانات
 interface InMemoryStore {
   profiles: any[]
   bookings: any[]
@@ -16,7 +17,6 @@ interface InMemoryStore {
   gallery: any[]
 }
 
-// تحميل البيانات من localStorage
 function loadFromStorage(): InMemoryStore | null {
   if (typeof window === "undefined") return null
   try {
@@ -27,7 +27,6 @@ function loadFromStorage(): InMemoryStore | null {
   }
 }
 
-// حفظ البيانات في localStorage
 function saveToStorage(data: InMemoryStore) {
   if (typeof window === "undefined") return
   try {
@@ -37,9 +36,6 @@ function saveToStorage(data: InMemoryStore) {
   }
 }
 
-import bcrypt from "bcryptjs"
-
-// تهيئة المخزن
 const storedData = loadFromStorage()
 const inMemoryStore: InMemoryStore = storedData || {
   profiles: [],
@@ -55,14 +51,12 @@ const inMemoryStore: InMemoryStore = storedData || {
   gallery: [],
 }
 
-// التأكد من وجود booking_form_services
 if (!inMemoryStore.booking_form_services) {
   inMemoryStore.booking_form_services = []
 }
 
 if (!storedData || inMemoryStore.profiles.length === 0) {
   try {
-    // استخدام hashSync للتشفير المتزامن
     const defaultAdminPassword = bcrypt.hashSync("admin123", 10)
     const defaultAdmin = {
       id: "1",
@@ -75,20 +69,19 @@ if (!storedData || inMemoryStore.profiles.length === 0) {
     }
     inMemoryStore.profiles.push(defaultAdmin)
     saveToStorage(inMemoryStore)
-    console.log("[v0] تم إنشاء مستخدم المدير الافتراضي بنجاح")
   } catch (error) {
     console.error("[v0] خطأ في إنشاء المستخدم الافتراضي:", error)
   }
 }
 
-// دالة الاستعلام الرئيسية
 export async function query(text: string, params?: any[]) {
+  // عند النشر على Vercel مع قاعدة بيانات حقيقية، يمكن تعديل هذا الملف لاستخدام PostgreSQL
+
   const queryLower = text.toLowerCase().trim()
 
   // معالجة استعلامات profiles (المستخدمين)
   if (queryLower.includes("from profiles") || queryLower.includes("insert into profiles")) {
     if (queryLower.includes("insert")) {
-      console.log("[v0] Creating new user with params:", params)
       const newUser = {
         id: String(Date.now()),
         full_name: params?.[0] || "",
@@ -98,58 +91,31 @@ export async function query(text: string, params?: any[]) {
         password: params?.[4] || "",
         created_at: new Date().toISOString(),
       }
-      console.log("[v0] New user object:", newUser)
       inMemoryStore.profiles.push(newUser)
-      console.log("[v0] Total users after insert:", inMemoryStore.profiles.length)
       saveToStorage(inMemoryStore)
-      console.log("[v0] User saved to localStorage")
       return { rows: [newUser], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
-      console.log("[v0] UPDATE profiles query:", text)
-      console.log("[v0] UPDATE params:", params)
-      console.log("[v0] Current profiles count:", inMemoryStore.profiles.length)
-
       const userId = params?.[params.length - 1]
-      console.log("[v0] Looking for user with ID:", userId)
-
       const user = inMemoryStore.profiles.find((u) => u.id === userId)
 
       if (user) {
-        console.log("[v0] Found user:", user.email, "- Current role:", user.role)
-
-        // التحقق من عدد المعاملات لتحديد نوع التحديث
         if (params && params.length === 5) {
-          // تحديث مع كلمة المرور: full_name, role, phone, password, id
-          console.log("[v0] Updating with password (5 params)")
           user.full_name = params[0]
           user.role = params[1]
           user.phone = params[2]
           user.password = params[3]
         } else if (params && params.length === 4) {
-          // تحديث بدون كلمة المرور: full_name, role, phone, id
-          console.log("[v0] Updating without password (4 params)")
           user.full_name = params[0]
           user.role = params[1]
           user.phone = params[2]
         }
 
-        console.log("[v0] Updated user data:", {
-          email: user.email,
-          full_name: user.full_name,
-          role: user.role,
-          phone: user.phone,
-        })
-
         saveToStorage(inMemoryStore)
-        console.log("[v0] User saved to localStorage")
-        console.log("[v0] Returning updated user")
-
         return { rows: [user], rowCount: 1 }
       }
 
-      console.log("[v0] User not found for update:", userId)
       return { rows: [], rowCount: 0 }
     }
 
