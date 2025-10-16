@@ -251,7 +251,7 @@ async function initDatabase() {
     `
     console.log("✅ تم إضافة مستخدم المدير")
 
-    console.log("🔄 إضافة الإعدادات الافتراضية...")
+    console.log("🔄 إضافة الإعدادات الأساسية...")
     await sql`
       INSERT INTO site_settings (setting_key, setting_value, setting_type, category) VALUES
         ('site_name_ar', 'روز سمايل', 'text', 'general'),
@@ -262,13 +262,27 @@ async function initDatabase() {
         ('email', 'info@rosesmile.com', 'text', 'contact'),
         ('whatsapp', '+966 XX XXX XXXX', 'text', 'contact')
     `
-    console.log("✅ تم إضافة الإعدادات الافتراضية")
+    console.log("✅ تم إضافة الإعدادات الأساسية")
 
     console.log("\n✅✅✅ تم تهيئة قاعدة البيانات بنجاح! ✅✅✅\n")
     console.log("📧 بيانات تسجيل الدخول:")
     console.log("   البريد الإلكتروني: admin@rosesmile.com")
     console.log("   كلمة المرور: admin123")
-    console.log("\n🌐 يمكنك الآن تسجيل الدخول إلى لوحة التحكم\n")
+    console.log("\n🌐 يمكنك الآن:")
+    console.log("   1. تسجيل الدخول إلى لوحة التحكم")
+    console.log("   2. إضافة الخدمات والأطباء والعروض من لوحة التحكم")
+    console.log("   3. ستظهر البيانات مباشرة على الموقع العام")
+    console.log("\n📊 الجداول الجاهزة:")
+    console.log("   ✅ المستخدمين (users)")
+    console.log("   ✅ الخدمات (services)")
+    console.log("   ✅ الأطباء (doctors)")
+    console.log("   ✅ العروض (offers)")
+    console.log("   ✅ المقالات (articles)")
+    console.log("   ✅ الحجوزات (bookings)")
+    console.log("   ✅ الأقسام (departments)")
+    console.log("   ✅ معرض الصور (gallery)")
+    console.log("\n🎉 قاعدة البيانات جاهزة لإضافة البيانات الحقيقية!\n")
+
   } catch (error) {
     console.error("❌ خطأ في تهيئة قاعدة البيانات:", error)
     throw error
