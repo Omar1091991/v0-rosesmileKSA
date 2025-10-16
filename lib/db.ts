@@ -1,10 +1,14 @@
 import bcrypt from "bcryptjs"
 
 const USE_REAL_DB =
-  typeof window === "undefined" && typeof process !== "undefined" && process.env.DATABASE_URL !== undefined
+  typeof window === "undefined" &&
+  typeof process !== "undefined" &&
+  process.env.DATABASE_URL !== undefined &&
+  process.env.DATABASE_URL !== ""
 
-// نظام التخزين المحلي الدائم
-const STORAGE_KEY = "rosesmile_database"
+declare global {
+  var __rosesmile_db__: InMemoryStore | undefined
+}
 
 interface InMemoryStore {
   profiles: any[]
@@ -20,133 +24,121 @@ interface InMemoryStore {
   gallery: any[]
 }
 
+function getStore(): InMemoryStore {
+  if (!globalThis.__rosesmile_db__) {
+    console.log("[v0] 🔧 تهيئة المخزن العام للمرة الأولى...")
+    globalThis.__rosesmile_db__ = {
+      profiles: [],
+      bookings: [],
+      booking_forms: [],
+      booking_form_services: [],
+      site_settings: [],
+      services: [],
+      doctors: [],
+      departments: [],
+      offers: [],
+      articles: [],
+      gallery: [],
+    }
+
+    try {
+      const defaultAdminPassword = bcrypt.hashSync("admin123", 10)
+      const defaultAdmin = {
+        id: "1",
+        full_name: "مدير النظام",
+        email: "admin@rosesmile.com",
+        phone: "+966500000000",
+        role: "admin",
+        password: defaultAdminPassword,
+        created_at: new Date().toISOString(),
+      }
+      globalThis.__rosesmile_db__.profiles.push(defaultAdmin)
+      console.log("[v0] ✅ تم إنشاء المستخدم الافتراضي: admin@rosesmile.com / admin123")
+    } catch (error) {
+      console.error("[v0] ❌ خطأ في إنشاء المستخدم الافتراضي:", error)
+    }
+  }
+
+  return globalThis.__rosesmile_db__
+}
+
 async function queryRealDatabase(text: string, params?: any[]) {
   if (typeof window !== "undefined") {
     throw new Error("Database queries can only run on the server")
   }
 
   try {
-    console.log("[v0] 🔄 محاولة الاتصال بقاعدة بيانات Railway...")
+    console.log("[v0] 🔄 الاتصال بقاعدة بيانات Railway...")
     console.log("[v0] 📝 الاستعلام:", text)
     console.log("[v0] 📊 المعاملات:", params)
 
     const { neon } = await import("@neondatabase/serverless")
     const sql = neon(process.env.DATABASE_URL!)
 
-    // Neon يدعم استعلامات SQL مباشرة مع المعاملات
-    let query = text
+    // Neon يدعم استعلامات SQL مباشرة، لكن يجب تحويل المعاملات بشكل آمن
+    let finalQuery = text
     const queryParams = params || []
 
-    // تحويل الاستعلام إلى صيغة آمنة
+    // تحويل $1, $2 إلى قيم فعلية بشكل آمن
     if (queryParams.length > 0) {
-      // استبدال $1, $2, etc. بالقيم الفعلية بشكل آمن
       queryParams.forEach((param, index) => {
         const placeholder = `$${index + 1}`
-        let value: string
+        let safeValue: string
 
         if (param === null || param === undefined) {
-          value = "NULL"
+          safeValue = "NULL"
         } else if (typeof param === "string") {
-          // تنظيف النص من علامات الاقتباس المزدوجة
-          value = `'${param.replace(/'/g, "''")}'`
+          // تنظيف النص وإضافة علامات اقتباس
+          safeValue = `'${param.replace(/'/g, "''")}'`
         } else if (typeof param === "boolean") {
-          value = param ? "true" : "false"
+          safeValue = param ? "true" : "false"
         } else if (typeof param === "number") {
-          value = String(param)
+          safeValue = String(param)
+        } else if (param instanceof Date) {
+          safeValue = `'${param.toISOString()}'`
         } else {
-          value = `'${String(param).replace(/'/g, "''")}'`
+          safeValue = `'${String(param).replace(/'/g, "''")}'`
         }
 
-        query = query.replace(new RegExp(`\\${placeholder}\\b`, "g"), value)
+        finalQuery = finalQuery.replace(new RegExp(`\\${placeholder}\\b`, "g"), safeValue)
       })
     }
 
-    console.log("[v0] 🔍 الاستعلام النهائي:", query)
+    console.log("[v0] 🔍 الاستعلام النهائي:", finalQuery)
 
-    const result = await sql(query)
-    console.log("[v0] ✅ نجح الاستعلام، عدد النتائج:", Array.isArray(result) ? result.length : 0)
-    console.log("[v0] 📦 البيانات المسترجعة:", JSON.stringify(result).substring(0, 200))
+    const result = await sql(finalQuery)
 
-    return { rows: Array.isArray(result) ? result : [result], rowCount: Array.isArray(result) ? result.length : 1 }
-  } catch (error: any) {
-    console.error("[v0] ❌ خطأ في قاعدة البيانات الحقيقية:", error.message)
-    console.error("[v0] 📋 تفاصيل الخطأ:", error)
-    throw error
-  }
-}
+    console.log("[v0] ✅ نجح الاستعلام من Railway")
+    console.log("[v0] 📦 عدد النتائج:", Array.isArray(result) ? result.length : 0)
 
-function loadFromStorage(): InMemoryStore | null {
-  if (typeof window === "undefined") return null
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    return stored ? JSON.parse(stored) : null
-  } catch {
-    return null
-  }
-}
-
-function saveToStorage(data: InMemoryStore) {
-  if (typeof window === "undefined") return
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-  } catch (error) {
-    console.error("Error saving to storage:", error)
-  }
-}
-
-const storedData = loadFromStorage()
-const inMemoryStore: InMemoryStore = storedData || {
-  profiles: [],
-  bookings: [],
-  booking_forms: [],
-  booking_form_services: [],
-  site_settings: [],
-  services: [],
-  doctors: [],
-  departments: [],
-  offers: [],
-  articles: [],
-  gallery: [],
-}
-
-if (!inMemoryStore.booking_form_services) {
-  inMemoryStore.booking_form_services = []
-}
-
-if (!storedData || inMemoryStore.profiles.length === 0) {
-  try {
-    const defaultAdminPassword = bcrypt.hashSync("admin123", 10)
-    const defaultAdmin = {
-      id: "1",
-      full_name: "مدير النظام",
-      email: "admin@rosesmile.com",
-      phone: "+966500000000",
-      role: "admin",
-      password: defaultAdminPassword,
-      created_at: new Date().toISOString(),
+    return {
+      rows: Array.isArray(result) ? result : [result],
+      rowCount: Array.isArray(result) ? result.length : result ? 1 : 0,
     }
-    inMemoryStore.profiles.push(defaultAdmin)
-    saveToStorage(inMemoryStore)
-  } catch (error) {
-    console.error("[v0] خطأ في إنشاء المستخدم الافتراضي:", error)
+  } catch (error: any) {
+    console.error("[v0] ❌ خطأ في الاتصال بـ Railway:", error.message)
+    console.error("[v0] 📋 التفاصيل:", error)
+    throw error
   }
 }
 
 export async function query(text: string, params?: any[]) {
   if (USE_REAL_DB) {
     try {
-      console.log("[v0] 🚀 استخدام قاعدة بيانات Railway...")
+      console.log("[v0] 🚀 استخدام قاعدة بيانات Railway (DATABASE_URL متوفر)")
       const result = await queryRealDatabase(text, params)
       console.log("[v0] ✅ تم الاستعلام بنجاح من Railway")
       return result
     } catch (error: any) {
-      console.error("[v0] ⚠️ فشل الاتصال بقاعدة البيانات الحقيقية:", error.message)
-      console.log("[v0] 🔄 التحويل إلى localStorage...")
-      // العودة إلى localStorage في حالة الفشل
+      console.error("[v0] ⚠️ فشل الاتصال بـ Railway:", error.message)
+      console.log("[v0] 🔄 التحويل إلى المخزن المحلي كنسخة احتياطية...")
     }
   } else {
-    console.log("[v0] 💾 استخدام localStorage (بيئة التطوير أو DATABASE_URL غير متوفر)")
+    console.log("[v0] ℹ️ DATABASE_URL غير متوفر - استخدام المخزن المحلي")
   }
+
+  console.log("[v0] 💾 استخدام المخزن العام على السيرفر")
+  const store = getStore()
 
   const queryLower = text.toLowerCase().trim()
 
@@ -162,14 +154,14 @@ export async function query(text: string, params?: any[]) {
         password: params?.[4] || "",
         created_at: new Date().toISOString(),
       }
-      inMemoryStore.profiles.push(newUser)
-      saveToStorage(inMemoryStore)
+      store.profiles.push(newUser)
+      console.log("[v0] ✅ تم إضافة مستخدم جديد:", newUser.email)
       return { rows: [newUser], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
       const userId = params?.[params.length - 1]
-      const user = inMemoryStore.profiles.find((u) => u.id === userId)
+      const user = store.profiles.find((u) => u.id === userId)
 
       if (user) {
         if (params && params.length === 5) {
@@ -182,8 +174,7 @@ export async function query(text: string, params?: any[]) {
           user.role = params[1]
           user.phone = params[2]
         }
-
-        saveToStorage(inMemoryStore)
+        console.log("[v0] ✅ تم تحديث المستخدم:", user.email)
         return { rows: [user], rowCount: 1 }
       }
 
@@ -192,10 +183,10 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("delete")) {
       const userId = params?.[0]
-      const index = inMemoryStore.profiles.findIndex((u) => u.id === userId)
+      const index = store.profiles.findIndex((u) => u.id === userId)
       if (index !== -1) {
-        inMemoryStore.profiles.splice(index, 1)
-        saveToStorage(inMemoryStore)
+        const deleted = store.profiles.splice(index, 1)
+        console.log("[v0] ✅ تم حذف المستخدم:", deleted[0].email)
         return { rows: [], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -203,11 +194,12 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("where email")) {
       const email = params?.[0]
-      const user = inMemoryStore.profiles.find((u) => u.email === email)
+      const user = store.profiles.find((u) => u.email === email)
       return { rows: user ? [user] : [], rowCount: user ? 1 : 0 }
     }
 
-    return { rows: inMemoryStore.profiles, rowCount: inMemoryStore.profiles.length }
+    console.log("[v0] 📊 عدد المستخدمين:", store.profiles.length)
+    return { rows: store.profiles, rowCount: store.profiles.length }
   }
 
   // معالجة استعلامات bookings
@@ -227,21 +219,19 @@ export async function query(text: string, params?: any[]) {
         admin_notes: null,
         created_at: new Date().toISOString(),
       }
-      inMemoryStore.bookings.push(newBooking)
-      saveToStorage(inMemoryStore)
+      store.bookings.push(newBooking)
       return { rows: [newBooking], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
       const bookingId = params?.[params.length - 1]
-      const booking = inMemoryStore.bookings.find((b) => b.id === bookingId)
+      const booking = store.bookings.find((b) => b.id === bookingId)
       if (booking) {
         const setClause = text.match(/SET\s+(.+?)\s+WHERE/i)?.[1] || ""
         if (setClause.includes("status")) booking.status = params?.[0]
         if (setClause.includes("contacted")) booking.contacted = params?.[0]
         if (setClause.includes("contact_attempts")) booking.contact_attempts = params?.[0]
         if (setClause.includes("admin_notes")) booking.admin_notes = params?.[0]
-        saveToStorage(inMemoryStore)
         return { rows: [booking], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -249,19 +239,20 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("delete")) {
       const bookingId = params?.[0]
-      const index = inMemoryStore.bookings.findIndex((b) => b.id === bookingId)
+      const index = store.bookings.findIndex((b) => b.id === bookingId)
       if (index !== -1) {
-        inMemoryStore.bookings.splice(index, 1)
-        saveToStorage(inMemoryStore)
+        store.bookings.splice(index, 1)
         return { rows: [], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
     }
 
-    return { rows: inMemoryStore.bookings, rowCount: inMemoryStore.bookings.length }
+    return { rows: store.bookings, rowCount: store.bookings.length }
   }
 
-  // معالجة استعلامات booking_forms
+  // معالجة باقي الجداول (booking_forms, site_settings, services, doctors, departments, offers, articles, gallery)
+  // الكود الموجود يعمل بشكل صحيح
+
   if (queryLower.includes("from booking_forms")) {
     if (queryLower.includes("insert")) {
       const newForm = {
@@ -275,22 +266,20 @@ export async function query(text: string, params?: any[]) {
         order_index: params?.[6] || 0,
         created_at: new Date().toISOString(),
       }
-      inMemoryStore.booking_forms.push(newForm)
-      saveToStorage(inMemoryStore)
+      store.booking_forms.push(newForm)
       return { rows: [newForm], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
       if (queryLower.includes("is_main = false")) {
-        inMemoryStore.booking_forms.forEach((form) => {
+        store.booking_forms.forEach((form) => {
           form.is_main = false
         })
-        saveToStorage(inMemoryStore)
         return { rows: [], rowCount: 1 }
       }
 
       const formId = params?.[params.length - 1]
-      const form = inMemoryStore.booking_forms.find((f) => f.id === formId)
+      const form = store.booking_forms.find((f) => f.id === formId)
       if (form) {
         if (params?.[0] !== undefined) form.name_ar = params[0]
         if (params?.[1] !== undefined) form.name_en = params[1]
@@ -299,7 +288,6 @@ export async function query(text: string, params?: any[]) {
         if (params?.[4] !== undefined) form.image_url = params[4]
         if (params?.[5] !== undefined) form.is_main = params[5]
         if (params?.[6] !== undefined) form.order_index = params[6]
-        saveToStorage(inMemoryStore)
         return { rows: [form], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -307,58 +295,49 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("delete")) {
       const formId = params?.[0]
-      const index = inMemoryStore.booking_forms.findIndex((f) => f.id === formId)
+      const index = store.booking_forms.findIndex((f) => f.id === formId)
       if (index !== -1) {
-        inMemoryStore.booking_forms.splice(index, 1)
-        inMemoryStore.booking_form_services = inMemoryStore.booking_form_services.filter(
-          (bfs) => bfs.booking_form_id !== formId,
-        )
-        saveToStorage(inMemoryStore)
+        store.booking_forms.splice(index, 1)
+        store.booking_form_services = store.booking_form_services.filter((bfs) => bfs.booking_form_id !== formId)
         return { rows: [], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
     }
 
-    return { rows: inMemoryStore.booking_forms, rowCount: inMemoryStore.booking_forms.length }
+    return { rows: store.booking_forms, rowCount: store.booking_forms.length }
   }
 
-  // معالجة استعلامات booking_form_services
   if (queryLower.includes("from booking_form_services") || queryLower.includes("booking_form_services bfs")) {
     if (queryLower.includes("insert")) {
       const newRelation = {
         booking_form_id: params?.[0],
         service_id: params?.[1],
       }
-      inMemoryStore.booking_form_services.push(newRelation)
-      saveToStorage(inMemoryStore)
+      store.booking_form_services.push(newRelation)
       return { rows: [newRelation], rowCount: 1 }
     }
 
     if (queryLower.includes("delete")) {
       const formId = params?.[0]
-      inMemoryStore.booking_form_services = inMemoryStore.booking_form_services.filter(
-        (bfs) => bfs.booking_form_id !== formId,
-      )
-      saveToStorage(inMemoryStore)
+      store.booking_form_services = store.booking_form_services.filter((bfs) => bfs.booking_form_id !== formId)
       return { rows: [], rowCount: 1 }
     }
 
     if (queryLower.includes("join services")) {
       const formId = params?.[0]
-      const formServices = inMemoryStore.booking_form_services.filter((bfs) => bfs.booking_form_id === formId)
+      const formServices = store.booking_form_services.filter((bfs) => bfs.booking_form_id === formId)
       const services = formServices
         .map((bfs) => {
-          const service = inMemoryStore.services.find((s) => s.id === bfs.service_id)
+          const service = store.services.find((s) => s.id === bfs.service_id)
           return service ? { id: service.id, title_ar: service.title_ar, title_en: service.title_en } : null
         })
         .filter(Boolean)
       return { rows: services, rowCount: services.length }
     }
 
-    return { rows: inMemoryStore.booking_form_services, rowCount: inMemoryStore.booking_form_services.length }
+    return { rows: store.booking_form_services, rowCount: store.booking_form_services.length }
   }
 
-  // معالجة استعلامات site_settings
   if (queryLower.includes("from site_settings")) {
     if (queryLower.includes("insert")) {
       const newSetting = {
@@ -367,17 +346,15 @@ export async function query(text: string, params?: any[]) {
         value: params?.[1] || "",
         created_at: new Date().toISOString(),
       }
-      inMemoryStore.site_settings.push(newSetting)
-      saveToStorage(inMemoryStore)
+      store.site_settings.push(newSetting)
       return { rows: [newSetting], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
       const key = params?.[params.length - 1]
-      const setting = inMemoryStore.site_settings.find((s) => s.key === key)
+      const setting = store.site_settings.find((s) => s.key === key)
       if (setting) {
         setting.value = params?.[0] || ""
-        saveToStorage(inMemoryStore)
         return { rows: [setting], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -385,10 +362,9 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("delete")) {
       const key = params?.[0]
-      const index = inMemoryStore.site_settings.findIndex((s) => s.key === key)
+      const index = store.site_settings.findIndex((s) => s.key === key)
       if (index !== -1) {
-        inMemoryStore.site_settings.splice(index, 1)
-        saveToStorage(inMemoryStore)
+        store.site_settings.splice(index, 1)
         return { rows: [], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -396,14 +372,14 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("where key")) {
       const key = params?.[0]
-      const setting = inMemoryStore.site_settings.find((s) => s.key === key)
+      const setting = store.site_settings.find((s) => s.key === key)
       return { rows: setting ? [setting] : [], rowCount: setting ? 1 : 0 }
     }
 
-    return { rows: inMemoryStore.site_settings, rowCount: inMemoryStore.site_settings.length }
+    console.log("[v0] 📊 عدد الإعدادات:", store.site_settings.length)
+    return { rows: store.site_settings, rowCount: store.site_settings.length }
   }
 
-  // معالجة استعلامات services
   if (queryLower.includes("from services") || queryLower.includes("into services")) {
     if (queryLower.includes("insert")) {
       const newService = {
@@ -418,14 +394,13 @@ export async function query(text: string, params?: any[]) {
         order_index: params?.[7] || 0,
         created_at: new Date().toISOString(),
       }
-      inMemoryStore.services.push(newService)
-      saveToStorage(inMemoryStore)
+      store.services.push(newService)
       return { rows: [newService], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
       const serviceId = params?.[params.length - 1]
-      const service = inMemoryStore.services.find((s) => s.id === serviceId)
+      const service = store.services.find((s) => s.id === serviceId)
       if (service) {
         const setClause = text.match(/SET\s+(.+?)\s+WHERE/i)?.[1] || ""
         const fields = setClause.split(",").map((f) => f.trim().split("=")[0].trim())
@@ -436,7 +411,6 @@ export async function query(text: string, params?: any[]) {
           }
         })
 
-        saveToStorage(inMemoryStore)
         return { rows: [service], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -444,19 +418,17 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("delete")) {
       const serviceId = params?.[0]
-      const index = inMemoryStore.services.findIndex((s) => s.id === serviceId)
+      const index = store.services.findIndex((s) => s.id === serviceId)
       if (index !== -1) {
-        inMemoryStore.services.splice(index, 1)
-        saveToStorage(inMemoryStore)
+        store.services.splice(index, 1)
         return { rows: [], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
     }
 
-    return { rows: inMemoryStore.services, rowCount: inMemoryStore.services.length }
+    return { rows: store.services, rowCount: store.services.length }
   }
 
-  // معالجة استعلامات doctors
   if (queryLower.includes("from doctors") || queryLower.includes("into doctors")) {
     if (queryLower.includes("insert")) {
       const newDoctor = {
@@ -472,14 +444,13 @@ export async function query(text: string, params?: any[]) {
         order_index: params?.[8] || 0,
         created_at: new Date().toISOString(),
       }
-      inMemoryStore.doctors.push(newDoctor)
-      saveToStorage(inMemoryStore)
+      store.doctors.push(newDoctor)
       return { rows: [newDoctor], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
       const doctorId = params?.[params.length - 1]
-      const doctor = inMemoryStore.doctors.find((d) => d.id === doctorId)
+      const doctor = store.doctors.find((d) => d.id === doctorId)
       if (doctor) {
         const setClause = text.match(/SET\s+(.+?)\s+WHERE/i)?.[1] || ""
         const fields = setClause.split(",").map((f) => f.trim().split("=")[0].trim())
@@ -490,7 +461,6 @@ export async function query(text: string, params?: any[]) {
           }
         })
 
-        saveToStorage(inMemoryStore)
         return { rows: [doctor], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -498,19 +468,18 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("delete")) {
       const doctorId = params?.[0]
-      const index = inMemoryStore.doctors.findIndex((d) => d.id === doctorId)
+      const index = store.doctors.findIndex((d) => d.id === doctorId)
       if (index !== -1) {
-        inMemoryStore.doctors.splice(index, 1)
-        saveToStorage(inMemoryStore)
+        store.doctors.splice(index, 1)
         return { rows: [], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
     }
 
-    return { rows: inMemoryStore.doctors, rowCount: inMemoryStore.doctors.length }
+    console.log("[v0] 📊 عدد الأطباء:", store.doctors.length)
+    return { rows: store.doctors, rowCount: store.doctors.length }
   }
 
-  // معالجة استعلامات departments
   if (queryLower.includes("from departments") || queryLower.includes("into departments")) {
     if (queryLower.includes("insert")) {
       const newDepartment = {
@@ -525,14 +494,13 @@ export async function query(text: string, params?: any[]) {
         order_index: params?.[7] || 0,
         created_at: new Date().toISOString(),
       }
-      inMemoryStore.departments.push(newDepartment)
-      saveToStorage(inMemoryStore)
+      store.departments.push(newDepartment)
       return { rows: [newDepartment], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
       const deptId = params?.[params.length - 1]
-      const dept = inMemoryStore.departments.find((d) => d.id === deptId)
+      const dept = store.departments.find((d) => d.id === deptId)
       if (dept) {
         const setClause = text.match(/SET\s+(.+?)\s+WHERE/i)?.[1] || ""
         const fields = setClause.split(",").map((f) => f.trim().split("=")[0].trim())
@@ -543,7 +511,6 @@ export async function query(text: string, params?: any[]) {
           }
         })
 
-        saveToStorage(inMemoryStore)
         return { rows: [dept], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -551,19 +518,17 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("delete")) {
       const deptId = params?.[0]
-      const index = inMemoryStore.departments.findIndex((d) => d.id === deptId)
+      const index = store.departments.findIndex((d) => d.id === deptId)
       if (index !== -1) {
-        inMemoryStore.departments.splice(index, 1)
-        saveToStorage(inMemoryStore)
+        store.departments.splice(index, 1)
         return { rows: [], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
     }
 
-    return { rows: inMemoryStore.departments, rowCount: inMemoryStore.departments.length }
+    return { rows: store.departments, rowCount: store.departments.length }
   }
 
-  // معالجة استعلامات offers
   if (queryLower.includes("from offers") || queryLower.includes("into offers")) {
     if (queryLower.includes("insert")) {
       const newOffer = {
@@ -580,14 +545,13 @@ export async function query(text: string, params?: any[]) {
         valid_until: params?.[9] || null,
         created_at: new Date().toISOString(),
       }
-      inMemoryStore.offers.push(newOffer)
-      saveToStorage(inMemoryStore)
+      store.offers.push(newOffer)
       return { rows: [newOffer], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
       const offerId = params?.[params.length - 1]
-      const offer = inMemoryStore.offers.find((o) => o.id === offerId)
+      const offer = store.offers.find((o) => o.id === offerId)
       if (offer) {
         const setClause = text.match(/SET\s+(.+?)\s+WHERE/i)?.[1] || ""
         const fields = setClause.split(",").map((f) => f.trim().split("=")[0].trim())
@@ -598,7 +562,6 @@ export async function query(text: string, params?: any[]) {
           }
         })
 
-        saveToStorage(inMemoryStore)
         return { rows: [offer], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -606,19 +569,17 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("delete")) {
       const offerId = params?.[0]
-      const index = inMemoryStore.offers.findIndex((o) => o.id === offerId)
+      const index = store.offers.findIndex((o) => o.id === offerId)
       if (index !== -1) {
-        inMemoryStore.offers.splice(index, 1)
-        saveToStorage(inMemoryStore)
+        store.offers.splice(index, 1)
         return { rows: [], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
     }
 
-    return { rows: inMemoryStore.offers, rowCount: inMemoryStore.offers.length }
+    return { rows: store.offers, rowCount: store.offers.length }
   }
 
-  // معالجة استعلامات articles
   if (queryLower.includes("from articles") || queryLower.includes("into articles")) {
     if (queryLower.includes("insert")) {
       const newArticle = {
@@ -631,14 +592,13 @@ export async function query(text: string, params?: any[]) {
         is_published: params?.[5] !== undefined ? params[5] : true,
         created_at: new Date().toISOString(),
       }
-      inMemoryStore.articles.push(newArticle)
-      saveToStorage(inMemoryStore)
+      store.articles.push(newArticle)
       return { rows: [newArticle], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
       const articleId = params?.[params.length - 1]
-      const article = inMemoryStore.articles.find((a) => a.id === articleId)
+      const article = store.articles.find((a) => a.id === articleId)
       if (article) {
         const setClause = text.match(/SET\s+(.+?)\s+WHERE/i)?.[1] || ""
         const fields = setClause.split(",").map((f) => f.trim().split("=")[0].trim())
@@ -649,7 +609,6 @@ export async function query(text: string, params?: any[]) {
           }
         })
 
-        saveToStorage(inMemoryStore)
         return { rows: [article], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -657,19 +616,17 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("delete")) {
       const articleId = params?.[0]
-      const index = inMemoryStore.articles.findIndex((a) => a.id === articleId)
+      const index = store.articles.findIndex((a) => a.id === articleId)
       if (index !== -1) {
-        inMemoryStore.articles.splice(index, 1)
-        saveToStorage(inMemoryStore)
+        store.articles.splice(index, 1)
         return { rows: [], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
     }
 
-    return { rows: inMemoryStore.articles, rowCount: inMemoryStore.articles.length }
+    return { rows: store.articles, rowCount: store.articles.length }
   }
 
-  // معالجة استعلامات gallery
   if (queryLower.includes("from gallery") || queryLower.includes("into gallery")) {
     if (queryLower.includes("insert")) {
       const newGalleryItem = {
@@ -680,14 +637,13 @@ export async function query(text: string, params?: any[]) {
         order_index: params?.[3] || 0,
         created_at: new Date().toISOString(),
       }
-      inMemoryStore.gallery.push(newGalleryItem)
-      saveToStorage(inMemoryStore)
+      store.gallery.push(newGalleryItem)
       return { rows: [newGalleryItem], rowCount: 1 }
     }
 
     if (queryLower.includes("update")) {
       const galleryId = params?.[params.length - 1]
-      const item = inMemoryStore.gallery.find((g) => g.id === galleryId)
+      const item = store.gallery.find((g) => g.id === galleryId)
       if (item) {
         const setClause = text.match(/SET\s+(.+?)\s+WHERE/i)?.[1] || ""
         const fields = setClause.split(",").map((f) => f.trim().split("=")[0].trim())
@@ -698,7 +654,6 @@ export async function query(text: string, params?: any[]) {
           }
         })
 
-        saveToStorage(inMemoryStore)
         return { rows: [item], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
@@ -706,32 +661,29 @@ export async function query(text: string, params?: any[]) {
 
     if (queryLower.includes("delete")) {
       const galleryId = params?.[0]
-      const index = inMemoryStore.gallery.findIndex((g) => g.id === galleryId)
+      const index = store.gallery.findIndex((g) => g.id === galleryId)
       if (index !== -1) {
-        inMemoryStore.gallery.splice(index, 1)
-        saveToStorage(inMemoryStore)
+        store.gallery.splice(index, 1)
         return { rows: [], rowCount: 1 }
       }
       return { rows: [], rowCount: 0 }
     }
 
-    return { rows: inMemoryStore.gallery, rowCount: inMemoryStore.gallery.length }
+    return { rows: store.gallery, rowCount: store.gallery.length }
   }
 
-  // معالجة استعلامات COUNT
   if (queryLower.includes("count(*)")) {
     let count = 0
-    if (queryLower.includes("from profiles")) count = inMemoryStore.profiles.length
-    else if (queryLower.includes("from bookings")) count = inMemoryStore.bookings.length
-    else if (queryLower.includes("from services")) count = inMemoryStore.services.length
-    else if (queryLower.includes("from doctors")) count = inMemoryStore.doctors.length
-    else if (queryLower.includes("from offers")) count = inMemoryStore.offers.length
-    else if (queryLower.includes("from articles")) count = inMemoryStore.articles.length
-    else if (queryLower.includes("from gallery")) count = inMemoryStore.gallery.length
+    if (queryLower.includes("from profiles")) count = store.profiles.length
+    else if (queryLower.includes("from bookings")) count = store.bookings.length
+    else if (queryLower.includes("from services")) count = store.services.length
+    else if (queryLower.includes("from doctors")) count = store.doctors.length
+    else if (queryLower.includes("from offers")) count = store.offers.length
+    else if (queryLower.includes("from articles")) count = store.articles.length
+    else if (queryLower.includes("from gallery")) count = store.gallery.length
     return { rows: [{ count }], rowCount: 1 }
   }
 
-  // استعلام افتراضي
   return { rows: [], rowCount: 0 }
 }
 
