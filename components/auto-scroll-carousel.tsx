@@ -25,12 +25,43 @@ export function AutoScrollCarousel({
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isPaused, setIsPaused] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isManualScrolling, setIsManualScrolling] = useState(false)
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const totalItems = children.length
   const maxIndex = Math.max(0, totalItems - itemsPerView)
 
   useEffect(() => {
-    if (!autoScroll || isPaused || totalItems <= itemsPerView) return
+    const scrollElement = scrollRef.current
+    if (!scrollElement) return
+
+    const handleScroll = () => {
+      // User is manually scrolling
+      setIsManualScrolling(true)
+
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+
+      // Resume auto-scroll after 3 seconds of no manual scrolling
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsManualScrolling(false)
+      }, 3000)
+    }
+
+    scrollElement.addEventListener("scroll", handleScroll, { passive: true })
+
+    return () => {
+      scrollElement.removeEventListener("scroll", handleScroll)
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!autoScroll || isPaused || isManualScrolling || totalItems <= itemsPerView) return
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => {
@@ -45,10 +76,10 @@ export function AutoScrollCarousel({
     }, scrollDuration * 1000)
 
     return () => clearInterval(interval)
-  }, [autoScroll, isPaused, scrollDuration, direction, maxIndex, totalItems, itemsPerView])
+  }, [autoScroll, isPaused, isManualScrolling, scrollDuration, direction, maxIndex, totalItems, itemsPerView])
 
   useEffect(() => {
-    if (!scrollRef.current) return
+    if (!scrollRef.current || isManualScrolling) return
 
     // Calculate the width of one item including its gap
     const containerWidth = scrollRef.current.clientWidth
@@ -61,14 +92,28 @@ export function AutoScrollCarousel({
       left: scrollPosition,
       behavior: "smooth",
     })
-  }, [currentIndex, itemsPerView])
+  }, [currentIndex, itemsPerView, isManualScrolling])
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex))
+    setIsManualScrolling(true)
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current)
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsManualScrolling(false)
+    }, 3000)
   }
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : 0))
+    setIsManualScrolling(true)
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current)
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsManualScrolling(false)
+    }, 3000)
   }
 
   if (totalItems === 0) return null
@@ -122,7 +167,16 @@ export function AutoScrollCarousel({
           {Array.from({ length: maxIndex + 1 }).map((_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => {
+                setCurrentIndex(index)
+                setIsManualScrolling(true)
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current)
+                }
+                scrollTimeoutRef.current = setTimeout(() => {
+                  setIsManualScrolling(false)
+                }, 3000)
+              }}
               className={`h-2 rounded-full transition-all ${
                 index === currentIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30"
               }`}
