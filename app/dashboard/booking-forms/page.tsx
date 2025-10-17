@@ -11,10 +11,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Pencil, Trash2, FileText, LinkIcon, Copy, ExternalLink, Upload, X } from "lucide-react"
+import { Plus, Pencil, Trash2, FileText, LinkIcon, Copy, ExternalLink } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import Link from "next/link"
+import { ImagePicker } from "@/components/image-picker"
 
 interface Service {
   id: string
@@ -57,9 +58,6 @@ export default function BookingFormsPage() {
     order_index: 0,
   })
   const [selectedServices, setSelectedServices] = useState<string[]>([])
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string>("")
-  const [uploadingImage, setUploadingImage] = useState(false)
   const [newService, setNewService] = useState({
     title_ar: "",
     title_en: "",
@@ -103,72 +101,8 @@ export default function BookingFormsPage() {
     }
   }
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string)
-    }
-    reader.readAsDataURL(file)
-
-    setUploadingImage(true)
-    try {
-      const uploadFormData = new FormData()
-      uploadFormData.append("file", file)
-
-      const response = await fetch("/api/upload-image", {
-        method: "POST",
-        body: uploadFormData,
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setFormData({ ...formData, image_url: data.url })
-        setImageFile(file)
-        toast({
-          title: "نجح",
-          description: "تم رفع الصورة بنجاح",
-        })
-      } else {
-        const error = await response.json()
-        toast({
-          title: "خطأ",
-          description: error.error || "فشل رفع الصورة",
-          variant: "destructive",
-        })
-        setImagePreview("")
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error)
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء رفع الصورة",
-        variant: "destructive",
-      })
-      setImagePreview("")
-    } finally {
-      setUploadingImage(false)
-    }
-  }
-
-  const removeImage = () => {
-    setImageFile(null)
-    setImagePreview("")
-    setFormData({ ...formData, image_url: "" })
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (uploadingImage) {
-      toast({
-        title: "تنبيه",
-        description: "يرجى الانتظار حتى يتم رفع الصورة",
-        variant: "destructive",
-      })
-      return
-    }
     setLoading(true)
 
     try {
@@ -224,7 +158,6 @@ export default function BookingFormsPage() {
       is_main: form.is_main ?? false,
       order_index: form.order_index ?? 0,
     })
-    setImagePreview(form.image_url ?? "")
     setSelectedServices(form.booking_form_services?.map((s) => s.service_id) || [])
     setOpen(true)
   }
@@ -267,8 +200,6 @@ export default function BookingFormsPage() {
       order_index: 0,
     })
     setSelectedServices([])
-    setImageFile(null)
-    setImagePreview("")
     setEditingForm(null)
   }
 
@@ -455,37 +386,11 @@ export default function BookingFormsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="image_url">صورة النموذج</Label>
-                  <div className="space-y-3">
-                    {imagePreview ? (
-                      <div className="relative w-full aspect-video rounded-lg overflow-hidden border">
-                        <Image src={imagePreview || "/placeholder.svg"} alt="معاينة" fill className="object-cover" />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="absolute top-2 right-2"
-                          onClick={removeImage}
-                          disabled={uploadingImage}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                        <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground mb-2">اضغط لاختيار صورة أو اسحبها هنا</p>
-                        <p className="text-xs text-muted-foreground">PNG, JPG, GIF حتى 5MB</p>
-                      </div>
-                    )}
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      disabled={uploadingImage}
-                      className="cursor-pointer"
-                    />
-                    {uploadingImage && <p className="text-sm text-muted-foreground text-center">جاري رفع الصورة...</p>}
-                  </div>
+                  <ImagePicker
+                    value={formData.image_url}
+                    onChange={(url) => setFormData({ ...formData, image_url: url })}
+                    onRemove={() => setFormData({ ...formData, image_url: "" })}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -572,14 +477,8 @@ export default function BookingFormsPage() {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading || uploadingImage}>
-                  {uploadingImage
-                    ? "جاري رفع الصورة..."
-                    : loading
-                      ? "جاري الحفظ..."
-                      : editingForm
-                        ? "تحديث النموذج"
-                        : "إضافة النموذج"}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "جاري الحفظ..." : editingForm ? "تحديث النموذج" : "إضافة النموذج"}
                 </Button>
               </form>
             </DialogContent>

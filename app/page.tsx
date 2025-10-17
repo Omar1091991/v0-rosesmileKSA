@@ -13,6 +13,7 @@ import { motion } from "framer-motion"
 import { useEffect, useState, useRef } from "react"
 import { WhatsAppButton } from "@/components/whatsapp-button"
 import { useLanguage } from "@/components/language-switcher"
+import { HeroSlideshow } from "@/components/hero-slideshow"
 
 export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
@@ -120,6 +121,28 @@ export default function HomePage() {
     return siteSettings[langKey] || siteSettings[`${key}_ar`] || ""
   }
 
+  const getHeroImages = (): string[] => {
+    try {
+      const imagesJson = getText("hero_images")
+      if (!imagesJson) return []
+      const images = JSON.parse(imagesJson)
+      return Array.isArray(images) ? images : []
+    } catch {
+      // Fallback to single image if parsing fails
+      const singleImage = getText("hero_image_url")
+      return singleImage ? [singleImage] : []
+    }
+  }
+
+  const getHeroSlideshowDuration = (): number => {
+    const duration = getText("hero_slideshow_duration")
+    return duration ? Number.parseFloat(duration) : 5
+  }
+
+  const getHeroAnimationType = (): string => {
+    return getText("hero_animation_type") || "scale-in"
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader user={user} />
@@ -177,15 +200,11 @@ export default function HomePage() {
                 className="relative w-full aspect-square max-w-sm sm:max-w-md mx-auto lg:max-w-full order-1 lg:order-2"
                 variants={scaleIn}
               >
-                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-                  <Image
-                    src={siteSettings.hero_image_url || "/placeholder.svg?height=600&width=600"}
-                    alt="ابتسامة الورود"
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
+                <HeroSlideshow
+                  images={getHeroImages()}
+                  duration={getHeroSlideshowDuration()}
+                  animationType={getHeroAnimationType()}
+                />
               </motion.div>
             </motion.div>
           </div>

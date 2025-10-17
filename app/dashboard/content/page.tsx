@@ -1,18 +1,17 @@
 "use client"
-
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Save, FileText, Loader2, Sparkles } from "lucide-react"
+import { Save, FileText, Loader2, Sparkles, X, Plus } from "lucide-react"
 import { motion } from "framer-motion"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { TextFormatter } from "@/components/text-formatter"
+import { ImagePicker } from "@/components/image-picker"
+import Image from "next/image"
 
 const CONTENT_SECTIONS = [
   {
@@ -26,7 +25,8 @@ const CONTENT_SECTIONS = [
         type: "textarea",
         defaultValue: "نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة",
       },
-      { key: "hero_image_url", label: "صورة القسم", type: "image", defaultValue: "" },
+      { key: "hero_images", label: "صور القسم (متعددة)", type: "images", defaultValue: "[]" },
+      { key: "hero_slideshow_duration", label: "مدة عرض كل صورة (ثانية)", type: "number", defaultValue: "5" },
     ],
   },
   {
@@ -384,7 +384,6 @@ export default function ContentManagementPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [savingSection, setSavingSection] = useState<string | null>(null)
-  const [imagePreview, setImagePreview] = useState<Record<string, string>>({})
   const { toast } = useToast()
 
   useEffect(() => {
@@ -411,14 +410,6 @@ export default function ContentManagementPage() {
       })
 
       setSettings(settingsMap)
-
-      const previews: Record<string, string> = {}
-      data.forEach((setting: any) => {
-        if (setting.type === "image" && setting.value_ar) {
-          previews[setting.key] = setting.value_ar
-        }
-      })
-      setImagePreview(previews)
     } catch (error: any) {
       console.error("[v0] Error fetching settings:", error)
       toast({
@@ -565,37 +556,37 @@ export default function ContentManagementPage() {
     }))
   }
 
-  function handleImageUpload(key: string, e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "خطأ",
-        description: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const base64 = reader.result as string
-      handleChange(key, base64, "image")
-      setImagePreview((prev) => ({ ...prev, [key]: base64 }))
-    }
-    reader.readAsDataURL(file)
+  function handleHeroImagesChange(images: string[]) {
+    const imagesJson = JSON.stringify(images)
+    setSettings((prev) => ({
+      ...prev,
+      hero_images: {
+        ...prev.hero_images,
+        key: "hero_images",
+        value_ar: imagesJson,
+        value_en: imagesJson,
+        type: "text",
+      },
+    }))
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </div>
-    )
+  function getHeroImages(): string[] {
+    try {
+      const value = settings.hero_images?.value_ar || "[]"
+      return JSON.parse(value)
+    } catch {
+      return []
+    }
+  }
+
+  function addHeroImage(url: string) {
+    const currentImages = getHeroImages()
+    handleHeroImagesChange([...currentImages, url])
+  }
+
+  function removeHeroImage(index: number) {
+    const currentImages = getHeroImages()
+    handleHeroImagesChange(currentImages.filter((_, i) => i !== index))
   }
 
   return (
@@ -642,7 +633,7 @@ export default function ContentManagementPage() {
                 d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
               />
             </svg>
-            ألوان الخلفيات
+            ألوان الخلفيات والنصوص
           </TabsTrigger>
           <TabsTrigger value="animations">
             <Sparkles className="ml-2 h-4 w-4" />
@@ -691,41 +682,35 @@ export default function ContentManagementPage() {
                         {field.type === "text" && (
                           <Input
                             id={field.key}
-                            value={settings[field.key]?.value_ar || field.defaultValue}
+                            value={settings[field.key]?.value_ar ?? field.defaultValue ?? ""}
                             onChange={(e) => handleChange(field.key, e.target.value, field.type)}
                             placeholder={field.defaultValue}
                           />
                         )}
                         {field.type === "textarea" && (
-                          <TextFormatter
+                          <Textarea
                             id={field.key}
-                            value={settings[field.key]?.value_ar || field.defaultValue}
-                            onChange={(value) => handleChange(field.key, value, field.type)}
+                            value={settings[field.key]?.value_ar ?? field.defaultValue ?? ""}
+                            onChange={(e) => handleChange(field.key, e.target.value, field.type)}
                             placeholder={field.defaultValue}
                             rows={3}
                           />
                         )}
-                        {field.type === "color" && (
-                          <div className="flex gap-2">
-                            <Input
-                              id={field.key}
-                              type="color"
-                              value={settings[field.key]?.value_ar || field.defaultValue}
-                              onChange={(e) => handleChange(field.key, e.target.value, field.type)}
-                              className="w-20 h-10"
-                            />
-                            <Input
-                              type="text"
-                              value={settings[field.key]?.value_ar || field.defaultValue}
-                              onChange={(e) => handleChange(field.key, e.target.value, field.type)}
-                              placeholder={field.defaultValue}
-                              className="flex-1"
-                            />
-                          </div>
+                        {field.type === "number" && (
+                          <Input
+                            id={field.key}
+                            type="number"
+                            step="0.5"
+                            min="1"
+                            max="30"
+                            value={settings[field.key]?.value_ar ?? field.defaultValue ?? ""}
+                            onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                            placeholder={field.defaultValue}
+                          />
                         )}
                         {field.type === "select" && (
                           <Select
-                            value={settings[field.key]?.value_ar || field.defaultValue}
+                            value={settings[field.key]?.value_ar ?? field.defaultValue ?? ""}
                             onValueChange={(value) => handleChange(field.key, value, field.type)}
                           >
                             <SelectTrigger id={field.key}>
@@ -741,38 +726,55 @@ export default function ContentManagementPage() {
                           </Select>
                         )}
                         {field.type === "image" && (
-                          <div className="space-y-2">
-                            <Input
-                              id={field.key}
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleImageUpload(field.key, e)}
-                            />
-                            {imagePreview[field.key] && (
-                              <div className="relative w-full aspect-square max-w-xs rounded-lg overflow-hidden border">
-                                <img
-                                  src={imagePreview[field.key] || "/placeholder.svg"}
-                                  alt={field.label}
-                                  className="w-full h-full object-cover"
+                          <ImagePicker
+                            value={settings[field.key]?.value_ar ?? ""}
+                            onChange={(url) => handleChange(field.key, url, field.type)}
+                            onRemove={() => handleChange(field.key, "", field.type)}
+                          />
+                        )}
+                        {field.type === "images" && (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                              {getHeroImages().map((imageUrl, index) => (
+                                <div key={index} className="relative group">
+                                  <div className="relative w-full aspect-video rounded-lg overflow-hidden border-2 border-border">
+                                    <Image
+                                      src={imageUrl || "/placeholder.svg"}
+                                      alt={`صورة ${index + 1}`}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => removeHeroImage(index)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                  <div className="absolute bottom-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
+                                    صورة {index + 1}
+                                  </div>
+                                </div>
+                              ))}
+                              <div className="relative w-full aspect-video rounded-lg border-2 border-dashed border-border flex items-center justify-center">
+                                <ImagePicker
+                                  value=""
+                                  onChange={(url) => addHeroImage(url)}
+                                  onRemove={() => {}}
+                                  trigger={
+                                    <Button type="button" variant="ghost" className="h-full w-full">
+                                      <Plus className="h-8 w-8 text-muted-foreground" />
+                                    </Button>
+                                  }
                                 />
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="sm"
-                                  className="absolute top-2 right-2"
-                                  onClick={() => {
-                                    handleChange(field.key, "", field.type)
-                                    setImagePreview((prev) => {
-                                      const newPrev = { ...prev }
-                                      delete newPrev[field.key]
-                                      return newPrev
-                                    })
-                                  }}
-                                >
-                                  حذف
-                                </Button>
                               </div>
-                            )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              أضف صور متعددة للقسم الرئيسي. سيتم عرضها بشكل متتابع حسب المدة المحددة.
+                            </p>
                           </div>
                         )}
                       </div>

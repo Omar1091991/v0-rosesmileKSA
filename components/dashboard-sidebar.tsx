@@ -11,10 +11,11 @@ import {
   Tag,
   Calendar,
   FileText,
-  ImageIcon,
   LayoutDashboard,
   LogOut,
   Database,
+  LucideComponent as ImageIconComponent,
+  Newspaper,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
@@ -32,17 +33,18 @@ import { Badge } from "@/components/ui/badge"
 
 const menuItems = [
   { title: "الرئيسية", href: "/dashboard", icon: LayoutDashboard, permission: "*" },
-  { title: "المستخدمين", href: "/dashboard/users", icon: Users, permission: "admin" },
-  { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText, permission: "admin" },
+  { title: "الحجوزات", href: "/dashboard/bookings", icon: Calendar, permission: "*" },
+  { title: "المقالات", href: "/dashboard/articles", icon: Newspaper, permission: "editor" },
   { title: "الخدمات", href: "/dashboard/services", icon: Briefcase, permission: "admin" },
   { title: "الأطباء", href: "/dashboard/doctors", icon: Stethoscope, permission: "admin" },
-  { title: "الأقسام", href: "/dashboard/departments", icon: Building2, permission: "admin" },
   { title: "العروض", href: "/dashboard/offers", icon: Tag, permission: "admin" },
+  { title: "الأقسام", href: "/dashboard/departments", icon: Building2, permission: "admin" },
   { title: "نماذج الحجز", href: "/dashboard/booking-forms", icon: FileText, permission: "admin" },
-  { title: "الحجوزات", href: "/dashboard/bookings", icon: Calendar, permission: "*" },
-  { title: "المقالات", href: "/dashboard/articles", icon: FileText, permission: "editor" },
-  { title: "معرض الصور", href: "/dashboard/gallery", icon: ImageIcon, permission: "admin" },
-  { title: "إعداد قاعدة البيانات", href: "/dashboard/database-setup", icon: Database, permission: "admin" }, // إضافة رابط إعداد قاعدة البيانات
+  { title: "مكتبة الصور", href: "/dashboard/media", icon: ImageIconComponent, permission: "admin" },
+  { title: "معرض الصور", href: "/dashboard/gallery", icon: ImageIconComponent, permission: "admin" },
+  { title: "المستخدمين", href: "/dashboard/users", icon: Users, permission: "admin" },
+  { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText, permission: "admin" },
+  { title: "إعداد قاعدة البيانات", href: "/dashboard/database-setup", icon: Database, permission: "admin" },
 ]
 
 export function DashboardSidebar() {
