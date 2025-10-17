@@ -50,14 +50,18 @@ export function AutoScrollCarousel({
   useEffect(() => {
     if (!scrollRef.current) return
 
-    const itemWidth = scrollRef.current.scrollWidth / totalItems
+    // Calculate the width of one item including its gap
+    const containerWidth = scrollRef.current.clientWidth
+    const itemWidth = containerWidth / itemsPerView
+
+    // Calculate scroll position: each scroll moves by one item width
     const scrollPosition = currentIndex * itemWidth
 
     scrollRef.current.scrollTo({
       left: scrollPosition,
       behavior: "smooth",
     })
-  }, [currentIndex, totalItems])
+  }, [currentIndex, itemsPerView])
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex))

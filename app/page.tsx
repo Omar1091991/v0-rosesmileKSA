@@ -15,6 +15,7 @@ import { WhatsAppButton } from "@/components/whatsapp-button"
 import { useLanguage } from "@/components/language-switcher"
 import { HeroSlideshow } from "@/components/hero-slideshow"
 import { AutoScrollCarousel } from "@/components/auto-scroll-carousel"
+import { AnimatedBackground } from "@/components/animated-background"
 
 export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
@@ -167,9 +168,11 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <AnimatedBackground />
+
       <SiteHeader user={user} />
 
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-12 sm:py-16 md:py-20 lg:py-32 overflow-hidden">
           <div className="container px-4 sm:px-6">
