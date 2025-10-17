@@ -35,7 +35,7 @@ export function SiteHeader() {
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/images/logo.jpeg"
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled-2-Ipgz40KKLVCjXdRLpN2Uu3iW79G489.png"
               alt="ابتسامة الورود"
               width={50}
               height={50}

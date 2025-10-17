@@ -36,15 +36,12 @@ export function AutoScrollCarousel({
     if (!scrollElement) return
 
     const handleScroll = () => {
-      // User is manually scrolling
       setIsManualScrolling(true)
 
-      // Clear existing timeout
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current)
       }
 
-      // Resume auto-scroll after 3 seconds of no manual scrolling
       scrollTimeoutRef.current = setTimeout(() => {
         setIsManualScrolling(false)
       }, 3000)
@@ -67,7 +64,6 @@ export function AutoScrollCarousel({
       setCurrentIndex((prev) => {
         const next = direction === "right" ? prev + 1 : prev - 1
 
-        // Loop back to start/end
         if (next > maxIndex) return 0
         if (next < 0) return maxIndex
 
@@ -81,20 +77,21 @@ export function AutoScrollCarousel({
   useEffect(() => {
     if (!scrollRef.current || isManualScrolling) return
 
-    const containerWidth = scrollRef.current.clientWidth
-    // Calculate the actual width of one item (excluding gaps)
-    const totalGapWidth = gap * (itemsPerView - 1)
-    const itemWidth = (containerWidth - totalGapWidth) / itemsPerView
+    // Get the first child element to measure its actual width
+    const firstChild = scrollRef.current.children[0] as HTMLElement
+    if (!firstChild) return
 
-    // Each scroll moves by one item width plus one gap
-    const scrollStep = itemWidth + gap
-    const scrollPosition = currentIndex * scrollStep
+    // Use the actual rendered width of the item
+    const itemWidth = firstChild.offsetWidth
+
+    // Scroll by the item width plus gap
+    const scrollPosition = currentIndex * (itemWidth + gap)
 
     scrollRef.current.scrollTo({
       left: scrollPosition,
       behavior: "smooth",
     })
-  }, [currentIndex, itemsPerView, gap, isManualScrolling])
+  }, [currentIndex, gap, isManualScrolling])
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex))
