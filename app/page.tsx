@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, CheckCircle2, Phone, ChevronLeft, ChevronRight } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Phone } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
@@ -14,6 +14,7 @@ import { useEffect, useState, useRef } from "react"
 import { WhatsAppButton } from "@/components/whatsapp-button"
 import { useLanguage } from "@/components/language-switcher"
 import { HeroSlideshow } from "@/components/hero-slideshow"
+import { AutoScrollCarousel } from "@/components/auto-scroll-carousel"
 
 export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
@@ -141,6 +142,27 @@ export default function HomePage() {
 
   const getHeroAnimationType = (): string => {
     return getText("hero_animation_type") || "scale-in"
+  }
+
+  // Helper functions to get carousel settings
+  const getCarouselItemsPerView = (): number => {
+    const value = getText("carousel_items_per_view")
+    return value ? Number.parseInt(value) : 3
+  }
+
+  const getCarouselScrollDuration = (): number => {
+    const value = getText("carousel_scroll_duration")
+    return value ? Number.parseInt(value) : 3
+  }
+
+  const getCarouselDirection = (): "left" | "right" => {
+    const value = getText("carousel_direction")
+    return value === "left" ? "left" : "right"
+  }
+
+  const getCarouselAutoScroll = (): boolean => {
+    const value = getText("carousel_auto_scroll")
+    return value !== "false"
   }
 
   return (
@@ -289,78 +311,58 @@ export default function HomePage() {
               </p>
             </motion.div>
 
-            <div className="relative">
-              <button
-                onClick={() => scroll(servicesScrollRef, "left")}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg"
-                aria-label="السابق"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </button>
-
-              <div
-                ref={servicesScrollRef}
-                className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
-                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-              >
-                {services?.map((service) => (
-                  <motion.div
-                    key={service.id}
-                    className="flex-shrink-0 w-80"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                  >
-                    <Card className="hover:shadow-lg transition-shadow h-full">
-                      <CardContent className="pt-6 space-y-4">
-                        <Link href={`/services/${service.id}`} className="block">
-                          {service.image_url ? (
-                            <div className="w-full aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                              <Image
-                                src={service.image_url || "/placeholder.svg"}
-                                alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-6xl cursor-pointer hover:opacity-90 transition-opacity">
-                              {service.icon || "🏥"}
-                            </div>
-                          )}
-                        </Link>
-                        <h3 className="text-xl font-semibold">
-                          {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
-                        </h3>
-                        <p className="text-muted-foreground leading-relaxed line-clamp-3">
-                          {language === "ar"
-                            ? service.description_ar
-                            : service.description_en || service.description_ar}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent">
-                            <Link href={`/services/${service.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
-                          </Button>
-                          <Button size="sm" asChild className="flex-1">
-                            <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                              {language === "ar" ? "حجز موعد" : "Book Appointment"}
-                            </Link>
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-
-              <button
-                onClick={() => scroll(servicesScrollRef, "right")}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg"
-                aria-label="التالي"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-            </div>
+            <AutoScrollCarousel
+              itemsPerView={getCarouselItemsPerView()}
+              scrollDuration={getCarouselScrollDuration()}
+              direction={getCarouselDirection()}
+              autoScroll={getCarouselAutoScroll()}
+            >
+              {services?.map((service) => (
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                >
+                  <Card className="hover:shadow-lg transition-shadow h-full">
+                    <CardContent className="pt-6 space-y-4">
+                      <Link href={`/services/${service.id}`} className="block">
+                        {service.image_url ? (
+                          <div className="w-full aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                            <Image
+                              src={service.image_url || "/placeholder.svg"}
+                              alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-6xl cursor-pointer hover:opacity-90 transition-opacity">
+                            {service.icon || "🏥"}
+                          </div>
+                        )}
+                      </Link>
+                      <h3 className="text-xl font-semibold">
+                        {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                      </h3>
+                      <p className="text-muted-foreground leading-relaxed line-clamp-3">
+                        {language === "ar" ? service.description_ar : service.description_en || service.description_ar}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent">
+                          <Link href={`/services/${service.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
+                        </Button>
+                        <Button size="sm" asChild className="flex-1">
+                          <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                            {language === "ar" ? "حجز موعد" : "Book Appointment"}
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </AutoScrollCarousel>
 
             <motion.div
               className="text-center mt-12"
@@ -405,83 +407,65 @@ export default function HomePage() {
                 </p>
               </motion.div>
 
-              <div className="relative">
-                <button
-                  onClick={() => scroll(doctorsScrollRef, "left")}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg"
-                  aria-label="السابق"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-
-                <div
-                  ref={doctorsScrollRef}
-                  className="flex gap-8 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                >
-                  {doctors.map((doctor) => (
-                    <motion.div
-                      key={doctor.id}
-                      className="flex-shrink-0 w-80"
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                    >
-                      <Card className="text-center h-full">
-                        <CardContent className="pt-6 space-y-4">
-                          <Link href={`/doctors/${doctor.id}`} className="block">
-                            <div className="w-full aspect-square mx-auto bg-muted flex items-center justify-center text-4xl overflow-hidden rounded-lg md:rounded-full cursor-pointer hover:opacity-90 transition-opacity">
-                              {doctor.image_url ? (
-                                <div className="relative w-full h-full">
-                                  <Image
-                                    src={doctor.image_url || "/placeholder.svg"}
-                                    alt={doctor.name_ar}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                              ) : (
-                                "👨‍⚕️"
-                              )}
-                            </div>
-                          </Link>
-                          <div>
-                            <h3 className="text-xl font-semibold">
-                              {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
-                            </h3>
-                            <p className="text-primary font-medium">
-                              {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
-                            </p>
+              <AutoScrollCarousel
+                itemsPerView={getCarouselItemsPerView()}
+                scrollDuration={getCarouselScrollDuration()}
+                direction={getCarouselDirection()}
+                autoScroll={getCarouselAutoScroll()}
+              >
+                {doctors.map((doctor) => (
+                  <motion.div
+                    key={doctor.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                  >
+                    <Card className="text-center h-full">
+                      <CardContent className="pt-6 space-y-4">
+                        <Link href={`/doctors/${doctor.id}`} className="block">
+                          <div className="w-full aspect-square mx-auto bg-muted flex items-center justify-center text-4xl overflow-hidden rounded-lg md:rounded-full cursor-pointer hover:opacity-90 transition-opacity">
+                            {doctor.image_url ? (
+                              <div className="relative w-full h-full">
+                                <Image
+                                  src={doctor.image_url || "/placeholder.svg"}
+                                  alt={doctor.name_ar}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              "👨‍⚕️"
+                            )}
                           </div>
-                          {doctor.bio_ar && (
-                            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                              {language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar}
-                            </p>
-                          )}
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent">
-                              <Link href={`/doctors/${doctor.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
-                            </Button>
-                            <Button size="sm" asChild className="flex-1">
-                              <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                                {language === "ar" ? "حجز موعد" : "Book Appointment"}
-                              </Link>
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => scroll(doctorsScrollRef, "right")}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg"
-                  aria-label="التالي"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-              </div>
+                        </Link>
+                        <div>
+                          <h3 className="text-xl font-semibold">
+                            {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
+                          </h3>
+                          <p className="text-primary font-medium">
+                            {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
+                          </p>
+                        </div>
+                        {doctor.bio_ar && (
+                          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                            {language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar}
+                          </p>
+                        )}
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent">
+                            <Link href={`/doctors/${doctor.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
+                          </Button>
+                          <Button size="sm" asChild className="flex-1">
+                            <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                              {language === "ar" ? "حجز موعد" : "Book Appointment"}
+                            </Link>
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AutoScrollCarousel>
 
               <motion.div
                 className="text-center mt-12"
@@ -520,24 +504,16 @@ export default function HomePage() {
                 </p>
               </motion.div>
 
-              <div className="relative max-w-4xl mx-auto">
-                <button
-                  onClick={() => scroll(offersScrollRef, "left")}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg"
-                  aria-label="السابق"
-                >
-                  <ChevronRight className="h-6 w-6 text-foreground" />
-                </button>
-
-                <div
-                  ref={offersScrollRef}
-                  className="flex gap-8 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              <div className="max-w-6xl mx-auto">
+                <AutoScrollCarousel
+                  itemsPerView={getCarouselItemsPerView()}
+                  scrollDuration={getCarouselScrollDuration()}
+                  direction={getCarouselDirection()}
+                  autoScroll={getCarouselAutoScroll()}
                 >
                   {offers.map((offer) => (
                     <motion.div
                       key={offer.id}
-                      className="flex-shrink-0 w-96"
                       initial={{ opacity: 0, scale: 0.9 }}
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
@@ -588,15 +564,7 @@ export default function HomePage() {
                       </Card>
                     </motion.div>
                   ))}
-                </div>
-
-                <button
-                  onClick={() => scroll(offersScrollRef, "right")}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg"
-                  aria-label="التالي"
-                >
-                  <ChevronLeft className="h-6 w-6 text-foreground" />
-                </button>
+                </AutoScrollCarousel>
               </div>
 
               <motion.div
@@ -643,71 +611,53 @@ export default function HomePage() {
                 </p>
               </motion.div>
 
-              <div className="relative">
-                <button
-                  onClick={() => scroll(articlesScrollRef, "left")}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg"
-                  aria-label="السابق"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-
-                <div
-                  ref={articlesScrollRef}
-                  className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                >
-                  {articles.map((article) => (
-                    <motion.div
-                      key={article.id}
-                      className="flex-shrink-0 w-80"
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                    >
-                      <Card className="hover:shadow-lg transition-shadow h-full">
-                        <CardContent className="pt-6 space-y-4">
-                          <Link href={`/articles/${article.id}`} className="block">
-                            {article.image_url && (
-                              <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
-                                <Image
-                                  src={article.image_url || "/placeholder.svg"}
-                                  alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            )}
+              <AutoScrollCarousel
+                itemsPerView={getCarouselItemsPerView()}
+                scrollDuration={getCarouselScrollDuration()}
+                direction={getCarouselDirection()}
+                autoScroll={getCarouselAutoScroll()}
+              >
+                {articles.map((article) => (
+                  <motion.div
+                    key={article.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                  >
+                    <Card className="hover:shadow-lg transition-shadow h-full">
+                      <CardContent className="pt-6 space-y-4">
+                        <Link href={`/articles/${article.id}`} className="block">
+                          {article.image_url && (
+                            <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
+                              <Image
+                                src={article.image_url || "/placeholder.svg"}
+                                alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                        </Link>
+                        <h3 className="text-xl font-semibold line-clamp-2">
+                          {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                        </h3>
+                        <p className="text-muted-foreground leading-relaxed line-clamp-3">
+                          {language === "ar"
+                            ? article.content_ar?.substring(0, 150)
+                            : article.content_en?.substring(0, 150) || article.content_ar?.substring(0, 150)}
+                          ...
+                        </p>
+                        <Button variant="outline" size="sm" asChild className="w-full bg-transparent">
+                          <Link href={`/articles/${article.id}`}>
+                            {language === "ar" ? "اقرأ المزيد" : "Read More"}
+                            <ArrowLeft className="mr-2 h-4 w-4" />
                           </Link>
-                          <h3 className="text-xl font-semibold line-clamp-2">
-                            {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
-                          </h3>
-                          <p className="text-muted-foreground leading-relaxed line-clamp-3">
-                            {language === "ar"
-                              ? article.content_ar?.substring(0, 150)
-                              : article.content_en?.substring(0, 150) || article.content_ar?.substring(0, 150)}
-                            ...
-                          </p>
-                          <Button variant="outline" size="sm" asChild className="w-full bg-transparent">
-                            <Link href={`/articles/${article.id}`}>
-                              {language === "ar" ? "اقرأ المزيد" : "Read More"}
-                              <ArrowLeft className="mr-2 h-4 w-4" />
-                            </Link>
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => scroll(articlesScrollRef, "right")}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg"
-                  aria-label="التالي"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-              </div>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AutoScrollCarousel>
 
               <motion.div
                 className="text-center mt-12"

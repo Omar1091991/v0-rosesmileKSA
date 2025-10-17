@@ -379,6 +379,51 @@ const ANIMATION_SECTIONS = [
   },
 ]
 
+const CAROUSEL_SETTINGS = [
+  {
+    section: "carousel_settings",
+    title: "إعدادات التمرير التلقائي للأقسام",
+    fields: [
+      {
+        key: "carousel_items_per_view",
+        label: "عدد العناصر المعروضة في كل مرة",
+        type: "number",
+        defaultValue: "3",
+        min: "1",
+        max: "6",
+      },
+      {
+        key: "carousel_scroll_duration",
+        label: "مدة التمرير التلقائي (ثانية)",
+        type: "number",
+        defaultValue: "3",
+        min: "1",
+        max: "10",
+      },
+      {
+        key: "carousel_direction",
+        label: "اتجاه التمرير",
+        type: "select",
+        options: [
+          { value: "right", label: "من اليسار إلى اليمين" },
+          { value: "left", label: "من اليمين إلى اليسار" },
+        ],
+        defaultValue: "right",
+      },
+      {
+        key: "carousel_auto_scroll",
+        label: "تفعيل التمرير التلقائي",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "true",
+      },
+    ],
+  },
+]
+
 export default function ContentManagementPage() {
   const [settings, setSettings] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
@@ -619,7 +664,7 @@ export default function ContentManagementPage() {
       </motion.div>
 
       <Tabs defaultValue="content" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="content">
             <FileText className="ml-2 h-4 w-4" />
             المحتوى والنصوص
@@ -638,6 +683,17 @@ export default function ContentManagementPage() {
           <TabsTrigger value="animations">
             <Sparkles className="ml-2 h-4 w-4" />
             تأثيرات الحركة
+          </TabsTrigger>
+          <TabsTrigger value="carousel">
+            <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+              />
+            </svg>
+            التمرير التلقائي
           </TabsTrigger>
         </TabsList>
 
@@ -945,6 +1001,88 @@ export default function ContentManagementPage() {
                             : 0.6
                         }
                       />
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
+        </TabsContent>
+
+        <TabsContent value="carousel" className="space-y-6 mt-6">
+          {CAROUSEL_SETTINGS.map((section, sectionIndex) => {
+            const sectionFieldKeys = section.fields.map((f) => f.key)
+            const isSavingThisSection = savingSection && sectionFieldKeys.includes(savingSection)
+
+            return (
+              <motion.div
+                key={section.section}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: sectionIndex * 0.1 }}
+              >
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>{section.title}</CardTitle>
+                    <Button
+                      onClick={() => handleSaveSection(sectionFieldKeys)}
+                      disabled={isSavingThisSection || saving}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {isSavingThisSection ? (
+                        <>
+                          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                          جاري الحفظ...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="ml-2 h-4 w-4" />
+                          حفظ {section.title}
+                        </>
+                      )}
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {section.fields.map((field) => (
+                      <div key={field.key} className="space-y-2">
+                        <Label htmlFor={field.key}>{field.label}</Label>
+                        {field.type === "number" && (
+                          <Input
+                            id={field.key}
+                            type="number"
+                            step="1"
+                            min={field.min || "1"}
+                            max={field.max || "10"}
+                            value={settings[field.key]?.value_ar ?? field.defaultValue ?? ""}
+                            onChange={(e) => handleChange(field.key, e.target.value, field.type)}
+                            placeholder={field.defaultValue}
+                          />
+                        )}
+                        {field.type === "select" && (
+                          <Select
+                            value={settings[field.key]?.value_ar ?? field.defaultValue ?? ""}
+                            onValueChange={(value) => handleChange(field.key, value, field.type)}
+                          >
+                            <SelectTrigger id={field.key}>
+                              <SelectValue placeholder="اختر خياراً" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {field.options?.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    ))}
+                    <div className="mt-6 p-6 border rounded-lg bg-muted/50">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        ملاحظة: سيتم تطبيق هذه الإعدادات على جميع أقسام الصفحة الرئيسية (الخدمات، الأطباء، العروض،
+                        المقالات)
+                      </p>
                     </div>
                   </CardContent>
                 </Card>

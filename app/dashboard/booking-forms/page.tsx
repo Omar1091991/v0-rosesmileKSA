@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Pencil, Trash2, FileText, LinkIcon, Copy, ExternalLink } from "lucide-react"
+import { Plus, Pencil, Trash2, FileText, LinkIcon, Copy, ExternalLink, Star } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import Link from "next/link"
@@ -300,7 +300,51 @@ export default function BookingFormsPage() {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "فشل في تغيير حالة النموذج",
+        description: "حدث خطأ أثناء تغيير حالة النموذج",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const setAsMainForm = async (id: string) => {
+    try {
+      const response = await fetch("/api/booking-forms", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, is_main: true }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "نجح",
+          description: "تم تعيين النموذج كنموذج رئيسي",
+        })
+        fetchForms()
+      } else {
+        const error = await response.json()
+        if (error.error && error.error.includes('column "is_main" does not exist')) {
+          toast({
+            title: "خطأ: عمود is_main غير موجود",
+            description: "يرجى الذهاب إلى صفحة إعداد قاعدة البيانات والضغط على زر 'إضافة عمود النموذج الرئيسي'",
+            variant: "destructive",
+            action: (
+              <Button variant="outline" size="sm" onClick={() => (window.location.href = "/dashboard/database-setup")}>
+                اذهب إلى الإعدادات
+              </Button>
+            ),
+          })
+        } else {
+          toast({
+            title: "خطأ",
+            description: error.error || "فشل في تعيين النموذج كرئيسي",
+            variant: "destructive",
+          })
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تعيين النموذج",
         variant: "destructive",
       })
     }
@@ -548,14 +592,27 @@ export default function BookingFormsPage() {
                 <p className="text-muted-foreground">الخدمات المتاحة:</p>
                 <p className="font-medium">{form.booking_form_services?.length || 0} خدمة</p>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(form)} className="flex-1">
-                  <Pencil className="ml-2 h-4 w-4" />
-                  تعديل
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDelete(form.id)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              <div className="flex flex-col gap-2">
+                {!form.is_main && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAsMainForm(form.id)}
+                    className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <Star className="ml-2 h-4 w-4" />
+                    تعيين كنموذج رئيسي
+                  </Button>
+                )}
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(form)} className="flex-1">
+                    <Pencil className="ml-2 h-4 w-4" />
+                    تعديل
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(form.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

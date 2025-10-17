@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Database, Play, CheckCircle, XCircle, Loader2, Key, Wrench, ImageIcon } from "lucide-react"
+import { Database, Play, CheckCircle, XCircle, Loader2, Key, Wrench, ImageIcon, Star } from "lucide-react"
 
 export default function DatabaseSetupPage() {
   const [isRunning, setIsRunning] = useState(false)
@@ -18,6 +18,10 @@ export default function DatabaseSetupPage() {
   const [isImageMigrating, setIsImageMigrating] = useState(false)
   const [imageMigrationOutput, setImageMigrationOutput] = useState<string[]>([])
   const [imageMigrationStatus, setImageMigrationStatus] = useState<"idle" | "success" | "error">("idle")
+
+  const [isMainMigrating, setIsMainMigrating] = useState(false)
+  const [isMainMigrationOutput, setIsMainMigrationOutput] = useState<string[]>([])
+  const [isMainMigrationStatus, setIsMainMigrationStatus] = useState<"idle" | "success" | "error">("idle")
 
   const runScript = async () => {
     setIsRunning(true)
@@ -103,6 +107,34 @@ export default function DatabaseSetupPage() {
       setImageMigrationStatus("error")
     } finally {
       setIsImageMigrating(false)
+    }
+  }
+
+  // إضافة function لـ is_main migration
+  const runIsMainMigration = async () => {
+    setIsMainMigrating(true)
+    setIsMainMigrationOutput([])
+    setIsMainMigrationStatus("idle")
+
+    try {
+      const response = await fetch("/api/migrations/add-is-main-column", {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setIsMainMigrationOutput([data.message, data.mainFormId ? `النموذج الرئيسي: ${data.mainFormId}` : ""])
+        setIsMainMigrationStatus("success")
+      } else {
+        setIsMainMigrationOutput([data.error || "حدث خطأ غير معروف"])
+        setIsMainMigrationStatus("error")
+      }
+    } catch (error) {
+      setIsMainMigrationOutput([`خطأ في الاتصال: ${error}`])
+      setIsMainMigrationStatus("error")
+    } finally {
+      setIsMainMigrating(false)
     }
   }
 
@@ -225,6 +257,58 @@ export default function DatabaseSetupPage() {
           {migrationOutput.length > 0 && (
             <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
               {migrationOutput.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Star className="h-5 w-5" />
+            إصلاح: إضافة عمود النموذج الرئيسي
+          </CardTitle>
+          <CardDescription>
+            إذا كان زر "احجز موعد" لا يعمل، استخدم هذا الزر لإضافة عمود is_main إلى جدول booking_forms وتعيين نموذج
+            رئيسي
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button onClick={runIsMainMigration} disabled={isMainMigrating} variant="secondary" className="gap-2">
+              {isMainMigrating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري التنفيذ...
+                </>
+              ) : (
+                <>
+                  <Star className="h-5 w-5" />
+                  إضافة عمود النموذج الرئيسي
+                </>
+              )}
+            </Button>
+
+            {isMainMigrationStatus === "success" && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-semibold">تم بنجاح</span>
+              </div>
+            )}
+
+            {isMainMigrationStatus === "error" && (
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-semibold">فشل</span>
+              </div>
+            )}
+          </div>
+
+          {isMainMigrationOutput.length > 0 && (
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+              {isMainMigrationOutput.map((line, index) => (
                 <div key={index}>{line}</div>
               ))}
             </div>

@@ -69,10 +69,15 @@ export async function POST(request: Request) {
 
     console.log("[v0] Creating booking form with data:", formData)
 
+    // If this form is marked as main, unset all other main forms first
+    if (formData.is_main) {
+      await db.query("UPDATE booking_forms SET is_main = false WHERE is_main = true")
+    }
+
     const result = await db.query(
       `
-      INSERT INTO booking_forms (title_ar, title_en, description_ar, description_en, image_url, fields, is_active, order_index)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO booking_forms (title_ar, title_en, description_ar, description_en, image_url, fields, is_main, is_active, order_index)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `,
       [
@@ -82,6 +87,7 @@ export async function POST(request: Request) {
         formData.description_en,
         formData.image_url || null,
         formData.fields || "[]",
+        formData.is_main || false,
         formData.is_active !== false,
         formData.order_index || 0,
       ],
@@ -119,8 +125,14 @@ export async function PATCH(request: Request) {
       description_en: "description_en",
       image_url: "image_url",
       fields: "fields",
+      is_main: "is_main",
       is_active: "is_active",
       order_index: "order_index",
+    }
+
+    // If this form is being marked as main, unset all other main forms first
+    if (formData.is_main) {
+      await db.query("UPDATE booking_forms SET is_main = false WHERE is_main = true AND id != $1", [id])
     }
 
     const dbFields: string[] = []
