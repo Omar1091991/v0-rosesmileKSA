@@ -81,18 +81,20 @@ export function AutoScrollCarousel({
   useEffect(() => {
     if (!scrollRef.current || isManualScrolling) return
 
-    // Calculate the width of one item including its gap
     const containerWidth = scrollRef.current.clientWidth
-    const itemWidth = containerWidth / itemsPerView
+    // Calculate the actual width of one item (excluding gaps)
+    const totalGapWidth = gap * (itemsPerView - 1)
+    const itemWidth = (containerWidth - totalGapWidth) / itemsPerView
 
-    // Calculate scroll position: each scroll moves by one item width
-    const scrollPosition = currentIndex * itemWidth
+    // Each scroll moves by one item width plus one gap
+    const scrollStep = itemWidth + gap
+    const scrollPosition = currentIndex * scrollStep
 
     scrollRef.current.scrollTo({
       left: scrollPosition,
       behavior: "smooth",
     })
-  }, [currentIndex, itemsPerView, isManualScrolling])
+  }, [currentIndex, itemsPerView, gap, isManualScrolling])
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex))
