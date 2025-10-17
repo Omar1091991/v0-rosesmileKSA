@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
+import Image from "next/image"
 
 interface DentalIcon {
   id: number
@@ -11,7 +12,7 @@ interface DentalIcon {
   duration: number
   delay: number
   rotation: number
-  type: "tooth" | "toothbrush" | "mirror" | "drill" | "molar"
+  type: "tooth" | "toothbrush" | "mirror" | "drill" | "molar" | "logo"
 }
 
 // SVG Components for different dental icons
@@ -79,15 +80,15 @@ export function AnimatedBackground() {
   useEffect(() => {
     const generateIcons = () => {
       const newIcons: DentalIcon[] = []
-      const count = 25
-      const types: DentalIcon["type"][] = ["tooth", "toothbrush", "mirror", "drill", "molar"]
+      const count = 30
+      const types: DentalIcon["type"][] = ["tooth", "toothbrush", "mirror", "drill", "molar", "logo", "logo"]
 
       for (let i = 0; i < count; i++) {
         newIcons.push({
           id: i,
           x: Math.random() * 100,
           y: Math.random() * 100,
-          size: 40 + Math.random() * 50,
+          size: 50 + Math.random() * 80,
           duration: 15 + Math.random() * 15,
           delay: Math.random() * 5,
           rotation: Math.random() * 360,
@@ -113,6 +114,15 @@ export function AnimatedBackground() {
         return <MirrorIcon />
       case "drill":
         return <DrillIcon />
+      case "logo":
+        return (
+          <Image
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled-2-iVEA0ISnmn0GPMPijj4fvY3wRhkNtj.png"
+            alt="Rose Smile Logo"
+            fill
+            className="object-contain"
+          />
+        )
       default:
         return <ToothIcon />
     }
@@ -123,7 +133,7 @@ export function AnimatedBackground() {
       {icons.map((icon) => (
         <motion.div
           key={icon.id}
-          className="absolute text-primary/30"
+          className={icon.type === "logo" ? "absolute opacity-20" : "absolute text-primary/30"}
           style={{
             left: `${icon.x}%`,
             top: `${icon.y}%`,
@@ -136,7 +146,7 @@ export function AnimatedBackground() {
             rotate: icon.rotation,
           }}
           animate={{
-            opacity: [0, 0.35, 0.35, 0],
+            opacity: icon.type === "logo" ? [0, 0.25, 0.25, 0] : [0, 0.35, 0.35, 0],
             scale: [0, 1, 1, 0],
             rotate: [icon.rotation, icon.rotation + 360],
             y: [0, -100, -200, -300],
