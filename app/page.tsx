@@ -213,14 +213,14 @@ export default function HomePage() {
               : "linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--background)), hsl(var(--primary) / 0.05))",
           }}
         >
-          <div className="container px-4 sm:px-6 lg:px-8">
+          <div className="container px-2 sm:px-4 md:px-6 lg:px-8">
             <motion.div
               className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center"
               initial="initial"
               animate="animate"
               variants={staggerContainer}
             >
-              <div className="space-y-4 sm:space-y-6 lg:space-y-8 text-center lg:text-right order-2 lg:order-1">
+              <div className="space-y-4 sm:space-y-6 lg:space-y-8 text-center lg:text-right order-2 lg:order-1 px-2 sm:px-0">
                 <motion.h1
                   className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-balance leading-tight"
                   variants={fadeInUp}
@@ -260,7 +260,7 @@ export default function HomePage() {
               </div>
 
               <motion.div
-                className="relative w-full aspect-square max-w-[280px] sm:max-w-sm md:max-w-md mx-auto lg:max-w-full order-1 lg:order-2"
+                className="relative w-full aspect-square max-w-full sm:max-w-md md:max-w-lg mx-auto lg:max-w-full order-1 lg:order-2"
                 variants={scaleIn}
               >
                 <HeroSlideshow
