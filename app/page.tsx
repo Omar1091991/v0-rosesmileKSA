@@ -290,10 +290,15 @@ export default function HomePage() {
                 <motion.div key={index} variants={scaleIn}>
                   <Card className={`border-none shadow-none bg-gradient-to-br ${feature.gradient} h-full`}>
                     <CardContent className="pt-6 space-y-4">
-                      <h3 className="text-xl font-semibold text-[#E91E63]">
+                      <h3
+                        className="text-xl font-semibold"
+                        style={{ color: getText("features_title_color") || undefined }}
+                      >
                         {renderFormattedText(feature.title.replace(/^\d+[\s.:-]*/, ""))}
                       </h3>
-                      <p className="text-[#2196F3] leading-relaxed">{renderFormattedText(feature.description)}</p>
+                      <p className="leading-relaxed" style={{ color: getText("features_text_color") || undefined }}>
+                        {renderFormattedText(feature.description)}
+                      </p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -320,12 +325,15 @@ export default function HomePage() {
               viewport={{ once: true }}
               variants={fadeInUp}
             >
-              <h2 className="text-3xl md:text-4xl font-bold">
+              <h2
+                className="text-3xl md:text-4xl font-bold"
+                style={{ color: getText("services_title_color") || undefined }}
+              >
                 {renderFormattedText(
                   getText("services_title") || (language === "ar" ? "خدماتنا الطبية" : "Our Medical Services"),
                 )}
               </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <p className="text-lg max-w-2xl mx-auto" style={{ color: getText("services_text_color") || undefined }}>
                 {renderFormattedText(
                   getText("services_description") ||
                     (language === "ar"
@@ -405,7 +413,12 @@ export default function HomePage() {
 
         {/* Doctors Section */}
         {doctors && doctors.length > 0 && (
-          <section className="py-16 md:py-24">
+          <section
+            className="py-16 md:py-24"
+            style={{
+              backgroundColor: getText("doctors_background_color") || undefined,
+            }}
+          >
             <div className="container">
               <motion.div
                 className="text-center space-y-4 mb-12"
@@ -414,12 +427,15 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 variants={fadeInUp}
               >
-                <h2 className="text-3xl md:text-4xl font-bold">
+                <h2
+                  className="text-3xl md:text-4xl font-bold"
+                  style={{ color: getText("doctors_title_color") || undefined }}
+                >
                   {renderFormattedText(
                     getText("doctors_title") || (language === "ar" ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"),
                   )}
                 </h2>
-                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                <p className="text-lg max-w-2xl mx-auto" style={{ color: getText("doctors_text_color") || undefined }}>
                   {renderFormattedText(
                     getText("doctors_description") ||
                       (language === "ar"
@@ -730,7 +746,15 @@ export default function HomePage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-secondary/10 to-primary/5">
+        <section
+          className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-secondary/10 to-primary/5"
+          style={{
+            backgroundColor: getText("cta_background_color") || undefined,
+            backgroundImage: getText("cta_background_color")
+              ? "none"
+              : "linear-gradient(to bottom right, hsl(var(--primary) / 0.05), hsl(var(--secondary) / 0.1), hsl(var(--primary) / 0.05))",
+          }}
+        >
           <div className="container">
             <motion.div
               className="max-w-3xl mx-auto text-center space-y-8"
@@ -739,7 +763,11 @@ export default function HomePage() {
               viewport={{ once: true }}
               variants={staggerContainer}
             >
-              <motion.h2 className="text-3xl md:text-4xl font-bold text-balance" variants={fadeInUp}>
+              <motion.h2
+                className="text-3xl md:text-4xl font-bold text-balance"
+                variants={fadeInUp}
+                style={{ color: getText("cta_title_color") || undefined }}
+              >
                 {renderFormattedText(
                   getText("cta_title") ||
                     (language === "ar"
@@ -747,7 +775,11 @@ export default function HomePage() {
                       : "Are You Ready to Start Your Journey Towards Better Health?"),
                 )}
               </motion.h2>
-              <motion.p className="text-lg text-muted-foreground text-balance" variants={fadeInUp}>
+              <motion.p
+                className="text-lg text-balance"
+                variants={fadeInUp}
+                style={{ color: getText("cta_text_color") || undefined }}
+              >
                 {renderFormattedText(
                   getText("cta_description") ||
                     (language === "ar"
