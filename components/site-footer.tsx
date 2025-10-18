@@ -7,6 +7,11 @@ import { useEffect, useState } from "react"
 
 export function SiteFooter() {
   const [footerBgColor, setFooterBgColor] = useState<string>("")
+  const [footerPhone, setFooterPhone] = useState<string>("+966 12 345 6789")
+  const [footerEmail, setFooterEmail] = useState<string>("info@rosesmileksa.com")
+  const [footerNote, setFooterNote] = useState<string>(
+    "عيادات طبية متخصصة في مكة المكرمة نقدم أفضل الخدمات الطبية بأحدث التقنيات",
+  )
 
   useEffect(() => {
     async function fetchSettings() {
@@ -14,9 +19,25 @@ export function SiteFooter() {
         const response = await fetch("/api/site-settings")
         const settingsData = await response.json()
         const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
+
         const footerColorSetting = settings.find((s: any) => s.key === "footer_background_color")
         if (footerColorSetting?.value_ar) {
           setFooterBgColor(footerColorSetting.value_ar)
+        }
+
+        const phoneSetting = settings.find((s: any) => s.key === "footer_phone")
+        if (phoneSetting?.value_ar) {
+          setFooterPhone(phoneSetting.value_ar)
+        }
+
+        const emailSetting = settings.find((s: any) => s.key === "footer_email")
+        if (emailSetting?.value_ar) {
+          setFooterEmail(emailSetting.value_ar)
+        }
+
+        const noteSetting = settings.find((s: any) => s.key === "footer_note")
+        if (noteSetting?.value_ar) {
+          setFooterNote(noteSetting.value_ar)
         }
       } catch (error) {
         console.error("Error fetching footer settings:", error)
@@ -37,9 +58,7 @@ export function SiteFooter() {
           {/* About */}
           <div className="space-y-3 sm:space-y-4">
             <h3 className="text-base sm:text-lg font-bold text-primary">ابتسامة الورود</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              عيادات طبية متخصصة في مكة المكرمة نقدم أفضل الخدمات الطبية بأحدث التقنيات
-            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{footerNote}</p>
           </div>
 
           {/* Quick Links */}
@@ -70,6 +89,18 @@ export function SiteFooter() {
               >
                 العروض
               </Link>
+              <Link
+                href="/privacy-policy"
+                className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                سياسة الخصوصية
+              </Link>
+              <Link
+                href="/terms-conditions"
+                className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                الشروط والأحكام
+              </Link>
             </nav>
           </div>
 
@@ -79,11 +110,11 @@ export function SiteFooter() {
             <div className="flex flex-col gap-2 sm:gap-3">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                 <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
-                <span className="break-all">+966 12 345 6789</span>
+                <span className="break-all">{footerPhone}</span>
               </div>
               <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                 <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
-                <span className="break-all">info@rosesmileksa.com</span>
+                <span className="break-all">{footerEmail}</span>
               </div>
               <div className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground">
                 <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0 mt-0.5" />

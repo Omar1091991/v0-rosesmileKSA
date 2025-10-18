@@ -207,6 +207,32 @@ const CONTENT_SECTIONS = [
       },
     ],
   },
+  {
+    section: "footer",
+    title: "إعدادات التذييل",
+    fields: [
+      { key: "footer_phone", label: "رقم الهاتف", type: "text", defaultValue: "+966 12 345 6789" },
+      { key: "footer_email", label: "البريد الإلكتروني", type: "text", defaultValue: "info@rosesmileksa.com" },
+      {
+        key: "footer_note",
+        label: "ملاحظة التذييل",
+        type: "textarea",
+        defaultValue: "عيادات طبية متخصصة في مكة المكرمة نقدم أفضل الخدمات الطبية بأحدث التقنيات",
+      },
+      {
+        key: "privacy_policy_content",
+        label: "محتوى سياسة الخصوصية",
+        type: "textarea",
+        defaultValue: "أضف محتوى سياسة الخصوصية هنا...",
+      },
+      {
+        key: "terms_conditions_content",
+        label: "محتوى الشروط والأحكام",
+        type: "textarea",
+        defaultValue: "أضف محتوى الشروط والأحكام هنا...",
+      },
+    ],
+  },
 ]
 
 const BACKGROUND_COLOR_SECTIONS = [

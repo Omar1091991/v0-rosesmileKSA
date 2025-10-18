@@ -16,6 +16,7 @@ import { useLanguage } from "@/components/language-switcher"
 import { HeroSlideshow } from "@/components/hero-slideshow"
 import { AutoScrollCarousel } from "@/components/auto-scroll-carousel"
 import { AnimatedBackground } from "@/components/animated-background"
+import { SocialMediaLinks } from "@/components/social-media-links"
 
 export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
@@ -357,14 +358,16 @@ export default function HomePage() {
               viewport={{ once: true }}
               variants={fadeInUp}
             >
-              <h2
-                className="text-2xl sm:text-3xl md:text-4xl font-bold"
-                style={{ color: getText("services_title_color") || undefined }}
-              >
-                {renderFormattedText(
-                  getText("services_title") || (language === "ar" ? "خدماتنا الطبية" : "Our Medical Services"),
-                )}
-              </h2>
+              <Link href="/services" className="inline-block hover:opacity-80 transition-opacity">
+                <h2
+                  className="text-2xl sm:text-3xl md:text-4xl font-bold cursor-pointer"
+                  style={{ color: getText("services_title_color") || undefined }}
+                >
+                  {renderFormattedText(
+                    getText("services_title") || (language === "ar" ? "خدماتنا الطبية" : "Our Medical Services"),
+                  )}
+                </h2>
+              </Link>
               <p
                 className="text-base sm:text-lg max-w-2xl mx-auto px-4"
                 style={{ color: getText("services_text_color") || undefined }}
@@ -426,11 +429,30 @@ export default function HomePage() {
                         >
                           <Link href={`/services/${service.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
                         </Button>
-                        <Button size="sm" className="flex-1 text-xs sm:text-sm" asChild>
-                          <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                            {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                          </Link>
-                        </Button>
+                        <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Button
+                            size="sm"
+                            className="w-full text-xs sm:text-sm relative overflow-hidden group"
+                            asChild
+                          >
+                            <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                              <motion.span
+                                className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
+                                animate={{
+                                  x: ["-100%", "100%"],
+                                }}
+                                transition={{
+                                  duration: 2,
+                                  repeat: Number.POSITIVE_INFINITY,
+                                  ease: "linear",
+                                }}
+                              />
+                              <span className="relative z-10">
+                                {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                              </span>
+                            </Link>
+                          </Button>
+                        </motion.div>
                       </div>
                     </CardContent>
                   </Card>
@@ -471,14 +493,17 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 variants={fadeInUp}
               >
-                <h2
-                  className="text-2xl sm:text-3xl md:text-4xl font-bold"
-                  style={{ color: getText("doctors_title_color") || undefined }}
-                >
-                  {renderFormattedText(
-                    getText("doctors_title") || (language === "ar" ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"),
-                  )}
-                </h2>
+                <Link href="/doctors" className="inline-block hover:opacity-80 transition-opacity">
+                  <h2
+                    className="text-2xl sm:text-3xl md:text-4xl font-bold cursor-pointer"
+                    style={{ color: getText("doctors_title_color") || undefined }}
+                  >
+                    {renderFormattedText(
+                      getText("doctors_title") ||
+                        (language === "ar" ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"),
+                    )}
+                  </h2>
+                </Link>
                 <p
                   className="text-base sm:text-lg max-w-2xl mx-auto px-4"
                   style={{ color: getText("doctors_text_color") || undefined }}
@@ -508,22 +533,20 @@ export default function HomePage() {
                     <Card className="text-center h-full hover:shadow-lg transition-all hover:scale-105 flex flex-col">
                       <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
                         <Link href={`/doctors/${doctor.id}`} className="block">
-                          <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-muted flex items-center justify-center text-3xl sm:text-4xl overflow-hidden rounded-full cursor-pointer hover:opacity-90 transition-opacity">
+                          <div className="w-full aspect-square relative bg-muted flex items-center justify-center text-4xl sm:text-6xl overflow-hidden rounded-lg cursor-pointer hover:opacity-90 transition-opacity mx-auto max-w-xs">
                             {doctor.image_url ? (
-                              <div className="relative w-full h-full">
-                                <Image
-                                  src={doctor.image_url || "/placeholder.svg"}
-                                  alt={doctor.name_ar}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
+                              <Image
+                                src={doctor.image_url || "/placeholder.svg"}
+                                alt={doctor.name_ar}
+                                fill
+                                className="object-cover"
+                              />
                             ) : (
                               "👨‍⚕️"
                             )}
                           </div>
                         </Link>
-                        <div>
+                        <div className="flex-1">
                           <h3 className="text-base sm:text-lg md:text-xl font-semibold line-clamp-2">
                             {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
                           </h3>
@@ -540,11 +563,30 @@ export default function HomePage() {
                           >
                             <Link href={`/doctors/${doctor.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
                           </Button>
-                          <Button size="sm" className="flex-1 text-xs sm:text-sm" asChild>
-                            <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                              {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                            </Link>
-                          </Button>
+                          <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <Button
+                              size="sm"
+                              className="w-full text-xs sm:text-sm relative overflow-hidden group"
+                              asChild
+                            >
+                              <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                                <motion.span
+                                  className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
+                                  animate={{
+                                    x: ["-100%", "100%"],
+                                  }}
+                                  transition={{
+                                    duration: 2,
+                                    repeat: Number.POSITIVE_INFINITY,
+                                    ease: "linear",
+                                  }}
+                                />
+                                <span className="relative z-10">
+                                  {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                                </span>
+                              </Link>
+                            </Button>
+                          </motion.div>
                         </div>
                       </CardContent>
                     </Card>
@@ -575,94 +617,63 @@ export default function HomePage() {
           <section className="py-16 md:py-24 bg-gradient-to-br from-primary to-primary/90 text-primary-foreground">
             <div className="container">
               <motion.div
-                className="text-center space-y-4 mb-12"
+                className="max-w-6xl mx-auto"
                 initial="initial"
                 whileInView="animate"
                 viewport={{ once: true }}
-                variants={fadeInUp}
+                variants={staggerContainer}
               >
-                <h2 className="text-3xl md:text-4xl font-bold">
-                  {language === "ar" ? "عروضنا الحصرية" : "Exclusive Offers"}
-                </h2>
-                <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto">
-                  {language === "ar" ? "استفد من عروضنا الخاصة المحدودة" : "Enjoy our limited exclusive offers"}
-                </p>
-              </motion.div>
-
-              <div className="max-w-6xl mx-auto">
-                <AutoScrollCarousel
-                  itemsPerView={getOffersCarouselSettings().itemsPerView}
-                  scrollDuration={getOffersCarouselSettings().scrollDuration}
-                  direction={getOffersCarouselSettings().direction}
-                  autoScroll={getOffersCarouselSettings().autoScroll}
-                >
-                  {offers.map((offer) => (
-                    <motion.div
-                      key={offer.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                    >
-                      <Card className="bg-background text-foreground h-full flex flex-col">
-                        <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
-                          {offer.image_url && (
-                            <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
-                              <Image
-                                src={offer.image_url || "/placeholder.svg"}
-                                alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          )}
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-2xl font-bold">
-                              {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
-                            </h3>
-                            {offer.discount_percentage && (
-                              <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-bold">
-                                {language === "ar"
-                                  ? `خصم ${offer.discount_percentage}%`
-                                  : `Discount ${offer.discount_percentage}%`}
-                              </div>
-                            )}
+                {offers.map((offer) => (
+                  <motion.div
+                    key={offer.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                  >
+                    <Card className="bg-background text-foreground h-full flex flex-col">
+                      <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
+                        {offer.image_url && (
+                          <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
+                            <Image
+                              src={offer.image_url || "/placeholder.svg"}
+                              alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
+                              fill
+                              className="object-cover"
+                            />
                           </div>
-                          <p className="text-muted-foreground leading-relaxed line-clamp-3">
-                            {language === "ar" ? offer.description_ar : offer.description_en || offer.description_ar}
-                          </p>
-                          {offer.price_before && offer.price_after && (
-                            <div className="flex items-center gap-4">
-                              <span className="text-3xl font-bold text-primary">{offer.price_after} ريال</span>
-                              <span className="text-lg text-muted-foreground line-through">
-                                {offer.price_before} ريال
-                              </span>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-2xl font-bold">
+                            {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
+                          </h3>
+                          {offer.discount_percentage && (
+                            <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-bold">
+                              {language === "ar"
+                                ? `خصم ${offer.discount_percentage}%`
+                                : `Discount ${offer.discount_percentage}%`}
                             </div>
                           )}
-                          <Button className="w-full" asChild>
-                            <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                              {language === "ar" ? "احجز الآن" : "Book Now"}
-                            </Link>
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </AutoScrollCarousel>
-              </div>
-
-              <motion.div
-                className="text-center mt-12"
-                initial="initial"
-                whileInView="animate"
-                viewport={{ once: true }}
-                variants={fadeIn}
-              >
-                <Button variant="secondary" size="lg" asChild>
-                  <Link href="/offers">
-                    {language === "ar" ? "عرض جميع العروض" : "View All Offers"}
-                    <ArrowLeft className="mr-2 h-5 w-5" />
-                  </Link>
-                </Button>
+                        </div>
+                        <p className="text-muted-foreground leading-relaxed line-clamp-3">
+                          {language === "ar" ? offer.description_ar : offer.description_en || offer.description_ar}
+                        </p>
+                        {offer.price_before && offer.price_after && (
+                          <div className="flex items-center gap-4">
+                            <span className="text-3xl font-bold text-primary">{offer.price_after} ريال</span>
+                            <span className="text-lg text-muted-foreground line-through">
+                              {offer.price_before} ريال
+                            </span>
+                          </div>
+                        )}
+                        <Button className="w-full" asChild>
+                          <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                            {language === "ar" ? "احجز الآن" : "Book Now"}
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
               </motion.div>
             </div>
           </section>
@@ -679,12 +690,14 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 variants={fadeInUp}
               >
-                <h2 className="text-3xl md:text-4xl font-bold">
-                  {renderFormattedText(
-                    getText("articles_title") || (language === "ar" ? "مقالاتنا الطبية" : "Our Medical Articles"),
-                  )}
-                </h2>
-                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                <Link href="/articles" className="inline-block hover:opacity-80 transition-opacity">
+                  <h2 className="text-3xl md:text-4xl font-bold cursor-pointer">
+                    {renderFormattedText(
+                      getText("articles_title") || (language === "ar" ? "مقالاتنا الطبية" : "Our Medical Articles"),
+                    )}
+                  </h2>
+                </Link>
+                <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
                   {renderFormattedText(
                     getText("articles_description") ||
                       (language === "ar"
@@ -760,6 +773,31 @@ export default function HomePage() {
           </section>
         )}
 
+        {/* Social Media Section - Above Why Choose Us */}
+        <section className="py-12 sm:py-16 bg-gradient-to-br from-primary/5 to-secondary/5">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <motion.div
+              className="text-center space-y-6"
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+            >
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+                {language === "ar" ? "تابعنا على وسائل التواصل الاجتماعي" : "Follow Us on Social Media"}
+              </h2>
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+                {language === "ar"
+                  ? "ابقَ على اطلاع بآخر الأخبار والعروض والنصائح الطبية"
+                  : "Stay updated with the latest news, offers, and medical tips"}
+              </p>
+              <div className="flex justify-center">
+                <SocialMediaLinks />
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
         {/* Why Choose Us Section */}
         <section className="py-16 md:py-24">
           <div className="container">
@@ -798,6 +836,85 @@ export default function HomePage() {
                   <span className="text-lg">{item}</span>
                 </motion.div>
               ))}
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Location & Map Section */}
+        <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-muted/30">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <motion.div
+              className="max-w-5xl mx-auto"
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+            >
+              {/* Title */}
+              <motion.div className="text-center space-y-3 sm:space-y-4 mb-8 sm:mb-12" variants={fadeInUp}>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+                  {language === "ar" ? "موقعنا" : "Our Location"}
+                </h2>
+                <div className="space-y-2">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-primary">
+                    {language === "ar" ? "ابتسامة الورود لطب الأسنان" : "Rose Smile Dental Clinic"}
+                  </h3>
+                  <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                    {language === "ar"
+                      ? "مكة المكرمة - حي العوالي - شارع ابراهيم الجفالي - أعلى صيدلية الدواء"
+                      : "Makkah - Al-Awali District - Ibrahim Al-Jafali Street - Above Al-Dawa Pharmacy"}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Map */}
+              <motion.div className="space-y-6" variants={fadeInUp}>
+                <Card className="overflow-hidden border-2">
+                  <CardContent className="p-0">
+                    <div className="w-full aspect-video sm:aspect-[16/10] md:aspect-video relative">
+                      <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3401.366826996365!2d39.88774458506184!3d21.356004385822036!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c205a75fa29ceb%3A0x34e397f5afaaf369!2z2YXYrNmF2Lkg2KfYqNiq2LPYp9mF2Kkg2KfZhNmI2LHZiNivINmE2LfYqCDYp9mE2KPYs9mG2KfZhg!5e1!3m2!1sar!2seg!4v1760828095198!5m2!1sar!2seg"
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0, position: "absolute", top: 0, left: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title={language === "ar" ? "موقع العيادة" : "Clinic Location"}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Get Directions Button */}
+                <div className="text-center">
+                  <Button size="lg" className="w-full sm:w-auto" asChild>
+                    <a
+                      href="https://maps.app.goo.gl/A1bn39TLNMNoCCJ8A"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-map-pin"
+                      >
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                      {language === "ar" ? "اضغط للحصول على الاتجاهات" : "Click to Get Directions"}
+                    </a>
+                  </Button>
+                </div>
+              </motion.div>
             </motion.div>
           </div>
         </section>
@@ -845,11 +962,24 @@ export default function HomePage() {
                 )}
               </motion.p>
               <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" variants={fadeInUp}>
-                <Button size="lg" asChild>
-                  <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                  </Link>
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button size="lg" className="relative overflow-hidden group" asChild>
+                    <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                      <motion.span
+                        className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
+                        animate={{
+                          x: ["-100%", "100%"],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: "linear",
+                        }}
+                      />
+                      <span className="relative z-10">{language === "ar" ? "احجز موعد" : "Book Appointment"}</span>
+                    </Link>
+                  </Button>
+                </motion.div>
                 <Button variant="outline" size="lg" asChild>
                   <Link href="tel:+966123456789">
                     <Phone className="ml-2 h-5 w-5" />
