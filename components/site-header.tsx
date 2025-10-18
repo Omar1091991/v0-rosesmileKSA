@@ -10,28 +10,45 @@ import { LanguageSwitcher } from "@/components/language-switcher"
 export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mainBookingFormId, setMainBookingFormId] = useState<string>("")
+  const [headerBgColor, setHeaderBgColor] = useState<string>("")
 
   useEffect(() => {
-    async function fetchMainForm() {
+    async function fetchData() {
       try {
-        const response = await fetch("/api/booking-forms")
-        const forms = await response.json()
+        const [formsResponse, settingsResponse] = await Promise.all([
+          fetch("/api/booking-forms"),
+          fetch("/api/site-settings"),
+        ])
+
+        const forms = await formsResponse.json()
         const mainForm = forms.find((f: any) => f.is_main)
         if (mainForm) {
           setMainBookingFormId(mainForm.id)
         }
+
+        const settingsData = await settingsResponse.json()
+        const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
+        const headerColorSetting = settings.find((s: any) => s.key === "header_background_color")
+        if (headerColorSetting?.value_ar) {
+          setHeaderBgColor(headerColorSetting.value_ar)
+        }
       } catch (error) {
-        console.error("Error fetching booking forms:", error)
+        console.error("Error fetching data:", error)
       }
     }
-    fetchMainForm()
+    fetchData()
   }, [])
 
   const bookingLink = mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header
+        className="sticky top-0 z-50 w-full border-b border-border/40 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        style={{
+          backgroundColor: headerBgColor || "hsl(var(--background) / 0.95)",
+        }}
+      >
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <Image
@@ -45,7 +62,6 @@ export function SiteHeader() {
             <div className="text-xl font-bold text-primary hidden sm:block">ابتسامة الورود</div>
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/" className="text-sm font-medium hover:text-primary transition-colors">
               الرئيسية
@@ -67,7 +83,6 @@ export function SiteHeader() {
             </Link>
           </nav>
 
-          {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
 
@@ -83,13 +98,11 @@ export function SiteHeader() {
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-border/40 bg-background">
             <nav className="container flex flex-col gap-4 py-4">

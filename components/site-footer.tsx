@@ -1,10 +1,37 @@
+"use client"
+
 import Link from "next/link"
 import { Phone, Mail, MapPin } from "lucide-react"
 import { SocialMediaLinks } from "@/components/social-media-links"
+import { useEffect, useState } from "react"
 
 export function SiteFooter() {
+  const [footerBgColor, setFooterBgColor] = useState<string>("")
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const response = await fetch("/api/site-settings")
+        const settingsData = await response.json()
+        const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
+        const footerColorSetting = settings.find((s: any) => s.key === "footer_background_color")
+        if (footerColorSetting?.value_ar) {
+          setFooterBgColor(footerColorSetting.value_ar)
+        }
+      } catch (error) {
+        console.error("Error fetching footer settings:", error)
+      }
+    }
+    fetchSettings()
+  }, [])
+
   return (
-    <footer className="border-t border-border/40 bg-muted/30">
+    <footer
+      className="border-t border-border/40"
+      style={{
+        backgroundColor: footerBgColor || "hsl(var(--muted) / 0.3)",
+      }}
+    >
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}

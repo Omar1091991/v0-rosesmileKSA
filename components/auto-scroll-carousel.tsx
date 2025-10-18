@@ -24,21 +24,41 @@ export function AutoScrollCarousel({
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isPaused, setIsPaused] = useState(false)
   const [isManualScrolling, setIsManualScrolling] = useState(false)
+  const [isWaitingToLoop, setIsWaitingToLoop] = useState(false)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const autoScrollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const loopTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const prevDirectionRef = useRef(direction)
 
   const totalItems = children.length
 
-  const scrollByOneItem = (direction: "left" | "right") => {
+  useEffect(() => {
+    const scrollElement = scrollRef.current
+    if (!scrollElement) return
+
+    if (prevDirectionRef.current !== direction) {
+      if (direction === "left") {
+        scrollElement.scrollTo({
+          left: scrollElement.scrollWidth - scrollElement.clientWidth,
+          behavior: "auto",
+        })
+      } else {
+        scrollElement.scrollTo({
+          left: 0,
+          behavior: "auto",
+        })
+      }
+      prevDirectionRef.current = direction
+    }
+  }, [direction])
+
+  const scrollByOneItem = (scrollDirection: "left" | "right") => {
     if (!scrollRef.current) return
 
     const container = scrollRef.current
     const containerWidth = container.offsetWidth
-
-    // Calculate how much to scroll: container width divided by items per view
     const scrollAmount = containerWidth / itemsPerView
-
-    const scrollDistance = direction === "right" ? scrollAmount : -scrollAmount
+    const scrollDistance = scrollDirection === "right" ? scrollAmount : -scrollAmount
 
     container.scrollBy({
       left: scrollDistance,
@@ -46,12 +66,61 @@ export function AutoScrollCarousel({
     })
   }
 
-  // Handle manual scroll detection
   useEffect(() => {
     const scrollElement = scrollRef.current
     if (!scrollElement) return
 
     const handleScroll = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollElement
+
+      if (direction === "right" && scrollLeft + clientWidth >= scrollWidth - 5 && !isWaitingToLoop) {
+        setIsWaitingToLoop(true)
+
+        if (loopTimeoutRef.current) {
+          clearTimeout(loopTimeoutRef.current)
+        }
+
+        loopTimeoutRef.current = setTimeout(() => {
+          scrollElement.scrollTo({
+            left: 0,
+            behavior: "auto",
+          })
+          setIsWaitingToLoop(false)
+        }, scrollDuration * 1000)
+      }
+
+      if (direction === "left" && scrollLeft <= 5 && !isWaitingToLoop) {
+        setIsWaitingToLoop(true)
+
+        if (loopTimeoutRef.current) {
+          clearTimeout(loopTimeoutRef.current)
+        }
+
+        loopTimeoutRef.current = setTimeout(() => {
+          scrollElement.scrollTo({
+            left: scrollWidth - clientWidth,
+            behavior: "auto",
+          })
+          setIsWaitingToLoop(false)
+        }, scrollDuration * 1000)
+      }
+    }
+
+    scrollElement.addEventListener("scroll", handleScroll, { passive: true })
+
+    return () => {
+      scrollElement.removeEventListener("scroll", handleScroll)
+      if (loopTimeoutRef.current) {
+        clearTimeout(loopTimeoutRef.current)
+      }
+    }
+  }, [direction, scrollDuration, isWaitingToLoop])
+
+  useEffect(() => {
+    const scrollElement = scrollRef.current
+    if (!scrollElement) return
+
+    const handleManualScroll = () => {
       setIsManualScrolling(true)
 
       if (scrollTimeoutRef.current) {
@@ -63,10 +132,10 @@ export function AutoScrollCarousel({
       }, 3000)
     }
 
-    scrollElement.addEventListener("scroll", handleScroll, { passive: true })
+    scrollElement.addEventListener("scroll", handleManualScroll, { passive: true })
 
     return () => {
-      scrollElement.removeEventListener("scroll", handleScroll)
+      scrollElement.removeEventListener("scroll", handleManualScroll)
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current)
       }
@@ -74,7 +143,7 @@ export function AutoScrollCarousel({
   }, [])
 
   useEffect(() => {
-    if (!autoScroll || isPaused || isManualScrolling || totalItems <= itemsPerView) {
+    if (!autoScroll || isPaused || isManualScrolling || isWaitingToLoop || totalItems <= itemsPerView) {
       if (autoScrollIntervalRef.current) {
         clearInterval(autoScrollIntervalRef.current)
         autoScrollIntervalRef.current = null
@@ -92,7 +161,7 @@ export function AutoScrollCarousel({
         autoScrollIntervalRef.current = null
       }
     }
-  }, [autoScroll, isPaused, isManualScrolling, scrollDuration, direction, totalItems, itemsPerView])
+  }, [autoScroll, isPaused, isManualScrolling, isWaitingToLoop, scrollDuration, direction, totalItems, itemsPerView])
 
   const handlePrevious = () => {
     scrollByOneItem("left")

@@ -174,7 +174,15 @@ export default function HomePage() {
 
       <main className="flex-1 relative z-10">
         {/* Hero Section */}
-        <section className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-12 sm:py-16 md:py-20 lg:py-32 overflow-hidden">
+        <section
+          className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-12 sm:py-16 md:py-20 lg:py-32 overflow-hidden"
+          style={{
+            backgroundColor: getText("hero_background_color") || undefined,
+            backgroundImage: getText("hero_background_color")
+              ? "none"
+              : "linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--background)), hsl(var(--primary) / 0.05))",
+          }}
+        >
           <div className="container px-4 sm:px-6">
             <motion.div
               className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center"
@@ -236,7 +244,12 @@ export default function HomePage() {
         </section>
 
         {/* Features Section */}
-        <section className="py-16 md:py-24">
+        <section
+          className="py-16 md:py-24"
+          style={{
+            backgroundColor: getText("features_background_color") || undefined,
+          }}
+        >
           <div className="container">
             <motion.div
               className="grid grid-cols-1 md:grid-cols-3 gap-8"
@@ -290,7 +303,15 @@ export default function HomePage() {
         </section>
 
         {/* Services Section */}
-        <section className="py-12 sm:py-16 md:py-24 bg-gradient-to-br from-secondary/10 to-primary/5">
+        <section
+          className="py-12 sm:py-16 md:py-24"
+          style={{
+            backgroundColor: getText("services_background_color") || undefined,
+            backgroundImage: getText("services_background_color")
+              ? "none"
+              : "linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--primary) / 0.05))",
+          }}
+        >
           <div className="container px-4 sm:px-6">
             <motion.div
               className="text-center space-y-4 mb-12"
