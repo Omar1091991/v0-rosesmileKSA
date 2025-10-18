@@ -1,14 +1,15 @@
 "use client"
 
-import type React from "react"
+import { Textarea } from "@/components/ui/textarea"
 
+import type React from "react"
+import { TextFormatter } from "@/components/text-formatter"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { Plus, Pencil, Trash2, FileText } from "lucide-react"
 
@@ -291,10 +292,10 @@ export default function ArticlesPage() {
 
               <div>
                 <Label htmlFor="content_ar">المحتوى بالعربية *</Label>
-                <Textarea
+                <TextFormatter
                   id="content_ar"
                   value={formData.content_ar}
-                  onChange={(e) => setFormData({ ...formData, content_ar: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, content_ar: value })}
                   placeholder="محتوى المقال..."
                   rows={6}
                 />
@@ -302,10 +303,10 @@ export default function ArticlesPage() {
 
               <div>
                 <Label htmlFor="content_en">المحتوى بالإنجليزية</Label>
-                <Textarea
+                <TextFormatter
                   id="content_en"
                   value={formData.content_en}
-                  onChange={(e) => setFormData({ ...formData, content_en: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, content_en: value })}
                   placeholder="Article content..."
                   rows={6}
                 />
@@ -424,20 +425,20 @@ export default function ArticlesPage() {
 
             <div>
               <Label htmlFor="edit_content_ar">المحتوى بالعربية *</Label>
-              <Textarea
+              <TextFormatter
                 id="edit_content_ar"
                 value={formData.content_ar}
-                onChange={(e) => setFormData({ ...formData, content_ar: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, content_ar: value })}
                 rows={6}
               />
             </div>
 
             <div>
               <Label htmlFor="edit_content_en">المحتوى بالإنجليزية</Label>
-              <Textarea
+              <TextFormatter
                 id="edit_content_en"
                 value={formData.content_en}
-                onChange={(e) => setFormData({ ...formData, content_en: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, content_en: value })}
                 rows={6}
               />
             </div>

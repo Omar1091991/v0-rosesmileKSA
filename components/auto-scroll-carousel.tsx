@@ -33,6 +33,17 @@ export function AutoScrollCarousel({
   const totalItems = children.length
 
   useEffect(() => {
+    console.log("[v0] AutoScrollCarousel initialized:", {
+      totalItems,
+      itemsPerView,
+      scrollDuration,
+      direction,
+      autoScroll,
+      canScroll: totalItems > itemsPerView,
+    })
+  }, [totalItems, itemsPerView, scrollDuration, direction, autoScroll])
+
+  useEffect(() => {
     const scrollElement = scrollRef.current
     if (!scrollElement) return
 
@@ -143,7 +154,8 @@ export function AutoScrollCarousel({
   }, [])
 
   useEffect(() => {
-    if (!autoScroll || isPaused || isManualScrolling || isWaitingToLoop || totalItems <= itemsPerView) {
+    if (!autoScroll) {
+      console.log("[v0] AutoScroll disabled by prop")
       if (autoScrollIntervalRef.current) {
         clearInterval(autoScrollIntervalRef.current)
         autoScrollIntervalRef.current = null
@@ -151,7 +163,27 @@ export function AutoScrollCarousel({
       return
     }
 
+    if (totalItems <= itemsPerView) {
+      console.log("[v0] AutoScroll disabled: not enough items", { totalItems, itemsPerView })
+      if (autoScrollIntervalRef.current) {
+        clearInterval(autoScrollIntervalRef.current)
+        autoScrollIntervalRef.current = null
+      }
+      return
+    }
+
+    if (isPaused || isManualScrolling || isWaitingToLoop) {
+      console.log("[v0] AutoScroll paused:", { isPaused, isManualScrolling, isWaitingToLoop })
+      if (autoScrollIntervalRef.current) {
+        clearInterval(autoScrollIntervalRef.current)
+        autoScrollIntervalRef.current = null
+      }
+      return
+    }
+
+    console.log("[v0] Starting auto-scroll interval:", { direction, scrollDuration })
     autoScrollIntervalRef.current = setInterval(() => {
+      console.log("[v0] Auto-scrolling...")
       scrollByOneItem(direction)
     }, scrollDuration * 1000)
 
@@ -162,6 +194,54 @@ export function AutoScrollCarousel({
       }
     }
   }, [autoScroll, isPaused, isManualScrolling, isWaitingToLoop, scrollDuration, direction, totalItems, itemsPerView])
+
+  useEffect(() => {
+    const scrollElement = scrollRef.current
+    if (!scrollElement) return
+
+    let touchStartX = 0
+    let touchEndX = 0
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX
+      setIsManualScrolling(true)
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      touchEndX = e.touches[0].clientX
+    }
+
+    const handleTouchEnd = () => {
+      const swipeDistance = touchStartX - touchEndX
+      const minSwipeDistance = 50
+
+      if (Math.abs(swipeDistance) > minSwipeDistance) {
+        if (swipeDistance > 0) {
+          scrollByOneItem("right")
+        } else {
+          scrollByOneItem("left")
+        }
+      }
+
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsManualScrolling(false)
+      }, 3000)
+    }
+
+    scrollElement.addEventListener("touchstart", handleTouchStart, { passive: true })
+    scrollElement.addEventListener("touchmove", handleTouchMove, { passive: true })
+    scrollElement.addEventListener("touchend", handleTouchEnd, { passive: true })
+
+    return () => {
+      scrollElement.removeEventListener("touchstart", handleTouchStart)
+      scrollElement.removeEventListener("touchmove", handleTouchMove)
+      scrollElement.removeEventListener("touchend", handleTouchEnd)
+    }
+  }, [])
 
   const handlePrevious = () => {
     scrollByOneItem("left")
@@ -193,31 +273,32 @@ export function AutoScrollCarousel({
         <>
           <button
             onClick={handlePrevious}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-50 bg-primary hover:bg-primary/90 text-primary-foreground p-3 rounded-full shadow-xl transition-all hover:scale-110 active:scale-95"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 sm:translate-x-full z-50 bg-primary hover:bg-primary/90 text-primary-foreground p-2 sm:p-3 rounded-full shadow-xl transition-all hover:scale-110 active:scale-95"
             aria-label="السابق"
             type="button"
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-4 w-4 sm:h-6 sm:w-6" />
           </button>
 
           <button
             onClick={handleNext}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-50 bg-primary hover:bg-primary/90 text-primary-foreground p-3 rounded-full shadow-xl transition-all hover:scale-110 active:scale-95"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 sm:-translate-x-full z-50 bg-primary hover:bg-primary/90 text-primary-foreground p-2 sm:p-3 rounded-full shadow-xl transition-all hover:scale-110 active:scale-95"
             aria-label="التالي"
             type="button"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-4 w-4 sm:h-6 sm:w-6" />
           </button>
         </>
       )}
 
       <div
         ref={scrollRef}
-        className="flex overflow-x-auto scrollbar-hide scroll-smooth"
+        className="flex overflow-x-auto scrollbar-hide scroll-smooth touch-pan-x"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           gap: `${gap}px`,
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {children.map((child, index) => (
@@ -226,6 +307,7 @@ export function AutoScrollCarousel({
             className="flex-shrink-0"
             style={{
               width: `calc((100% - ${gap * (itemsPerView - 1)}px) / ${itemsPerView})`,
+              minWidth: "280px",
             }}
           >
             {child}

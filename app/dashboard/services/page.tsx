@@ -9,9 +9,9 @@ import { Plus, Pencil, Trash2, Briefcase, Upload, X } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
+import { TextFormatter } from "@/components/text-formatter"
 
 interface Service {
   id: string
@@ -276,13 +276,13 @@ export default function ServicesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => (
             <Card key={service.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
-                <div className="flex items-start justify-between gap-4">
+                <div className="space-y-4">
                   {service.image_url && (
-                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                    <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted">
                       <img
                         src={service.image_url || "/placeholder.svg"}
                         alt={service.title_ar}
@@ -290,12 +290,11 @@ export default function ServicesPage() {
                       />
                     </div>
                   )}
-                  <div className="flex-1 space-y-2">
+                  <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       {service.icon && <span className="text-2xl">{service.icon}</span>}
-                      <h3 className="font-semibold text-xl">{service.title_ar}</h3>
+                      <h3 className="font-semibold text-lg">{service.title_ar}</h3>
                     </div>
-                    <p className="text-muted-foreground">{service.description_ar}</p>
                     <div className="flex items-center gap-2 text-sm">
                       <span className={service.is_active ? "text-green-600" : "text-red-600"}>
                         {service.is_active ? "نشط" : "غير نشط"}
@@ -303,10 +302,11 @@ export default function ServicesPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 pt-2">
                     <Button
                       variant="outline"
                       size="sm"
+                      className="flex-1 bg-transparent"
                       onClick={() => {
                         setSelectedService(service)
                         setEditImagePreview(service.image_url || "")
@@ -320,6 +320,7 @@ export default function ServicesPage() {
                     <Button
                       variant="destructive"
                       size="sm"
+                      className="flex-1"
                       onClick={() => handleDeleteService(service.id)}
                       disabled={loading}
                     >
@@ -393,13 +394,12 @@ export default function ServicesPage() {
               <Label htmlFor="description_ar">
                 الوصف بالعربية <span className="text-destructive">*</span>
               </Label>
-              <Textarea
+              <TextFormatter
                 id="description_ar"
                 value={newService.description_ar}
-                onChange={(e) => setNewService({ ...newService, description_ar: e.target.value })}
+                onChange={(value) => setNewService({ ...newService, description_ar: value })}
                 placeholder="وصف تفصيلي للخدمة"
                 rows={4}
-                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -492,12 +492,11 @@ export default function ServicesPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit_description_ar">الوصف بالعربية</Label>
-                <Textarea
+                <TextFormatter
                   id="edit_description_ar"
                   value={selectedService.description_ar}
-                  onChange={(e) => setSelectedService({ ...selectedService, description_ar: e.target.value })}
+                  onChange={(value) => setSelectedService({ ...selectedService, description_ar: value })}
                   rows={4}
-                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">

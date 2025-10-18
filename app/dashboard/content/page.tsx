@@ -381,19 +381,19 @@ const ANIMATION_SECTIONS = [
 
 const CAROUSEL_SETTINGS = [
   {
-    section: "carousel_settings",
-    title: "إعدادات التمرير التلقائي للأقسام",
+    section: "services_carousel",
+    title: "إعدادات التمرير التلقائي - قسم الخدمات",
     fields: [
       {
-        key: "carousel_items_per_view",
-        label: "عدد العناصر المعروضة في كل مرة",
+        key: "services_carousel_items_per_view",
+        label: "عدد الخدمات المعروضة في كل مرة",
         type: "number",
         defaultValue: "3",
         min: "1",
         max: "6",
       },
       {
-        key: "carousel_scroll_duration",
+        key: "services_carousel_scroll_duration",
         label: "مدة التمرير التلقائي (ثانية)",
         type: "number",
         defaultValue: "3",
@@ -401,17 +401,143 @@ const CAROUSEL_SETTINGS = [
         max: "10",
       },
       {
-        key: "carousel_direction",
+        key: "services_carousel_direction",
         label: "اتجاه التمرير",
         type: "select",
         options: [
           { value: "right", label: "من اليسار إلى اليمين" },
           { value: "left", label: "من اليمين إلى اليسار" },
         ],
-        defaultValue: "right",
+        defaultValue: "left",
       },
       {
-        key: "carousel_auto_scroll",
+        key: "services_carousel_auto_scroll",
+        label: "تفعيل التمرير التلقائي",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "true",
+      },
+    ],
+  },
+  {
+    section: "doctors_carousel",
+    title: "إعدادات التمرير التلقائي - قسم الأطباء",
+    fields: [
+      {
+        key: "doctors_carousel_items_per_view",
+        label: "عدد الأطباء المعروضين في كل مرة",
+        type: "number",
+        defaultValue: "3",
+        min: "1",
+        max: "6",
+      },
+      {
+        key: "doctors_carousel_scroll_duration",
+        label: "مدة التمرير التلقائي (ثانية)",
+        type: "number",
+        defaultValue: "3",
+        min: "1",
+        max: "10",
+      },
+      {
+        key: "doctors_carousel_direction",
+        label: "اتجاه التمرير",
+        type: "select",
+        options: [
+          { value: "right", label: "من اليسار إلى اليمين" },
+          { value: "left", label: "من اليمين إلى اليسار" },
+        ],
+        defaultValue: "left",
+      },
+      {
+        key: "doctors_carousel_auto_scroll",
+        label: "تفعيل التمرير التلقائي",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "true",
+      },
+    ],
+  },
+  {
+    section: "articles_carousel",
+    title: "إعدادات التمرير التلقائي - قسم المقالات",
+    fields: [
+      {
+        key: "articles_carousel_items_per_view",
+        label: "عدد المقالات المعروضة في كل مرة",
+        type: "number",
+        defaultValue: "3",
+        min: "1",
+        max: "6",
+      },
+      {
+        key: "articles_carousel_scroll_duration",
+        label: "مدة التمرير التلقائي (ثانية)",
+        type: "number",
+        defaultValue: "3",
+        min: "1",
+        max: "10",
+      },
+      {
+        key: "articles_carousel_direction",
+        label: "اتجاه التمرير",
+        type: "select",
+        options: [
+          { value: "right", label: "من اليسار إلى اليمين" },
+          { value: "left", label: "من اليمين إلى اليسار" },
+        ],
+        defaultValue: "left",
+      },
+      {
+        key: "articles_carousel_auto_scroll",
+        label: "تفعيل التمرير التلقائي",
+        type: "select",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+        defaultValue: "true",
+      },
+    ],
+  },
+  {
+    section: "offers_carousel",
+    title: "إعدادات التمرير التلقائي - قسم العروض",
+    fields: [
+      {
+        key: "offers_carousel_items_per_view",
+        label: "عدد العروض المعروضة في كل مرة",
+        type: "number",
+        defaultValue: "3",
+        min: "1",
+        max: "6",
+      },
+      {
+        key: "offers_carousel_scroll_duration",
+        label: "مدة التمرير التلقائي (ثانية)",
+        type: "number",
+        defaultValue: "3",
+        min: "1",
+        max: "10",
+      },
+      {
+        key: "offers_carousel_direction",
+        label: "اتجاه التمرير",
+        type: "select",
+        options: [
+          { value: "right", label: "من اليسار إلى اليمين" },
+          { value: "left", label: "من اليمين إلى اليسار" },
+        ],
+        defaultValue: "left",
+      },
+      {
+        key: "offers_carousel_auto_scroll",
         label: "تفعيل التمرير التلقائي",
         type: "select",
         options: [
@@ -1078,12 +1204,6 @@ export default function ContentManagementPage() {
                         )}
                       </div>
                     ))}
-                    <div className="mt-6 p-6 border rounded-lg bg-muted/50">
-                      <p className="text-sm text-muted-foreground mb-4">
-                        ملاحظة: سيتم تطبيق هذه الإعدادات على جميع أقسام الصفحة الرئيسية (الخدمات، الأطباء، العروض،
-                        المقالات)
-                      </p>
-                    </div>
                   </CardContent>
                 </Card>
               </motion.div>

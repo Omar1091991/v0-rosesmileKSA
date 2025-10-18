@@ -115,7 +115,7 @@ export default function HomePage() {
   const renderFormattedText = (text: string) => {
     // السماح فقط بالوسوم الآمنة: strong, em, s, b, i, del
     const sanitizedText = text.replace(/<(?!\/?(?:strong|em|s|b|i|del)\b)[^>]*>/gi, "")
-    return <span dangerouslySetInnerHTML={{ __html: sanitizedText }} />
+    return <span dangerouslySetInnerHTML={{ __html: sanitizedText }} style={{ whiteSpace: "pre-wrap" }} />
   }
 
   const getText = (key: string) => {
@@ -166,6 +166,35 @@ export default function HomePage() {
     return value !== "false"
   }
 
+  // Helper functions to get carousel settings for each section
+  const getServicesCarouselSettings = () => ({
+    itemsPerView: Number.parseInt(getText("services_carousel_items_per_view") || "3"),
+    scrollDuration: Number.parseInt(getText("services_carousel_scroll_duration") || "3"),
+    direction: (getText("services_carousel_direction") || "left") as "left" | "right",
+    autoScroll: getText("services_carousel_auto_scroll") !== "false",
+  })
+
+  const getDoctorsCarouselSettings = () => ({
+    itemsPerView: Number.parseInt(getText("doctors_carousel_items_per_view") || "3"),
+    scrollDuration: Number.parseInt(getText("doctors_carousel_scroll_duration") || "3"),
+    direction: (getText("doctors_carousel_direction") || "left") as "left" | "right",
+    autoScroll: getText("doctors_carousel_auto_scroll") !== "false",
+  })
+
+  const getArticlesCarouselSettings = () => ({
+    itemsPerView: Number.parseInt(getText("articles_carousel_items_per_view") || "3"),
+    scrollDuration: Number.parseInt(getText("articles_carousel_scroll_duration") || "3"),
+    direction: (getText("articles_carousel_direction") || "left") as "left" | "right",
+    autoScroll: getText("articles_carousel_auto_scroll") !== "false",
+  })
+
+  const getOffersCarouselSettings = () => ({
+    itemsPerView: Number.parseInt(getText("offers_carousel_items_per_view") || "3"),
+    scrollDuration: Number.parseInt(getText("offers_carousel_scroll_duration") || "3"),
+    direction: (getText("offers_carousel_direction") || "left") as "left" | "right",
+    autoScroll: getText("offers_carousel_auto_scroll") !== "false",
+  })
+
   return (
     <div className="flex min-h-screen flex-col">
       <AnimatedBackground />
@@ -175,7 +204,7 @@ export default function HomePage() {
       <main className="flex-1 relative z-10">
         {/* Hero Section */}
         <section
-          className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-12 sm:py-16 md:py-20 lg:py-32 overflow-hidden"
+          className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-8 sm:py-12 md:py-16 lg:py-24 overflow-hidden"
           style={{
             backgroundColor: getText("hero_background_color") || undefined,
             backgroundImage: getText("hero_background_color")
@@ -183,16 +212,16 @@ export default function HomePage() {
               : "linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--background)), hsl(var(--primary) / 0.05))",
           }}
         >
-          <div className="container px-4 sm:px-6">
+          <div className="container px-4 sm:px-6 lg:px-8">
             <motion.div
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center"
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center"
               initial="initial"
               animate="animate"
               variants={staggerContainer}
             >
-              <div className="space-y-6 sm:space-y-8 text-center lg:text-right order-2 lg:order-1">
+              <div className="space-y-4 sm:space-y-6 lg:space-y-8 text-center lg:text-right order-2 lg:order-1">
                 <motion.h1
-                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-balance leading-tight"
+                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-balance leading-tight"
                   variants={fadeInUp}
                 >
                   {renderFormattedText(
@@ -201,7 +230,7 @@ export default function HomePage() {
                   )}
                 </motion.h1>
                 <motion.p
-                  className="text-lg md:text-xl text-muted-foreground text-balance leading-relaxed"
+                  className="text-base sm:text-lg md:text-xl text-muted-foreground text-balance leading-relaxed"
                   variants={fadeInUp}
                 >
                   {renderFormattedText(
@@ -212,25 +241,25 @@ export default function HomePage() {
                   )}
                 </motion.p>
                 <motion.div
-                  className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4"
                   variants={fadeInUp}
                 >
-                  <Button size="lg" asChild>
+                  <Button size="lg" className="w-full sm:w-auto" asChild>
                     <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
                       {language === "ar" ? "احجز موعد" : "Book Appointment"}
                     </Link>
                   </Button>
-                  <Button variant="outline" size="lg" asChild>
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto bg-transparent" asChild>
                     <Link href="/services">
                       {language === "ar" ? "تصفح خدماتنا" : "Explore Our Services"}
-                      <ArrowLeft className="mr-2 h-5 w-5" />
+                      <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                     </Link>
                   </Button>
                 </motion.div>
               </div>
 
               <motion.div
-                className="relative w-full aspect-square max-w-sm sm:max-w-md mx-auto lg:max-w-full order-1 lg:order-2"
+                className="relative w-full aspect-square max-w-[280px] sm:max-w-sm md:max-w-md mx-auto lg:max-w-full order-1 lg:order-2"
                 variants={scaleIn}
               >
                 <HeroSlideshow
@@ -245,14 +274,14 @@ export default function HomePage() {
 
         {/* Features Section */}
         <section
-          className="py-16 md:py-24"
+          className="py-12 sm:py-16 md:py-20 lg:py-24"
           style={{
             backgroundColor: getText("features_background_color") || undefined,
           }}
         >
-          <div className="container">
+          <div className="container px-4 sm:px-6 lg:px-8">
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
               initial="initial"
               whileInView="animate"
               viewport={{ once: true, margin: "-100px" }}
@@ -289,14 +318,17 @@ export default function HomePage() {
               ].map((feature, index) => (
                 <motion.div key={index} variants={scaleIn}>
                   <Card className={`border-none shadow-none bg-gradient-to-br ${feature.gradient} h-full`}>
-                    <CardContent className="pt-6 space-y-4">
+                    <CardContent className="pt-6 space-y-3 sm:space-y-4">
                       <h3
-                        className="text-xl font-semibold"
+                        className="text-lg sm:text-xl font-semibold"
                         style={{ color: getText("features_title_color") || undefined }}
                       >
                         {renderFormattedText(feature.title.replace(/^\d+[\s.:-]*/, ""))}
                       </h3>
-                      <p className="leading-relaxed" style={{ color: getText("features_text_color") || undefined }}>
+                      <p
+                        className="text-sm sm:text-base leading-relaxed"
+                        style={{ color: getText("features_text_color") || undefined }}
+                      >
                         {renderFormattedText(feature.description)}
                       </p>
                     </CardContent>
@@ -309,7 +341,7 @@ export default function HomePage() {
 
         {/* Services Section */}
         <section
-          className="py-12 sm:py-16 md:py-24"
+          className="py-12 sm:py-16 md:py-20 lg:py-24"
           style={{
             backgroundColor: getText("services_background_color") || undefined,
             backgroundImage: getText("services_background_color")
@@ -317,23 +349,26 @@ export default function HomePage() {
               : "linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--primary) / 0.05))",
           }}
         >
-          <div className="container px-4 sm:px-6">
+          <div className="container px-4 sm:px-6 lg:px-8">
             <motion.div
-              className="text-center space-y-4 mb-12"
+              className="text-center space-y-3 sm:space-y-4 mb-8 sm:mb-12"
               initial="initial"
               whileInView="animate"
               viewport={{ once: true }}
               variants={fadeInUp}
             >
               <h2
-                className="text-3xl md:text-4xl font-bold"
+                className="text-2xl sm:text-3xl md:text-4xl font-bold"
                 style={{ color: getText("services_title_color") || undefined }}
               >
                 {renderFormattedText(
                   getText("services_title") || (language === "ar" ? "خدماتنا الطبية" : "Our Medical Services"),
                 )}
               </h2>
-              <p className="text-lg max-w-2xl mx-auto" style={{ color: getText("services_text_color") || undefined }}>
+              <p
+                className="text-base sm:text-lg max-w-2xl mx-auto px-4"
+                style={{ color: getText("services_text_color") || undefined }}
+              >
                 {renderFormattedText(
                   getText("services_description") ||
                     (language === "ar"
@@ -344,10 +379,10 @@ export default function HomePage() {
             </motion.div>
 
             <AutoScrollCarousel
-              itemsPerView={getCarouselItemsPerView()}
-              scrollDuration={getCarouselScrollDuration()}
-              direction={getCarouselDirection()}
-              autoScroll={getCarouselAutoScroll()}
+              itemsPerView={getServicesCarouselSettings().itemsPerView}
+              scrollDuration={getServicesCarouselSettings().scrollDuration}
+              direction={getServicesCarouselSettings().direction}
+              autoScroll={getServicesCarouselSettings().autoScroll}
             >
               {services?.map((service) => (
                 <motion.div
@@ -356,33 +391,42 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                 >
-                  <Card className="hover:shadow-lg transition-all hover:scale-105 h-full">
-                    <CardContent className="pt-6 space-y-4">
-                      {service.image_url ? (
-                        <div className="w-full aspect-square relative rounded-lg overflow-hidden">
-                          <Image
-                            src={service.image_url || "/placeholder.svg"}
-                            alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-6xl">
-                          {service.icon || "🏥"}
-                        </div>
-                      )}
-                      <h3 className="text-xl font-semibold text-center">
+                  <Card className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col">
+                    <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
+                      <Link href={`/services/${service.id}`} className="block">
+                        {service.image_url ? (
+                          <div className="w-full aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                            <Image
+                              src={service.image_url || "/placeholder.svg"}
+                              alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-4xl sm:text-6xl cursor-pointer hover:opacity-90 transition-opacity">
+                            {service.icon || "🏥"}
+                          </div>
+                        )}
+                      </Link>
+                      <h3 className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2">
                         {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
                       </h3>
-                      <p className="text-muted-foreground leading-relaxed line-clamp-2 text-center text-sm">
-                        {language === "ar" ? service.description_ar : service.description_en || service.description_ar}
+                      <p className="text-muted-foreground leading-relaxed line-clamp-2 text-center text-xs sm:text-sm flex-1">
+                        {renderFormattedText(
+                          language === "ar" ? service.description_ar : service.description_en || service.description_ar,
+                        )}
                       </p>
-                      <div className="flex gap-2 pt-2">
-                        <Button variant="outline" size="sm" className="flex-1 bg-transparent" asChild>
+                      <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 bg-transparent text-xs sm:text-sm"
+                          asChild
+                        >
                           <Link href={`/services/${service.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
                         </Button>
-                        <Button size="sm" className="flex-1" asChild>
+                        <Button size="sm" className="flex-1 text-xs sm:text-sm" asChild>
                           <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
                             {language === "ar" ? "احجز موعد" : "Book Appointment"}
                           </Link>
@@ -395,16 +439,16 @@ export default function HomePage() {
             </AutoScrollCarousel>
 
             <motion.div
-              className="text-center mt-12"
+              className="text-center mt-8 sm:mt-12"
               initial="initial"
               whileInView="animate"
               viewport={{ once: true }}
               variants={fadeIn}
             >
-              <Button variant="outline" size="lg" asChild>
+              <Button variant="outline" size="lg" className="w-full sm:w-auto bg-transparent" asChild>
                 <Link href="/services">
                   {language === "ar" ? "عرض جميع الخدمات" : "View All Services"}
-                  <ArrowLeft className="mr-2 h-5 w-5" />
+                  <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Link>
               </Button>
             </motion.div>
@@ -414,28 +458,31 @@ export default function HomePage() {
         {/* Doctors Section */}
         {doctors && doctors.length > 0 && (
           <section
-            className="py-16 md:py-24"
+            className="py-12 sm:py-16 md:py-20 lg:py-24"
             style={{
               backgroundColor: getText("doctors_background_color") || undefined,
             }}
           >
-            <div className="container">
+            <div className="container px-4 sm:px-6 lg:px-8">
               <motion.div
-                className="text-center space-y-4 mb-12"
+                className="text-center space-y-3 sm:space-y-4 mb-8 sm:mb-12"
                 initial="initial"
                 whileInView="animate"
                 viewport={{ once: true }}
                 variants={fadeInUp}
               >
                 <h2
-                  className="text-3xl md:text-4xl font-bold"
+                  className="text-2xl sm:text-3xl md:text-4xl font-bold"
                   style={{ color: getText("doctors_title_color") || undefined }}
                 >
                   {renderFormattedText(
                     getText("doctors_title") || (language === "ar" ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"),
                   )}
                 </h2>
-                <p className="text-lg max-w-2xl mx-auto" style={{ color: getText("doctors_text_color") || undefined }}>
+                <p
+                  className="text-base sm:text-lg max-w-2xl mx-auto px-4"
+                  style={{ color: getText("doctors_text_color") || undefined }}
+                >
                   {renderFormattedText(
                     getText("doctors_description") ||
                       (language === "ar"
@@ -446,10 +493,10 @@ export default function HomePage() {
               </motion.div>
 
               <AutoScrollCarousel
-                itemsPerView={getCarouselItemsPerView()}
-                scrollDuration={getCarouselScrollDuration()}
-                direction={getCarouselDirection()}
-                autoScroll={getCarouselAutoScroll()}
+                itemsPerView={getDoctorsCarouselSettings().itemsPerView}
+                scrollDuration={getDoctorsCarouselSettings().scrollDuration}
+                direction={getDoctorsCarouselSettings().direction}
+                autoScroll={getDoctorsCarouselSettings().autoScroll}
               >
                 {doctors.map((doctor) => (
                   <motion.div
@@ -458,35 +505,42 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                   >
-                    <Card className="text-center h-full hover:shadow-lg transition-all hover:scale-105">
-                      <CardContent className="pt-6 space-y-4">
-                        <div className="w-32 h-32 mx-auto bg-muted flex items-center justify-center text-4xl overflow-hidden rounded-full">
-                          {doctor.image_url ? (
-                            <div className="relative w-full h-full">
-                              <Image
-                                src={doctor.image_url || "/placeholder.svg"}
-                                alt={doctor.name_ar}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          ) : (
-                            "👨‍⚕️"
-                          )}
-                        </div>
+                    <Card className="text-center h-full hover:shadow-lg transition-all hover:scale-105 flex flex-col">
+                      <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
+                        <Link href={`/doctors/${doctor.id}`} className="block">
+                          <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-muted flex items-center justify-center text-3xl sm:text-4xl overflow-hidden rounded-full cursor-pointer hover:opacity-90 transition-opacity">
+                            {doctor.image_url ? (
+                              <div className="relative w-full h-full">
+                                <Image
+                                  src={doctor.image_url || "/placeholder.svg"}
+                                  alt={doctor.name_ar}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              "👨‍⚕️"
+                            )}
+                          </div>
+                        </Link>
                         <div>
-                          <h3 className="text-xl font-semibold">
+                          <h3 className="text-base sm:text-lg md:text-xl font-semibold line-clamp-2">
                             {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
                           </h3>
-                          <p className="text-primary font-medium mt-2">
+                          <p className="text-primary font-medium mt-2 text-sm sm:text-base line-clamp-2">
                             {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
                           </p>
                         </div>
-                        <div className="flex gap-2 pt-2">
-                          <Button variant="outline" size="sm" className="flex-1 bg-transparent" asChild>
+                        <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 bg-transparent text-xs sm:text-sm"
+                            asChild
+                          >
                             <Link href={`/doctors/${doctor.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
                           </Button>
-                          <Button size="sm" className="flex-1" asChild>
+                          <Button size="sm" className="flex-1 text-xs sm:text-sm" asChild>
                             <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
                               {language === "ar" ? "احجز موعد" : "Book Appointment"}
                             </Link>
@@ -499,16 +553,16 @@ export default function HomePage() {
               </AutoScrollCarousel>
 
               <motion.div
-                className="text-center mt-12"
+                className="text-center mt-8 sm:mt-12"
                 initial="initial"
                 whileInView="animate"
                 viewport={{ once: true }}
                 variants={fadeIn}
               >
-                <Button variant="outline" size="lg" asChild>
+                <Button variant="outline" size="lg" className="w-full sm:w-auto bg-transparent" asChild>
                   <Link href="/doctors">
                     {language === "ar" ? "تعرف على جميع الأطباء" : "Meet All Our Doctors"}
-                    <ArrowLeft className="mr-2 h-5 w-5" />
+                    <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   </Link>
                 </Button>
               </motion.div>
@@ -537,10 +591,10 @@ export default function HomePage() {
 
               <div className="max-w-6xl mx-auto">
                 <AutoScrollCarousel
-                  itemsPerView={getCarouselItemsPerView()}
-                  scrollDuration={getCarouselScrollDuration()}
-                  direction={getCarouselDirection()}
-                  autoScroll={getCarouselAutoScroll()}
+                  itemsPerView={getOffersCarouselSettings().itemsPerView}
+                  scrollDuration={getOffersCarouselSettings().scrollDuration}
+                  direction={getOffersCarouselSettings().direction}
+                  autoScroll={getOffersCarouselSettings().autoScroll}
                 >
                   {offers.map((offer) => (
                     <motion.div
@@ -549,8 +603,8 @@ export default function HomePage() {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                     >
-                      <Card className="bg-background text-foreground h-full">
-                        <CardContent className="pt-6 space-y-4">
+                      <Card className="bg-background text-foreground h-full flex flex-col">
+                        <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
                           {offer.image_url && (
                             <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
                               <Image
@@ -641,10 +695,10 @@ export default function HomePage() {
               </motion.div>
 
               <AutoScrollCarousel
-                itemsPerView={getCarouselItemsPerView()}
-                scrollDuration={getCarouselScrollDuration()}
-                direction={getCarouselDirection()}
-                autoScroll={getCarouselAutoScroll()}
+                itemsPerView={getArticlesCarouselSettings().itemsPerView}
+                scrollDuration={getArticlesCarouselSettings().scrollDuration}
+                direction={getArticlesCarouselSettings().direction}
+                autoScroll={getArticlesCarouselSettings().autoScroll}
               >
                 {articles.map((article) => (
                   <motion.div
@@ -653,26 +707,29 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                   >
-                    <Card className="hover:shadow-lg transition-all hover:scale-105 h-full">
-                      <CardContent className="pt-6 space-y-4">
+                    <Card className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col">
+                      <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
                         {article.image_url && (
-                          <div className="w-full aspect-video relative rounded-lg overflow-hidden">
-                            <Image
-                              src={article.image_url || "/placeholder.svg"}
-                              alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
+                          <Link href={`/articles/${article.id}`} className="block">
+                            <div className="w-full aspect-video relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                              <Image
+                                src={article.image_url || "/placeholder.svg"}
+                                alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          </Link>
                         )}
                         <h3 className="text-xl font-semibold line-clamp-2">
                           {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
                         </h3>
                         <p className="text-muted-foreground leading-relaxed line-clamp-2 text-sm">
-                          {language === "ar"
-                            ? article.content_ar?.substring(0, 120)
-                            : article.content_en?.substring(0, 120) || article.content_ar?.substring(0, 120)}
-                          ...
+                          {renderFormattedText(
+                            (language === "ar"
+                              ? article.content_ar?.substring(0, 120)
+                              : article.content_en?.substring(0, 120) || article.content_ar?.substring(0, 120)) + "...",
+                          )}
                         </p>
                         <Button variant="outline" size="sm" className="w-full bg-transparent" asChild>
                           <Link href={`/articles/${article.id}`}>

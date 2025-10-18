@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { TextFormatter } from "@/components/text-formatter"
 import { useToast } from "@/hooks/use-toast"
 import { Plus, Pencil, Trash2, Stethoscope, Settings, X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -490,10 +490,10 @@ export default function DoctorsPage() {
 
               <div>
                 <Label htmlFor="bio_ar">النبذة بالعربية</Label>
-                <Textarea
+                <TextFormatter
                   id="bio_ar"
                   value={formData.bio_ar}
-                  onChange={(e) => setFormData({ ...formData, bio_ar: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, bio_ar: value })}
                   placeholder="نبذة عن الطبيب..."
                   rows={3}
                 />
@@ -501,10 +501,10 @@ export default function DoctorsPage() {
 
               <div>
                 <Label htmlFor="bio_en">النبذة بالإنجليزية</Label>
-                <Textarea
+                <TextFormatter
                   id="bio_en"
                   value={formData.bio_en}
-                  onChange={(e) => setFormData({ ...formData, bio_en: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, bio_en: value })}
                   placeholder="About the doctor..."
                   rows={3}
                 />
@@ -557,7 +557,6 @@ export default function DoctorsPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">{doctor.specialty_ar}</p>
-              {doctor.bio_ar && <p className="text-sm mt-2">{doctor.bio_ar}</p>}
             </CardContent>
           </Card>
         ))}
@@ -622,20 +621,20 @@ export default function DoctorsPage() {
 
               <div>
                 <Label htmlFor="edit_bio_ar">النبذة بالعربية</Label>
-                <Textarea
+                <TextFormatter
                   id="edit_bio_ar"
                   value={formData.bio_ar}
-                  onChange={(e) => setFormData({ ...formData, bio_ar: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, bio_ar: value })}
                   rows={2}
                 />
               </div>
 
               <div>
                 <Label htmlFor="edit_bio_en">النبذة بالإنجليزية</Label>
-                <Textarea
+                <TextFormatter
                   id="edit_bio_en"
                   value={formData.bio_en}
-                  onChange={(e) => setFormData({ ...formData, bio_en: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, bio_en: value })}
                   rows={2}
                 />
               </div>

@@ -1,8 +1,9 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Bold, Italic, Strikethrough } from "lucide-react"
-import { useRef } from "react"
+import { Bold, Italic, Strikethrough, Palette } from "lucide-react"
+import { useRef, useState } from "react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface TextFormatterProps {
   value: string
@@ -14,8 +15,22 @@ interface TextFormatterProps {
 
 export function TextFormatter({ value, onChange, id, placeholder, rows = 3 }: TextFormatterProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [selectedColor, setSelectedColor] = useState("#000000")
 
-  const applyFormat = (tag: string) => {
+  const colors = [
+    "#000000",
+    "#E91E63",
+    "#2196F3",
+    "#4CAF50",
+    "#FF9800",
+    "#9C27B0",
+    "#F44336",
+    "#00BCD4",
+    "#8BC34A",
+    "#FF5722",
+  ]
+
+  const applyFormat = (tag: string, attribute?: string) => {
     const textarea = textareaRef.current
     if (!textarea) return
 
@@ -24,23 +39,29 @@ export function TextFormatter({ value, onChange, id, placeholder, rows = 3 }: Te
     const selectedText = value.substring(start, end)
 
     if (selectedText) {
-      // Wrap selected text with tag
       const before = value.substring(0, start)
       const after = value.substring(end)
-      const formatted = `${before}<${tag}>${selectedText}</${tag}>${after}`
+      const openTag = attribute ? `<${tag} ${attribute}>` : `<${tag}>`
+      const formatted = `${before}${openTag}${selectedText}</${tag}>${after}`
       onChange(formatted)
 
       // Restore focus and selection
       setTimeout(() => {
         textarea.focus()
-        textarea.setSelectionRange(start + tag.length + 2, end + tag.length + 2)
+        const offset = openTag.length
+        textarea.setSelectionRange(start + offset, end + offset)
       }, 0)
     }
   }
 
+  const applyColor = (color: string) => {
+    applyFormat("span", `style="color: ${color}"`)
+    setSelectedColor(color)
+  }
+
   return (
     <div className="space-y-2">
-      <div className="flex gap-1 border rounded-md p-1 bg-muted/50">
+      <div className="flex gap-1 border rounded-md p-1 bg-muted/50 flex-wrap">
         <Button
           type="button"
           variant="ghost"
@@ -71,6 +92,40 @@ export function TextFormatter({ value, onChange, id, placeholder, rows = 3 }: Te
         >
           <Strikethrough className="h-4 w-4" />
         </Button>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="ghost" size="sm" title="لون الخط" className="h-8 w-8 p-0">
+              <Palette className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2">
+            <div className="grid grid-cols-5 gap-2">
+              {colors.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className="w-8 h-8 rounded border-2 hover:scale-110 transition-transform"
+                  style={{
+                    backgroundColor: color,
+                    borderColor: selectedColor === color ? "#000" : "transparent",
+                  }}
+                  onClick={() => applyColor(color)}
+                  title={color}
+                />
+              ))}
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="color"
+                value={selectedColor}
+                onChange={(e) => applyColor(e.target.value)}
+                className="w-full h-8 rounded cursor-pointer"
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
+
         <div className="flex-1" />
         <span className="text-xs text-muted-foreground self-center px-2">حدد النص ثم اضغط على التنسيق المطلوب</span>
       </div>

@@ -1,14 +1,14 @@
 "use client"
 
+import { Textarea } from "@/components/ui/textarea"
+
 import type React from "react"
 import { toast } from "@/hooks/use-toast"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Plus, Pencil, Trash2, FileText, LinkIcon, Copy, ExternalLink, Star } from "lucide-react"
@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import Link from "next/link"
 import { ImagePicker } from "@/components/image-picker"
+import { TextFormatter } from "@/components/text-formatter"
 
 interface Service {
   id: string
@@ -420,10 +421,10 @@ export default function BookingFormsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="description_ar">الوصف بالعربية</Label>
-                  <Textarea
+                  <TextFormatter
                     id="description_ar"
                     value={formData.description_ar ?? ""}
-                    onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
+                    onChange={(value) => setFormData({ ...formData, description_ar: value })}
                     rows={3}
                   />
                 </div>

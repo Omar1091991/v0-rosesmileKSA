@@ -71,14 +71,24 @@ export default async function DoctorDetailPage({ params }: { params: { id: strin
                     {doctor.bio_ar && (
                       <div className="space-y-2">
                         <h2 className="text-xl font-semibold">نبذة عن الطبيب</h2>
-                        <p className="text-muted-foreground leading-relaxed text-lg">{doctor.bio_ar}</p>
+                        <div
+                          className="text-muted-foreground leading-relaxed text-lg"
+                          dangerouslySetInnerHTML={{
+                            __html: doctor.bio_ar.replace(/<(?!\/?(?:strong|em|s|b|i|del|span)\b)[^>]*>/gi, ""),
+                          }}
+                        />
                       </div>
                     )}
 
                     {doctor.bio_en && (
                       <div className="space-y-2">
                         <h2 className="text-xl font-semibold">About the Doctor</h2>
-                        <p className="text-muted-foreground leading-relaxed">{doctor.bio_en}</p>
+                        <div
+                          className="text-muted-foreground leading-relaxed"
+                          dangerouslySetInnerHTML={{
+                            __html: doctor.bio_en.replace(/<(?!\/?(?:strong|em|s|b|i|del|span)\b)[^>]*>/gi, ""),
+                          }}
+                        />
                       </div>
                     )}
 
