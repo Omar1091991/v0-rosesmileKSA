@@ -327,37 +327,35 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                 >
-                  <Card className="hover:shadow-lg transition-shadow h-full">
+                  <Card className="hover:shadow-lg transition-all hover:scale-105 h-full">
                     <CardContent className="pt-6 space-y-4">
-                      <Link href={`/services/${service.id}`} className="block">
-                        {service.image_url ? (
-                          <div className="w-full aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                            <Image
-                              src={service.image_url || "/placeholder.svg"}
-                              alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-6xl cursor-pointer hover:opacity-90 transition-opacity">
-                            {service.icon || "🏥"}
-                          </div>
-                        )}
-                      </Link>
-                      <h3 className="text-xl font-semibold">
+                      {service.image_url ? (
+                        <div className="w-full aspect-square relative rounded-lg overflow-hidden">
+                          <Image
+                            src={service.image_url || "/placeholder.svg"}
+                            alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-6xl">
+                          {service.icon || "🏥"}
+                        </div>
+                      )}
+                      <h3 className="text-xl font-semibold text-center">
                         {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
                       </h3>
-                      <p className="text-muted-foreground leading-relaxed line-clamp-3">
+                      <p className="text-muted-foreground leading-relaxed line-clamp-2 text-center text-sm">
                         {language === "ar" ? service.description_ar : service.description_en || service.description_ar}
                       </p>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent">
+                      <div className="flex gap-2 pt-2">
+                        <Button variant="outline" size="sm" className="flex-1 bg-transparent" asChild>
                           <Link href={`/services/${service.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
                         </Button>
-                        <Button size="sm" asChild className="flex-1">
+                        <Button size="sm" className="flex-1" asChild>
                           <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                            {language === "ar" ? "حجز موعد" : "Book Appointment"}
+                            {language === "ar" ? "احجز موعد" : "Book Appointment"}
                           </Link>
                         </Button>
                       </div>
@@ -423,44 +421,37 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                   >
-                    <Card className="text-center h-full">
+                    <Card className="text-center h-full hover:shadow-lg transition-all hover:scale-105">
                       <CardContent className="pt-6 space-y-4">
-                        <Link href={`/doctors/${doctor.id}`} className="block">
-                          <div className="w-full aspect-square mx-auto bg-muted flex items-center justify-center text-4xl overflow-hidden rounded-lg md:rounded-full cursor-pointer hover:opacity-90 transition-opacity">
-                            {doctor.image_url ? (
-                              <div className="relative w-full h-full">
-                                <Image
-                                  src={doctor.image_url || "/placeholder.svg"}
-                                  alt={doctor.name_ar}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            ) : (
-                              "👨‍⚕️"
-                            )}
-                          </div>
-                        </Link>
+                        <div className="w-32 h-32 mx-auto bg-muted flex items-center justify-center text-4xl overflow-hidden rounded-full">
+                          {doctor.image_url ? (
+                            <div className="relative w-full h-full">
+                              <Image
+                                src={doctor.image_url || "/placeholder.svg"}
+                                alt={doctor.name_ar}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            "👨‍⚕️"
+                          )}
+                        </div>
                         <div>
                           <h3 className="text-xl font-semibold">
                             {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
                           </h3>
-                          <p className="text-primary font-medium">
+                          <p className="text-primary font-medium mt-2">
                             {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
                           </p>
                         </div>
-                        {doctor.bio_ar && (
-                          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                            {language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar}
-                          </p>
-                        )}
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent">
+                        <div className="flex gap-2 pt-2">
+                          <Button variant="outline" size="sm" className="flex-1 bg-transparent" asChild>
                             <Link href={`/doctors/${doctor.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
                           </Button>
-                          <Button size="sm" asChild className="flex-1">
+                          <Button size="sm" className="flex-1" asChild>
                             <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                              {language === "ar" ? "حجز موعد" : "Book Appointment"}
+                              {language === "ar" ? "احجز موعد" : "Book Appointment"}
                             </Link>
                           </Button>
                         </div>
@@ -523,18 +514,16 @@ export default function HomePage() {
                     >
                       <Card className="bg-background text-foreground h-full">
                         <CardContent className="pt-6 space-y-4">
-                          <Link href={`/offers/${offer.id}`} className="block">
-                            {offer.image_url && (
-                              <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
-                                <Image
-                                  src={offer.image_url || "/placeholder.svg"}
-                                  alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            )}
-                          </Link>
+                          {offer.image_url && (
+                            <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
+                              <Image
+                                src={offer.image_url || "/placeholder.svg"}
+                                alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
                           <div className="flex items-center justify-between">
                             <h3 className="text-2xl font-bold">
                               {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
@@ -627,33 +616,30 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                   >
-                    <Card className="hover:shadow-lg transition-shadow h-full">
+                    <Card className="hover:shadow-lg transition-all hover:scale-105 h-full">
                       <CardContent className="pt-6 space-y-4">
-                        <Link href={`/articles/${article.id}`} className="block">
-                          {article.image_url && (
-                            <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
-                              <Image
-                                src={article.image_url || "/placeholder.svg"}
-                                alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          )}
-                        </Link>
+                        {article.image_url && (
+                          <div className="w-full aspect-video relative rounded-lg overflow-hidden">
+                            <Image
+                              src={article.image_url || "/placeholder.svg"}
+                              alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
                         <h3 className="text-xl font-semibold line-clamp-2">
                           {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
                         </h3>
-                        <p className="text-muted-foreground leading-relaxed line-clamp-3">
+                        <p className="text-muted-foreground leading-relaxed line-clamp-2 text-sm">
                           {language === "ar"
-                            ? article.content_ar?.substring(0, 150)
-                            : article.content_en?.substring(0, 150) || article.content_ar?.substring(0, 150)}
+                            ? article.content_ar?.substring(0, 120)
+                            : article.content_en?.substring(0, 120) || article.content_ar?.substring(0, 120)}
                           ...
                         </p>
-                        <Button variant="outline" size="sm" asChild className="w-full bg-transparent">
+                        <Button variant="outline" size="sm" className="w-full bg-transparent" asChild>
                           <Link href={`/articles/${article.id}`}>
                             {language === "ar" ? "اقرأ المزيد" : "Read More"}
-                            <ArrowLeft className="mr-2 h-4 w-4" />
                           </Link>
                         </Button>
                       </CardContent>

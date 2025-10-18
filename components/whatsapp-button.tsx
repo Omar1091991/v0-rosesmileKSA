@@ -10,44 +10,30 @@ export function WhatsAppButton() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        console.log("[v0] WhatsAppButton: Fetching settings...")
         const response = await fetch("/api/site-settings")
 
         if (!response.ok) {
-          console.log("[v0] WhatsAppButton: Response not OK, using defaults")
           return
         }
 
         const contentType = response.headers.get("content-type")
         if (!contentType || !contentType.includes("application/json")) {
-          console.log("[v0] WhatsAppButton: Response not JSON, using defaults")
           return
         }
 
         const data = await response.json()
         const settings = Array.isArray(data) ? data : data.settings || []
 
-        console.log("[v0] WhatsAppButton: Fetched", settings.length, "settings")
-
         const whatsappSetting = settings.find((s: any) => s.key === "whatsapp_number")
         const visibilitySetting = settings.find((s: any) => s.key === "whatsapp_visible")
 
-        console.log("[v0] WhatsAppButton: whatsapp_number setting:", whatsappSetting)
-        console.log("[v0] WhatsAppButton: whatsapp_visible setting:", visibilitySetting)
-
         if (whatsappSetting?.value_ar) {
           setWhatsappNumber(whatsappSetting.value_ar)
-          console.log("[v0] WhatsAppButton: Set number to:", whatsappSetting.value_ar)
-        } else {
-          console.log("[v0] WhatsAppButton: Using default number:", "+966500000000")
         }
 
         // Only hide if explicitly set to false
         if (visibilitySetting?.value_ar === "false") {
           setIsVisible(false)
-          console.log("[v0] WhatsAppButton: Button hidden by settings")
-        } else {
-          console.log("[v0] WhatsAppButton: Button visible (default or enabled)")
         }
       } catch (error) {
         console.error("[v0] WhatsAppButton: Error fetching settings:", error)
@@ -57,10 +43,7 @@ export function WhatsAppButton() {
     fetchSettings()
   }, [])
 
-  console.log("[v0] WhatsAppButton: Rendering with isVisible=", isVisible, "number=", whatsappNumber)
-
   if (!isVisible) {
-    console.log("[v0] WhatsAppButton: Not rendering (hidden)")
     return null
   }
 
@@ -68,7 +51,6 @@ export function WhatsAppButton() {
     const cleanNumber = whatsappNumber.replace(/\D/g, "")
     const message = encodeURIComponent("مرحباً، أود الاستفسار عن خدماتكم")
     const url = `https://wa.me/${cleanNumber}?text=${message}`
-    console.log("[v0] WhatsAppButton: Opening WhatsApp URL:", url)
     window.open(url, "_blank")
   }
 

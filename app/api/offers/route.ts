@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     const result = await query(
-      `INSERT INTO offers (title_ar, title_en, description_ar, description_en, price_before, price_after, discount_percentage, valid_from, valid_until, image_url, is_active)
+      `INSERT INTO offers (title_ar, title_en, description_ar, description_en, original_price, discounted_price, discount_percentage, valid_from, valid_until, image_url, is_active)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
@@ -23,8 +23,8 @@ export async function POST(request: Request) {
         body.title_en || body.title_ar,
         body.description_ar,
         body.description_en || body.description_ar,
-        body.price_before,
-        body.price_after,
+        body.original_price || body.price_before, // دعم كلا الاسمين للتوافق
+        body.discounted_price || body.price_after,
         body.discount_percentage,
         body.valid_from,
         body.valid_until,
@@ -46,7 +46,7 @@ export async function PATCH(request: Request) {
     const result = await query(
       `UPDATE offers SET 
         title_ar = $1, title_en = $2, description_ar = $3, description_en = $4,
-        price_before = $5, price_after = $6, discount_percentage = $7,
+        original_price = $5, discounted_price = $6, discount_percentage = $7,
         valid_from = $8, valid_until = $9, image_url = $10, is_active = $11
        WHERE id = $12
        RETURNING *`,
@@ -55,8 +55,8 @@ export async function PATCH(request: Request) {
         body.title_en,
         body.description_ar,
         body.description_en,
-        body.price_before,
-        body.price_after,
+        body.original_price || body.price_before, // دعم كلا الاسمين للتوافق
+        body.discounted_price || body.price_after,
         body.discount_percentage,
         body.valid_from,
         body.valid_until,

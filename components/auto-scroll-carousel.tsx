@@ -1,16 +1,15 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 interface AutoScrollCarouselProps {
   children: React.ReactNode[]
   itemsPerView?: number
-  scrollDuration?: number // in seconds
+  scrollDuration?: number
   direction?: "left" | "right"
-  gap?: number // gap between items in pixels
+  gap?: number
   autoScroll?: boolean
 }
 
@@ -24,13 +23,30 @@ export function AutoScrollCarousel({
 }: AutoScrollCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isPaused, setIsPaused] = useState(false)
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [isManualScrolling, setIsManualScrolling] = useState(false)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const autoScrollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const totalItems = children.length
-  const maxIndex = Math.max(0, totalItems - itemsPerView)
 
+  const scrollByOneItem = (direction: "left" | "right") => {
+    if (!scrollRef.current) return
+
+    const container = scrollRef.current
+    const containerWidth = container.offsetWidth
+
+    // Calculate how much to scroll: container width divided by items per view
+    const scrollAmount = containerWidth / itemsPerView
+
+    const scrollDistance = direction === "right" ? scrollAmount : -scrollAmount
+
+    container.scrollBy({
+      left: scrollDistance,
+      behavior: "smooth",
+    })
+  }
+
+  // Handle manual scroll detection
   useEffect(() => {
     const scrollElement = scrollRef.current
     if (!scrollElement) return
@@ -58,43 +74,28 @@ export function AutoScrollCarousel({
   }, [])
 
   useEffect(() => {
-    if (!autoScroll || isPaused || isManualScrolling || totalItems <= itemsPerView) return
+    if (!autoScroll || isPaused || isManualScrolling || totalItems <= itemsPerView) {
+      if (autoScrollIntervalRef.current) {
+        clearInterval(autoScrollIntervalRef.current)
+        autoScrollIntervalRef.current = null
+      }
+      return
+    }
 
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => {
-        const next = direction === "right" ? prev + 1 : prev - 1
-
-        if (next > maxIndex) return 0
-        if (next < 0) return maxIndex
-
-        return next
-      })
+    autoScrollIntervalRef.current = setInterval(() => {
+      scrollByOneItem(direction)
     }, scrollDuration * 1000)
 
-    return () => clearInterval(interval)
-  }, [autoScroll, isPaused, isManualScrolling, scrollDuration, direction, maxIndex, totalItems, itemsPerView])
-
-  useEffect(() => {
-    if (!scrollRef.current || isManualScrolling) return
-
-    // Get the first child element to measure its actual width
-    const firstChild = scrollRef.current.children[0] as HTMLElement
-    if (!firstChild) return
-
-    // Use the actual rendered width of the item
-    const itemWidth = firstChild.offsetWidth
-
-    // Scroll by the item width plus gap
-    const scrollPosition = currentIndex * (itemWidth + gap)
-
-    scrollRef.current.scrollTo({
-      left: scrollPosition,
-      behavior: "smooth",
-    })
-  }, [currentIndex, gap, isManualScrolling])
+    return () => {
+      if (autoScrollIntervalRef.current) {
+        clearInterval(autoScrollIntervalRef.current)
+        autoScrollIntervalRef.current = null
+      }
+    }
+  }, [autoScroll, isPaused, isManualScrolling, scrollDuration, direction, totalItems, itemsPerView])
 
   const handlePrevious = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex))
+    scrollByOneItem("left")
     setIsManualScrolling(true)
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current)
@@ -105,7 +106,7 @@ export function AutoScrollCarousel({
   }
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : 0))
+    scrollByOneItem("right")
     setIsManualScrolling(true)
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current)
@@ -123,16 +124,18 @@ export function AutoScrollCarousel({
         <>
           <button
             onClick={handlePrevious}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg transition-all hover:scale-110"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-50 bg-primary hover:bg-primary/90 text-primary-foreground p-3 rounded-full shadow-xl transition-all hover:scale-110 active:scale-95"
             aria-label="السابق"
+            type="button"
           >
             <ChevronRight className="h-6 w-6" />
           </button>
 
           <button
             onClick={handleNext}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background p-2 rounded-full shadow-lg transition-all hover:scale-110"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-50 bg-primary hover:bg-primary/90 text-primary-foreground p-3 rounded-full shadow-xl transition-all hover:scale-110 active:scale-95"
             aria-label="التالي"
+            type="button"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
@@ -141,7 +144,7 @@ export function AutoScrollCarousel({
 
       <div
         ref={scrollRef}
-        className="flex overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+        className="flex overflow-x-auto scrollbar-hide scroll-smooth"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
@@ -160,30 +163,6 @@ export function AutoScrollCarousel({
           </div>
         ))}
       </div>
-
-      {totalItems > itemsPerView && (
-        <div className="flex justify-center gap-2 mt-4">
-          {Array.from({ length: maxIndex + 1 }).map((_, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                setCurrentIndex(index)
-                setIsManualScrolling(true)
-                if (scrollTimeoutRef.current) {
-                  clearTimeout(scrollTimeoutRef.current)
-                }
-                scrollTimeoutRef.current = setTimeout(() => {
-                  setIsManualScrolling(false)
-                }, 3000)
-              }}
-              className={`h-2 rounded-full transition-all ${
-                index === currentIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30"
-              }`}
-              aria-label={`الانتقال إلى المجموعة ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   )
 }
