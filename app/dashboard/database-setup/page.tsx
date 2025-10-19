@@ -4,7 +4,20 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Database, Play, CheckCircle, XCircle, Loader2, Key, Wrench, ImageIcon, Star } from "lucide-react"
+import {
+  Database,
+  Play,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Key,
+  Wrench,
+  ImageIcon,
+  Star,
+  FileText,
+  Phone,
+  Users,
+} from "lucide-react"
 
 export default function DatabaseSetupPage() {
   const [isRunning, setIsRunning] = useState(false)
@@ -15,6 +28,10 @@ export default function DatabaseSetupPage() {
   const [migrationOutput, setMigrationOutput] = useState<string[]>([])
   const [migrationStatus, setMigrationStatus] = useState<"idle" | "success" | "error">("idle")
 
+  const [isPhoneMigrating, setIsPhoneMigrating] = useState(false)
+  const [phoneMigrationOutput, setPhoneMigrationOutput] = useState<string[]>([])
+  const [phoneMigrationStatus, setPhoneMigrationStatus] = useState<"idle" | "success" | "error">("idle")
+
   const [isImageMigrating, setIsImageMigrating] = useState(false)
   const [imageMigrationOutput, setImageMigrationOutput] = useState<string[]>([])
   const [imageMigrationStatus, setImageMigrationStatus] = useState<"idle" | "success" | "error">("idle")
@@ -22,6 +39,14 @@ export default function DatabaseSetupPage() {
   const [isMainMigrating, setIsMainMigrating] = useState(false)
   const [isMainMigrationOutput, setIsMainMigrationOutput] = useState<string[]>([])
   const [isMainMigrationStatus, setIsMainMigrationStatus] = useState<"idle" | "success" | "error">("idle")
+
+  const [isSubtitleMigrating, setIsSubtitleMigrating] = useState(false)
+  const [subtitleMigrationOutput, setSubtitleMigrationOutput] = useState<string[]>([])
+  const [subtitleMigrationStatus, setSubtitleMigrationStatus] = useState<"idle" | "success" | "error">("idle")
+
+  const [isDoctorCasesMigrating, setIsDoctorCasesMigrating] = useState(false)
+  const [doctorCasesMigrationOutput, setDoctorCasesMigrationOutput] = useState<string[]>([])
+  const [doctorCasesMigrationStatus, setDoctorCasesMigrationStatus] = useState<"idle" | "success" | "error">("idle")
 
   const runScript = async () => {
     setIsRunning(true)
@@ -110,7 +135,6 @@ export default function DatabaseSetupPage() {
     }
   }
 
-  // إضافة function لـ is_main migration
   const runIsMainMigration = async () => {
     setIsMainMigrating(true)
     setIsMainMigrationOutput([])
@@ -138,6 +162,99 @@ export default function DatabaseSetupPage() {
     }
   }
 
+  const runSubtitleMigration = async () => {
+    setIsSubtitleMigrating(true)
+    setSubtitleMigrationOutput([])
+    setSubtitleMigrationStatus("idle")
+
+    try {
+      const response = await fetch("/api/migrations/add-service-subtitle", {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setSubtitleMigrationOutput([data.message])
+        setSubtitleMigrationStatus("success")
+      } else {
+        setSubtitleMigrationOutput([data.error || "حدث خطأ غير معروف"])
+        setSubtitleMigrationStatus("error")
+      }
+    } catch (error) {
+      setSubtitleMigrationOutput([`خطأ في الاتصال: ${error}`])
+      setSubtitleMigrationStatus("error")
+    } finally {
+      setIsSubtitleMigrating(false)
+    }
+  }
+
+  const runPhoneMigration = async () => {
+    setIsPhoneMigrating(true)
+    setPhoneMigrationOutput([])
+    setPhoneMigrationStatus("idle")
+
+    try {
+      const response = await fetch("/api/database-setup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "add_phone_column",
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setPhoneMigrationOutput([data.message])
+        setPhoneMigrationStatus("success")
+      } else {
+        setPhoneMigrationOutput([data.error || "حدث خطأ غير معروف"])
+        setPhoneMigrationStatus("error")
+      }
+    } catch (error) {
+      setPhoneMigrationOutput([`خطأ في الاتصال: ${error}`])
+      setPhoneMigrationStatus("error")
+    } finally {
+      setIsPhoneMigrating(false)
+    }
+  }
+
+  const runDoctorCasesMigration = async () => {
+    setIsDoctorCasesMigrating(true)
+    setDoctorCasesMigrationOutput([])
+    setDoctorCasesMigrationStatus("idle")
+
+    try {
+      const response = await fetch("/api/database-setup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "fix_doctor_cases",
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setDoctorCasesMigrationOutput([data.message])
+        setDoctorCasesMigrationStatus("success")
+      } else {
+        setDoctorCasesMigrationOutput([data.error || "حدث خطأ غير معروف"])
+        setDoctorCasesMigrationStatus("error")
+      }
+    } catch (error) {
+      setDoctorCasesMigrationOutput([`خطأ في الاتصال: ${error}`])
+      setDoctorCasesMigrationStatus("error")
+    } finally {
+      setIsDoctorCasesMigrating(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -160,6 +277,109 @@ export default function DatabaseSetupPage() {
           </div>
         </AlertDescription>
       </Alert>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Phone className="h-5 w-5" />
+            إصلاح: إضافة عمود الهاتف للمستخدمين
+          </CardTitle>
+          <CardDescription>
+            إذا كنت تواجه خطأ "column phone does not exist"، استخدم هذا الزر لإضافة عمود phone إلى جدول المستخدمين
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button onClick={runPhoneMigration} disabled={isPhoneMigrating} variant="secondary" className="gap-2">
+              {isPhoneMigrating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري التنفيذ...
+                </>
+              ) : (
+                <>
+                  <Phone className="h-5 w-5" />
+                  إضافة عمود الهاتف
+                </>
+              )}
+            </Button>
+
+            {phoneMigrationStatus === "success" && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-semibold">تم بنجاح</span>
+              </div>
+            )}
+
+            {phoneMigrationStatus === "error" && (
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-semibold">فشل</span>
+              </div>
+            )}
+          </div>
+
+          {phoneMigrationOutput.length > 0 && (
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+              {phoneMigrationOutput.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            إصلاح: إضافة العنوان الفرعي للخدمات
+          </CardTitle>
+          <CardDescription>
+            إذا كنت تواجه خطأ "column subtitle_ar does not exist"، استخدم هذا الزر لإضافة أعمدة العنوان الفرعي إلى جدول
+            الخدمات
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button onClick={runSubtitleMigration} disabled={isSubtitleMigrating} variant="secondary" className="gap-2">
+              {isSubtitleMigrating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري التنفيذ...
+                </>
+              ) : (
+                <>
+                  <FileText className="h-5 w-5" />
+                  إضافة العنوان الفرعي
+                </>
+              )}
+            </Button>
+
+            {subtitleMigrationStatus === "success" && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-semibold">تم بنجاح</span>
+              </div>
+            )}
+
+            {subtitleMigrationStatus === "error" && (
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-semibold">فشل</span>
+              </div>
+            )}
+          </div>
+
+          {subtitleMigrationOutput.length > 0 && (
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+              {subtitleMigrationOutput.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -309,6 +529,63 @@ export default function DatabaseSetupPage() {
           {isMainMigrationOutput.length > 0 && (
             <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
               {isMainMigrationOutput.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            إصلاح: جدول حالات الأطباء
+          </CardTitle>
+          <CardDescription>
+            إذا كنت تواجه خطأ "null value in column title_ar violates not-null constraint"، استخدم هذا الزر لإصلاح جدول
+            حالات الأطباء
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={runDoctorCasesMigration}
+              disabled={isDoctorCasesMigrating}
+              variant="secondary"
+              className="gap-2"
+            >
+              {isDoctorCasesMigrating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري التنفيذ...
+                </>
+              ) : (
+                <>
+                  <Users className="h-5 w-5" />
+                  إصلاح جدول حالات الأطباء
+                </>
+              )}
+            </Button>
+
+            {doctorCasesMigrationStatus === "success" && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-semibold">تم بنجاح</span>
+              </div>
+            )}
+
+            {doctorCasesMigrationStatus === "error" && (
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-semibold">فشل</span>
+              </div>
+            )}
+          </div>
+
+          {doctorCasesMigrationOutput.length > 0 && (
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+              {doctorCasesMigrationOutput.map((line, index) => (
                 <div key={index}>{line}</div>
               ))}
             </div>

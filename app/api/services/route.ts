@@ -37,12 +37,14 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     const result = await query(
-      `INSERT INTO services (title_ar, title_en, description_ar, description_en, icon, image_url, is_active, order_index)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO services (title_ar, title_en, subtitle_ar, subtitle_en, description_ar, description_en, icon, image_url, is_active, order_index)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         body.title_ar,
         body.title_en || body.title_ar,
+        body.subtitle_ar || null,
+        body.subtitle_en || body.subtitle_ar || null,
         body.description_ar,
         body.description_en || body.description_ar,
         body.icon,
@@ -71,13 +73,16 @@ export async function PATCH(request: Request) {
 
     const result = await query(
       `UPDATE services 
-       SET title_ar = $1, title_en = $2, description_ar = $3, description_en = $4, 
-           icon = $5, image_url = $6, is_active = $7, order_index = $8
-       WHERE id = $9
+       SET title_ar = $1, title_en = $2, subtitle_ar = $3, subtitle_en = $4, 
+           description_ar = $5, description_en = $6, icon = $7, image_url = $8, 
+           is_active = $9, order_index = $10
+       WHERE id = $11
        RETURNING *`,
       [
         body.title_ar,
         body.title_en,
+        body.subtitle_ar,
+        body.subtitle_en,
         body.description_ar,
         body.description_en,
         body.icon,

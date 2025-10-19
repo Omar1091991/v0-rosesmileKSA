@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Plus, Pencil, Trash2, FileText } from "lucide-react"
+import { PermissionGuard } from "@/components/permission-guard"
 
 interface Article {
   id: string
@@ -237,94 +238,225 @@ export default function ArticlesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <FileText className="h-8 w-8" />
-            إدارة المقالات
-          </h1>
-          <p className="text-muted-foreground mt-2">إضافة وتعديل وحذف المقالات</p>
+    <PermissionGuard permission="articles.read">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <FileText className="h-8 w-8" />
+              إدارة المقالات
+            </h1>
+            <p className="text-muted-foreground mt-2">إضافة وتعديل وحذف المقالات</p>
+          </div>
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="h-4 w-4 ml-2" />
+                إضافة مقال
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>إضافة مقال جديد</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="title_ar">العنوان بالعربية *</Label>
+                    <Input
+                      id="title_ar"
+                      value={formData.title_ar}
+                      onChange={(e) => setFormData({ ...formData, title_ar: e.target.value })}
+                      placeholder="عنوان المقال"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="title_en">العنوان بالإنجليزية</Label>
+                    <Input
+                      id="title_en"
+                      value={formData.title_en}
+                      onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
+                      placeholder="Article Title"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="excerpt_ar">المقتطف بالعربية</Label>
+                  <Textarea
+                    id="excerpt_ar"
+                    value={formData.excerpt_ar}
+                    onChange={(e) => setFormData({ ...formData, excerpt_ar: e.target.value })}
+                    placeholder="مقتطف قصير عن المقال..."
+                    rows={2}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="content_ar">المحتوى بالعربية *</Label>
+                  <TextFormatter
+                    id="content_ar"
+                    value={formData.content_ar}
+                    onChange={(value) => setFormData({ ...formData, content_ar: value })}
+                    placeholder="محتوى المقال..."
+                    rows={6}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="content_en">المحتوى بالإنجليزية</Label>
+                  <TextFormatter
+                    id="content_en"
+                    value={formData.content_en}
+                    onChange={(value) => setFormData({ ...formData, content_en: value })}
+                    placeholder="Article content..."
+                    rows={6}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="author">الكاتب</Label>
+                  <Input
+                    id="author"
+                    value={formData.author}
+                    onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                    placeholder="اسم الكاتب"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="image">صورة المقال</Label>
+                  <Input id="image" type="file" accept="image/*" onChange={handleImageChange} />
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img
+                        src={imagePreview || "/placeholder.svg"}
+                        alt="Preview"
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Button onClick={handleAdd} className="w-full">
+                  إضافة المقال
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 ml-2" />
-              إضافة مقال
-            </Button>
-          </DialogTrigger>
+
+        <div className="grid grid-cols-1 gap-6">
+          {articles.map((article) => (
+            <Card key={article.id}>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>{article.title_ar}</span>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => openEditDialog(article)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(article.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4">
+                  {article.image_url && (
+                    <img
+                      src={article.image_url || "/placeholder.svg"}
+                      alt={article.title_ar}
+                      className="w-32 h-32 object-cover rounded-lg"
+                    />
+                  )}
+                  <div className="flex-1">
+                    {article.excerpt_ar && <p className="text-sm text-muted-foreground mb-2">{article.excerpt_ar}</p>}
+                    {article.author && <p className="text-sm">الكاتب: {article.author}</p>}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {new Date(article.created_at).toLocaleDateString("ar-SA")}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {articles.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">لا يوجد مقالات حالياً</CardContent>
+          </Card>
+        )}
+
+        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>إضافة مقال جديد</DialogTitle>
+              <DialogTitle>تعديل المقال</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title_ar">العنوان بالعربية *</Label>
+                  <Label htmlFor="edit_title_ar">العنوان بالعربية *</Label>
                   <Input
-                    id="title_ar"
+                    id="edit_title_ar"
                     value={formData.title_ar}
                     onChange={(e) => setFormData({ ...formData, title_ar: e.target.value })}
-                    placeholder="عنوان المقال"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="title_en">العنوان بالإنجليزية</Label>
+                  <Label htmlFor="edit_title_en">العنوان بالإنجليزية</Label>
                   <Input
-                    id="title_en"
+                    id="edit_title_en"
                     value={formData.title_en}
                     onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
-                    placeholder="Article Title"
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="excerpt_ar">المقتطف بالعربية</Label>
+                <Label htmlFor="edit_excerpt_ar">المقتطف بالعربية</Label>
                 <Textarea
-                  id="excerpt_ar"
+                  id="edit_excerpt_ar"
                   value={formData.excerpt_ar}
                   onChange={(e) => setFormData({ ...formData, excerpt_ar: e.target.value })}
-                  placeholder="مقتطف قصير عن المقال..."
                   rows={2}
                 />
               </div>
 
               <div>
-                <Label htmlFor="content_ar">المحتوى بالعربية *</Label>
+                <Label htmlFor="edit_content_ar">المحتوى بالعربية *</Label>
                 <TextFormatter
-                  id="content_ar"
+                  id="edit_content_ar"
                   value={formData.content_ar}
                   onChange={(value) => setFormData({ ...formData, content_ar: value })}
-                  placeholder="محتوى المقال..."
                   rows={6}
                 />
               </div>
 
               <div>
-                <Label htmlFor="content_en">المحتوى بالإنجليزية</Label>
+                <Label htmlFor="edit_content_en">المحتوى بالإنجليزية</Label>
                 <TextFormatter
-                  id="content_en"
+                  id="edit_content_en"
                   value={formData.content_en}
                   onChange={(value) => setFormData({ ...formData, content_en: value })}
-                  placeholder="Article content..."
                   rows={6}
                 />
               </div>
 
               <div>
-                <Label htmlFor="author">الكاتب</Label>
+                <Label htmlFor="edit_author">الكاتب</Label>
                 <Input
-                  id="author"
+                  id="edit_author"
                   value={formData.author}
                   onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                  placeholder="اسم الكاتب"
                 />
               </div>
 
               <div>
-                <Label htmlFor="image">صورة المقال</Label>
-                <Input id="image" type="file" accept="image/*" onChange={handleImageChange} />
+                <Label htmlFor="edit_image">صورة المقال</Label>
+                <Input id="edit_image" type="file" accept="image/*" onChange={handleImageChange} />
                 {imagePreview && (
                   <div className="mt-2">
                     <img
@@ -336,142 +468,13 @@ export default function ArticlesPage() {
                 )}
               </div>
 
-              <Button onClick={handleAdd} className="w-full">
-                إضافة المقال
+              <Button onClick={handleEdit} className="w-full">
+                حفظ التعديلات
               </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
-
-      <div className="grid grid-cols-1 gap-6">
-        {articles.map((article) => (
-          <Card key={article.id}>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>{article.title_ar}</span>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => openEditDialog(article)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(article.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                {article.image_url && (
-                  <img
-                    src={article.image_url || "/placeholder.svg"}
-                    alt={article.title_ar}
-                    className="w-32 h-32 object-cover rounded-lg"
-                  />
-                )}
-                <div className="flex-1">
-                  {article.excerpt_ar && <p className="text-sm text-muted-foreground mb-2">{article.excerpt_ar}</p>}
-                  {article.author && <p className="text-sm">الكاتب: {article.author}</p>}
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {new Date(article.created_at).toLocaleDateString("ar-SA")}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {articles.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">لا يوجد مقالات حالياً</CardContent>
-        </Card>
-      )}
-
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>تعديل المقال</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit_title_ar">العنوان بالعربية *</Label>
-                <Input
-                  id="edit_title_ar"
-                  value={formData.title_ar}
-                  onChange={(e) => setFormData({ ...formData, title_ar: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_title_en">العنوان بالإنجليزية</Label>
-                <Input
-                  id="edit_title_en"
-                  value={formData.title_en}
-                  onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="edit_excerpt_ar">المقتطف بالعربية</Label>
-              <Textarea
-                id="edit_excerpt_ar"
-                value={formData.excerpt_ar}
-                onChange={(e) => setFormData({ ...formData, excerpt_ar: e.target.value })}
-                rows={2}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_content_ar">المحتوى بالعربية *</Label>
-              <TextFormatter
-                id="edit_content_ar"
-                value={formData.content_ar}
-                onChange={(value) => setFormData({ ...formData, content_ar: value })}
-                rows={6}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_content_en">المحتوى بالإنجليزية</Label>
-              <TextFormatter
-                id="edit_content_en"
-                value={formData.content_en}
-                onChange={(value) => setFormData({ ...formData, content_en: value })}
-                rows={6}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_author">الكاتب</Label>
-              <Input
-                id="edit_author"
-                value={formData.author}
-                onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_image">صورة المقال</Label>
-              <Input id="edit_image" type="file" accept="image/*" onChange={handleImageChange} />
-              {imagePreview && (
-                <div className="mt-2">
-                  <img
-                    src={imagePreview || "/placeholder.svg"}
-                    alt="Preview"
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
-                </div>
-              )}
-            </div>
-
-            <Button onClick={handleEdit} className="w-full">
-              حفظ التعديلات
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+    </PermissionGuard>
   )
 }

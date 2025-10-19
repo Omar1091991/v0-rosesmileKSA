@@ -4,7 +4,9 @@ import bcrypt from "bcryptjs"
 
 export async function GET() {
   try {
-    const result = await db.query("SELECT id, full_name, email, role, created_at FROM users ORDER BY created_at DESC")
+    const result = await db.query(
+      "SELECT id, full_name, email, phone, role, created_at FROM users ORDER BY created_at DESC",
+    )
 
     return NextResponse.json(result.rows)
   } catch (error) {
@@ -61,9 +63,9 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json()
-    const { id, full_name, role, password } = body
+    const { id, full_name, phone, role, password } = body
 
-    console.log("[v0] PATCH /api/users - Received data:", { id, full_name, role, hasPassword: !!password })
+    console.log("[v0] PATCH /api/users - Received data:", { id, full_name, phone, role, hasPassword: !!password })
 
     if (password) {
       if (password.length < 6) {
@@ -74,8 +76,8 @@ export async function PATCH(request: Request) {
       console.log("[v0] Updating user WITH password")
 
       const result = await db.query(
-        "UPDATE users SET full_name = $1, role = $2, password = $3 WHERE id = $4 RETURNING id, username, full_name, email, role",
-        [full_name, role, hashedPassword, id],
+        "UPDATE users SET full_name = $1, phone = $2, role = $3, password = $4 WHERE id = $5 RETURNING id, username, full_name, email, phone, role",
+        [full_name, phone || null, role, hashedPassword, id],
       )
 
       console.log("[v0] Update result (with password):", result)
@@ -84,8 +86,8 @@ export async function PATCH(request: Request) {
       console.log("[v0] Updating user WITHOUT password")
 
       const result = await db.query(
-        "UPDATE users SET full_name = $1, role = $2 WHERE id = $3 RETURNING id, username, full_name, email, role",
-        [full_name, role, id],
+        "UPDATE users SET full_name = $1, phone = $2, role = $3 WHERE id = $4 RETURNING id, username, full_name, email, phone, role",
+        [full_name, phone || null, role, id],
       )
 
       console.log("[v0] Update result (without password):", result)

@@ -6,10 +6,17 @@ if (!connectionString) {
   console.warn("[v0] ⚠️ STORAGE_DATABASE_URL غير متاح - تأكد من إضافة متغير البيئة في Vercel")
 }
 
-const sql = connectionString ? neon(connectionString) : null
+const sqlClient = connectionString ? neon(connectionString) : null
+
+export const sql =
+  sqlClient ||
+  (() => {
+    throw new Error("Database connection not configured. Please add STORAGE_DATABASE_URL environment variable.")
+  })
+// </CHANGE>
 
 export async function query(text: string, params?: any[]) {
-  if (!sql) {
+  if (!sqlClient) {
     console.error("[v0] ❌ لا يوجد اتصال بقاعدة البيانات - STORAGE_DATABASE_URL غير محدد")
     throw new Error("Database connection not configured. Please add STORAGE_DATABASE_URL environment variable.")
   }
@@ -18,9 +25,9 @@ export async function query(text: string, params?: any[]) {
     let result
 
     if (params && params.length > 0) {
-      result = await (sql as any).query(text, params)
+      result = await (sqlClient as any).query(text, params)
     } else {
-      result = await (sql as any).query(text, [])
+      result = await (sqlClient as any).query(text, [])
     }
 
     if (Array.isArray(result)) {

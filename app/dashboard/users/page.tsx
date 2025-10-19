@@ -23,6 +23,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { motion } from "framer-motion"
+import { PermissionGuard } from "@/components/permission-guard"
+import { useAuth } from "@/components/auth-provider"
 
 interface User {
   id: string
@@ -34,6 +36,8 @@ interface User {
 }
 
 export default function UsersPage() {
+  const { user } = useAuth()
+
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -309,327 +313,228 @@ export default function UsersPage() {
   })
 
   return (
-    <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex justify-between items-center"
-      >
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <UsersIcon className="h-8 w-8" />
-            إدارة المستخدمين
-          </h1>
-          <p className="text-muted-foreground mt-2">إضافة وتعديل وحذف المستخدمين</p>
-        </div>
-        <Button onClick={() => setIsAddOpen(true)} disabled={loading}>
-          <Plus className="h-4 w-4 ml-2" />
-          إضافة مستخدم
-        </Button>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="ابحث بالاسم أو البريد الإلكتروني أو رقم الجوال..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10"
-                />
-              </div>
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="تصفية حسب الصلاحية" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع المستخدمين</SelectItem>
-                  <SelectItem value="admin">المسؤولين</SelectItem>
-                  <SelectItem value="editor">المحررين</SelectItem>
-                  <SelectItem value="user">المستخدمين العاديين</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {searchQuery && (
-              <p className="text-sm text-muted-foreground mt-2">
-                تم العثور على {filteredUsers.length} من أصل {users.length} مستخدم
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {loading && users.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-          <p className="mt-4 text-muted-foreground">جاري التحميل...</p>
-        </div>
-      ) : filteredUsers.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <UsersIcon className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-center text-muted-foreground">
-              {searchQuery || roleFilter !== "all" ? "لا توجد نتائج مطابقة للبحث" : "لا يوجد مستخدمين حالياً"}
-            </p>
-            {!searchQuery && roleFilter === "all" && (
-              <Button size="sm" className="mt-4" onClick={() => setIsAddOpen(true)}>
-                <Plus className="h-4 w-4 ml-2" />
-                إضافة أول مستخدم
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
+    <PermissionGuard permission="users.read">
+      <div className="space-y-6">
         <motion.div
-          className="grid gap-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex justify-between items-center"
         >
-          {filteredUsers.map((user, index) => (
-            <motion.div
-              key={user.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-            >
-              <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-xl">{user.full_name}</h3>
-                        <Badge
-                          variant={user.role === "admin" ? "default" : user.role === "editor" ? "secondary" : "outline"}
-                        >
-                          {user.role === "admin" ? "مسؤول" : user.role === "editor" ? "محرر" : "مستخدم"}
-                        </Badge>
-                      </div>
-
-                      <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          <span>{user.email}</span>
-                        </div>
-
-                        {user.phone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4" />
-                            <span dir="ltr">{user.phone}</span>
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>تاريخ التسجيل: {formatDate(user.created_at)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user)
-                          setIsEditOpen(true)
-                        }}
-                        disabled={loading}
-                      >
-                        <Pencil className="h-4 w-4 ml-2" />
-                        تعديل
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
-                        disabled={loading}
-                      >
-                        <Trash2 className="h-4 w-4 ml-2" />
-                        حذف
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UsersIcon className="h-5 w-5" />
-              إضافة مستخدم جديد
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="full_name">
-                الاسم الكامل <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="full_name"
-                value={newUser.full_name}
-                onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
-                placeholder="أدخل الاسم الكامل"
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">
-                البريد الإلكتروني <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                placeholder="example@email.com"
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">رقم الجوال</Label>
-              <Input
-                id="phone"
-                value={newUser.phone}
-                onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
-                placeholder="05xxxxxxxx"
-                dir="ltr"
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">
-                كلمة المرور <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={newUser.password}
-                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                placeholder="أدخل كلمة المرور (6 أحرف على الأقل)"
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">الصلاحية</Label>
-              <Select
-                value={newUser.role}
-                onValueChange={(value) => setNewUser({ ...newUser, role: value })}
-                disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">مستخدم عادي - عرض الحجوزات فقط</SelectItem>
-                  <SelectItem value="editor">محرر - كتابة وتعديل المقالات</SelectItem>
-                  <SelectItem value="admin">مسؤول - صلاحيات كاملة</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {newUser.role === "admin" && "المسؤول لديه صلاحيات كاملة على جميع أقسام لوحة التحكم"}
-                {newUser.role === "editor" && "المحرر يمكنه كتابة وتعديل المقالات فقط"}
-                {newUser.role === "user" && "المستخدم العادي يمكنه عرض الحجوزات فقط"}
-              </p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <UsersIcon className="h-8 w-8" />
+              إدارة المستخدمين
+            </h1>
+            <p className="text-muted-foreground mt-2">إضافة وتعديل وحذف المستخدمين</p>
           </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setIsAddOpen(false)} disabled={loading}>
-              إلغاء
-            </Button>
-            <Button onClick={handleAddUser} disabled={loading}>
-              {loading ? "جاري الإضافة..." : "إضافة المستخدم"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <Button onClick={() => setIsAddOpen(true)} disabled={loading}>
+            <Plus className="h-4 w-4 ml-2" />
+            إضافة مستخدم
+          </Button>
+        </motion.div>
 
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Pencil className="h-5 w-5" />
-              تعديل بيانات المستخدم
-            </DialogTitle>
-          </DialogHeader>
-          {selectedUser && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="ابحث بالاسم أو البريد الإلكتروني أو رقم الجوال..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="تصفية حسب الصلاحية" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع المستخدمين</SelectItem>
+                    <SelectItem value="admin">المسؤولين</SelectItem>
+                    <SelectItem value="editor">المحررين</SelectItem>
+                    <SelectItem value="user">المستخدمين العاديين</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {searchQuery && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  تم العثور على {filteredUsers.length} من أصل {users.length} مستخدم
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {loading && users.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+            <p className="mt-4 text-muted-foreground">جاري التحميل...</p>
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <UsersIcon className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-center text-muted-foreground">
+                {searchQuery || roleFilter !== "all" ? "لا توجد نتائج مطابقة للبحث" : "لا يوجد مستخدمين حالياً"}
+              </p>
+              {!searchQuery && roleFilter === "all" && (
+                <Button size="sm" className="mt-4" onClick={() => setIsAddOpen(true)}>
+                  <Plus className="h-4 w-4 ml-2" />
+                  إضافة أول مستخدم
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <motion.div
+            className="grid gap-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {filteredUsers.map((user, index) => (
+              <motion.div
+                key={user.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+              >
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-xl">{user.full_name}</h3>
+                          <Badge
+                            variant={
+                              user.role === "admin" ? "default" : user.role === "editor" ? "secondary" : "outline"
+                            }
+                          >
+                            {user.role === "admin" ? "مسؤول" : user.role === "editor" ? "محرر" : "مستخدم"}
+                          </Badge>
+                        </div>
+
+                        <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4" />
+                            <span>{user.email}</span>
+                          </div>
+
+                          {user.phone && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4" />
+                              <span dir="ltr">{user.phone}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            <span>تاريخ التسجيل: {formatDate(user.created_at)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setIsEditOpen(true)
+                          }}
+                          disabled={loading}
+                        >
+                          <Pencil className="h-4 w-4 ml-2" />
+                          تعديل
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id)}
+                          disabled={loading}
+                        >
+                          <Trash2 className="h-4 w-4 ml-2" />
+                          حذف
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UsersIcon className="h-5 w-5" />
+                إضافة مستخدم جديد
+              </DialogTitle>
+            </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit_full_name">الاسم الكامل</Label>
+                <Label htmlFor="full_name">
+                  الاسم الكامل <span className="text-destructive">*</span>
+                </Label>
                 <Input
-                  id="edit_full_name"
-                  value={selectedUser.full_name}
-                  onChange={(e) => setSelectedUser({ ...selectedUser, full_name: e.target.value })}
+                  id="full_name"
+                  value={newUser.full_name}
+                  onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
+                  placeholder="أدخل الاسم الكامل"
                   disabled={loading}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit_email">البريد الإلكتروني</Label>
-                <Input id="edit_email" value={selectedUser.email} disabled className="bg-muted" />
-                <p className="text-xs text-muted-foreground">لا يمكن تعديل البريد الإلكتروني</p>
+                <Label htmlFor="email">
+                  البريد الإلكتروني <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  placeholder="example@email.com"
+                  disabled={loading}
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit_phone">رقم الجوال</Label>
+                <Label htmlFor="phone">رقم الجوال</Label>
                 <Input
-                  id="edit_phone"
-                  value={selectedUser.phone || ""}
-                  onChange={(e) => setSelectedUser({ ...selectedUser, phone: e.target.value })}
+                  id="phone"
+                  value={newUser.phone}
+                  onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
                   placeholder="05xxxxxxxx"
                   dir="ltr"
                   disabled={loading}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit_password">كلمة المرور الجديدة</Label>
-                <div className="relative">
-                  <Input
-                    id="edit_password"
-                    type={showPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="اتركه فارغاً للإبقاء على كلمة المرور الحالية"
-                    disabled={loading}
-                    className="pl-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute left-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                    disabled={loading}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {newPassword
-                    ? "سيتم تغيير كلمة المرور عند الحفظ (6 أحرف على الأقل)"
-                    : "اترك الحقل فارغاً للإبقاء على كلمة المرور الحالية"}
-                </p>
+                <Label htmlFor="password">
+                  كلمة المرور <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  placeholder="أدخل كلمة المرور (6 أحرف على الأقل)"
+                  disabled={loading}
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit_role">الصلاحية</Label>
+                <Label htmlFor="role">الصلاحية</Label>
                 <Select
-                  value={selectedUser.role}
-                  onValueChange={(value) => setSelectedUser({ ...selectedUser, role: value })}
+                  value={newUser.role}
+                  onValueChange={(value) => setNewUser({ ...newUser, role: value })}
                   disabled={loading}
                 >
                   <SelectTrigger>
@@ -642,87 +547,194 @@ export default function UsersPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  {selectedUser.role === "admin" && "المسؤول لديه صلاحيات كاملة على جميع أقسام لوحة التحكم"}
-                  {selectedUser.role === "editor" && "المحرر يمكنه كتابة وتعديل المقالات فقط"}
-                  {selectedUser.role === "user" && "المستخدم العادي يمكنه عرض الحجوزات فقط"}
+                  {newUser.role === "admin" && "المسؤول لديه صلاحيات كاملة على جميع أقسام لوحة التحكم"}
+                  {newUser.role === "editor" && "المحرر يمكنه كتابة وتعديل المقالات فقط"}
+                  {newUser.role === "user" && "المستخدم العادي يمكنه عرض الحجوزات فقط"}
                 </p>
               </div>
             </div>
-          )}
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsEditOpen(false)
-                setNewPassword("")
-                setShowPassword(false)
-              }}
-              disabled={loading}
-            >
-              إلغاء
-            </Button>
-            <Button onClick={handleUpdateUser} disabled={loading}>
-              {loading ? "جاري التحديث..." : "حفظ التغييرات"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setIsAddOpen(false)} disabled={loading}>
+                إلغاء
+              </Button>
+              <Button onClick={handleAddUser} disabled={loading}>
+                {loading ? "جاري الإضافة..." : "إضافة المستخدم"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      <Dialog open={isReplaceOpen} onOpenChange={setIsReplaceOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
-              المستخدم موجود مسبقاً
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-muted-foreground">
-              المستخدم بالبريد الإلكتروني <strong>{newUser.email}</strong> موجود مسبقاً:
-            </p>
-            {existingUser && (
-              <Card className="bg-muted/50">
-                <CardContent className="pt-4 space-y-2">
-                  <p>
-                    <strong>الاسم:</strong> {existingUser.full_name}
+        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Pencil className="h-5 w-5" />
+                تعديل بيانات المستخدم
+              </DialogTitle>
+            </DialogHeader>
+            {selectedUser && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit_full_name">الاسم الكامل</Label>
+                  <Input
+                    id="edit_full_name"
+                    value={selectedUser.full_name}
+                    onChange={(e) => setSelectedUser({ ...selectedUser, full_name: e.target.value })}
+                    disabled={loading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_email">البريد الإلكتروني</Label>
+                  <Input id="edit_email" value={selectedUser.email} disabled className="bg-muted" />
+                  <p className="text-xs text-muted-foreground">لا يمكن تعديل البريد الإلكتروني</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_phone">رقم الجوال</Label>
+                  <Input
+                    id="edit_phone"
+                    value={selectedUser.phone || ""}
+                    onChange={(e) => setSelectedUser({ ...selectedUser, phone: e.target.value })}
+                    placeholder="05xxxxxxxx"
+                    dir="ltr"
+                    disabled={loading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_password">كلمة المرور الجديدة</Label>
+                  <div className="relative">
+                    <Input
+                      id="edit_password"
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="اتركه فارغاً للإبقاء على كلمة المرور الحالية"
+                      disabled={loading}
+                      className="pl-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute left-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {newPassword
+                      ? "سيتم تغيير كلمة المرور عند الحفظ (6 أحرف على الأقل)"
+                      : "اترك الحقل فارغاً للإبقاء على كلمة المرور الحالية"}
                   </p>
-                  <p>
-                    <strong>البريد:</strong> {existingUser.email}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_role">الصلاحية</Label>
+                  <Select
+                    value={selectedUser.role}
+                    onValueChange={(value) => setSelectedUser({ ...selectedUser, role: value })}
+                    disabled={loading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">مستخدم عادي - عرض الحجوزات فقط</SelectItem>
+                      <SelectItem value="editor">محرر - كتابة وتعديل المقالات</SelectItem>
+                      <SelectItem value="admin">مسؤول - صلاحيات كاملة</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedUser.role === "admin" && "المسؤول لديه صلاحيات كاملة على جميع أقسام لوحة التحكم"}
+                    {selectedUser.role === "editor" && "المحرر يمكنه كتابة وتعديل المقالات فقط"}
+                    {selectedUser.role === "user" && "المستخدم العادي يمكنه عرض الحجوزات فقط"}
                   </p>
-                  {existingUser.phone && (
-                    <p>
-                      <strong>الجوال:</strong> {existingUser.phone}
-                    </p>
-                  )}
-                  <p>
-                    <strong>الصلاحية:</strong>{" "}
-                    {existingUser.role === "admin" ? "مسؤول" : existingUser.role === "editor" ? "محرر" : "مستخدم عادي"}
-                  </p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
-            <p className="text-sm text-muted-foreground">
-              هل تريد استبدال البيانات القديمة بالبيانات الجديدة؟ سيتم حذف البيانات القديمة نهائياً.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setIsReplaceOpen(false)
-                setExistingUser(null)
-              }}
-              disabled={loading}
-            >
-              إلغاء
-            </Button>
-            <Button variant="destructive" onClick={handleReplaceUser} disabled={loading}>
-              {loading ? "جاري الاستبدال..." : "استبدال وحفظ"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditOpen(false)
+                  setNewPassword("")
+                  setShowPassword(false)
+                }}
+                disabled={loading}
+              >
+                إلغاء
+              </Button>
+              <Button onClick={handleUpdateUser} disabled={loading}>
+                {loading ? "جاري التحديث..." : "حفظ التغييرات"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isReplaceOpen} onOpenChange={setIsReplaceOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                المستخدم موجود مسبقاً
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-muted-foreground">
+                المستخدم بالبريد الإلكتروني <strong>{newUser.email}</strong> موجود مسبقاً:
+              </p>
+              {existingUser && (
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-4 space-y-2">
+                    <p>
+                      <strong>الاسم:</strong> {existingUser.full_name}
+                    </p>
+                    <p>
+                      <strong>البريد:</strong> {existingUser.email}
+                    </p>
+                    {existingUser.phone && (
+                      <p>
+                        <strong>الجوال:</strong> {existingUser.phone}
+                      </p>
+                    )}
+                    <p>
+                      <strong>الصلاحية:</strong>{" "}
+                      {existingUser.role === "admin"
+                        ? "مسؤول"
+                        : existingUser.role === "editor"
+                          ? "محرر"
+                          : "مستخدم عادي"}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+              <p className="text-sm text-muted-foreground">
+                هل تريد استبدال البيانات القديمة بالبيانات الجديدة؟ سيتم حذف البيانات القديمة نهائياً.
+              </p>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsReplaceOpen(false)
+                  setExistingUser(null)
+                }}
+                disabled={loading}
+              >
+                إلغاء
+              </Button>
+              <Button variant="destructive" onClick={handleReplaceUser} disabled={loading}>
+                {loading ? "جاري الاستبدال..." : "استبدال وحفظ"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </PermissionGuard>
   )
 }

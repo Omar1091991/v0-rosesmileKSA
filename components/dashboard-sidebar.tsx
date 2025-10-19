@@ -16,6 +16,7 @@ import {
   Database,
   LucideComponent as ImageIconComponent,
   Newspaper,
+  UserCircle,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
@@ -32,19 +33,18 @@ import {
 import { Badge } from "@/components/ui/badge"
 
 const menuItems = [
-  { title: "الرئيسية", href: "/dashboard", icon: LayoutDashboard, permission: "*" },
-  { title: "الحجوزات", href: "/dashboard/bookings", icon: Calendar, permission: "*" },
-  { title: "المقالات", href: "/dashboard/articles", icon: Newspaper, permission: "editor" },
-  { title: "الخدمات", href: "/dashboard/services", icon: Briefcase, permission: "admin" },
-  { title: "الأطباء", href: "/dashboard/doctors", icon: Stethoscope, permission: "admin" },
-  { title: "العروض", href: "/dashboard/offers", icon: Tag, permission: "admin" },
-  { title: "الأقسام", href: "/dashboard/departments", icon: Building2, permission: "admin" },
-  { title: "نماذج الحجز", href: "/dashboard/booking-forms", icon: FileText, permission: "admin" },
-  { title: "مكتبة الصور", href: "/dashboard/media", icon: ImageIconComponent, permission: "admin" },
-  { title: "معرض الصور", href: "/dashboard/gallery", icon: ImageIconComponent, permission: "admin" },
-  { title: "المستخدمين", href: "/dashboard/users", icon: Users, permission: "admin" },
-  { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText, permission: "admin" },
-  { title: "إعداد قاعدة البيانات", href: "/dashboard/database-setup", icon: Database, permission: "admin" },
+  { title: "الرئيسية", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "editor", "user"] },
+  { title: "الحجوزات", href: "/dashboard/bookings", icon: Calendar, roles: ["admin", "user"] },
+  { title: "المقالات", href: "/dashboard/articles", icon: Newspaper, roles: ["admin", "editor"] },
+  { title: "الخدمات", href: "/dashboard/services", icon: Briefcase, roles: ["admin"] },
+  { title: "الأطباء", href: "/dashboard/doctors", icon: Stethoscope, roles: ["admin"] },
+  { title: "العروض", href: "/dashboard/offers", icon: Tag, roles: ["admin"] },
+  { title: "الأقسام", href: "/dashboard/departments", icon: Building2, roles: ["admin"] },
+  { title: "نماذج الحجز", href: "/dashboard/booking-forms", icon: FileText, roles: ["admin"] },
+  { title: "مكتبة الصور", href: "/dashboard/media", icon: ImageIconComponent, roles: ["admin"] },
+  { title: "المستخدمين", href: "/dashboard/users", icon: Users, roles: ["admin"] },
+  { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText, roles: ["admin"] },
+  { title: "إعداد قاعدة البيانات", href: "/dashboard/database-setup", icon: Database, roles: ["admin"] },
 ]
 
 export function DashboardSidebar() {
@@ -70,13 +70,10 @@ export function DashboardSidebar() {
     }
   }
 
-  const canAccessMenuItem = (permission: string) => {
-    if (!user) return true // السماح بالوصول لجميع القوائم عند تعطيل المصادقة
-    if (permission === "*") return true
-    if (user.role === "admin") return true
-    if (permission === "editor" && (user.role === "editor" || user.role === "admin")) return true
-    return false
-  }
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (!user) return false
+    return item.roles.includes(user.role)
+  })
 
   const getInitials = (name: string) => {
     const parts = name.split(" ")
@@ -113,6 +110,11 @@ export function DashboardSidebar() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/dashboard/profile")} className="cursor-pointer">
+                <UserCircle className="ml-2 h-4 w-4" />
+                الملف الشخصي
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
                 <LogOut className="ml-2 h-4 w-4" />
                 تسجيل الخروج
@@ -130,7 +132,7 @@ export function DashboardSidebar() {
         </div>
 
         <nav className="space-y-1">
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             const isActive = pathname === item.href
             return (
               <Link

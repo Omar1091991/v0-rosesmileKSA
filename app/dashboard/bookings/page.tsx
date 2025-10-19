@@ -36,6 +36,7 @@ import { format } from "date-fns"
 import jsPDF from "jspdf"
 import * as XLSX from "xlsx"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { PermissionGuard } from "@/components/permission-guard"
 
 interface Booking {
   id: string
@@ -517,356 +518,358 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <CalendarIcon className="h-8 w-8" />
-            إدارة الحجوزات
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            عرض وإدارة حجوزات المرضى ({filteredBookings.length} من {bookings.length})
-          </p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline">
-                <Filter className="ml-2 h-4 w-4" />
-                فلتر التاريخ
-                {(dateFrom || dateTo) && (
-                  <Badge className="mr-2" variant="secondary">
-                    نشط
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-4" align="end">
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">من تاريخ</Label>
-                  <CalendarComponent
-                    mode="single"
-                    selected={dateFrom}
-                    onSelect={setDateFrom}
-                    locale={ar}
-                    className="rounded-md border"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">إلى تاريخ</Label>
-                  <CalendarComponent
-                    mode="single"
-                    selected={dateTo}
-                    onSelect={setDateTo}
-                    locale={ar}
-                    className="rounded-md border"
-                  />
-                </div>
-                <Button onClick={resetFilter} variant="outline" className="w-full bg-transparent">
-                  إعادة تعيين الكل
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline">
-                <Download className="ml-2 h-4 w-4" />
-                تصدير
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48" align="end">
-              <div className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start" onClick={exportToExcel}>
-                  <FileSpreadsheet className="ml-2 h-4 w-4 text-green-600" />
-                  تصدير Excel
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={exportToPDF}>
-                  <FileText className="ml-2 h-4 w-4 text-red-600" />
-                  تصدير PDF
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={exportToCSV}>
-                  <Download className="ml-2 h-4 w-4 text-blue-600" />
-                  تصدير CSV
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            الفلاتر
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <Label className="text-sm mb-2 block">نموذج الحجز</Label>
-              <Select value={filterBookingForm} onValueChange={setFilterBookingForm}>
-                <SelectTrigger>
-                  <SelectValue placeholder="الكل" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">الكل</SelectItem>
-                  {bookingForms.map((form) => (
-                    <SelectItem key={form.id} value={form.id}>
-                      {form.name_ar}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-sm mb-2 block">الحالة</Label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="الكل" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">الكل</SelectItem>
-                  <SelectItem value="pending">قيد الانتظار</SelectItem>
-                  <SelectItem value="confirmed">مؤكد</SelectItem>
-                  <SelectItem value="completed">مكتمل</SelectItem>
-                  <SelectItem value="cancelled">ملغي</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-sm mb-2 block">حالة التواصل</Label>
-              <Select value={filterContacted} onValueChange={setFilterContacted}>
-                <SelectTrigger>
-                  <SelectValue placeholder="الكل" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">الكل</SelectItem>
-                  <SelectItem value="contacted">تم التواصل</SelectItem>
-                  <SelectItem value="not_contacted">لم يتم التواصل</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-end">
-              <Button onClick={resetFilter} variant="outline" className="w-full bg-transparent">
-                إعادة تعيين
-              </Button>
-            </div>
+    <PermissionGuard permission="bookings.read">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <CalendarIcon className="h-8 w-8" />
+              إدارة الحجوزات
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              عرض وإدارة حجوزات المرضى ({filteredBookings.length} من {bookings.length})
+            </p>
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 gap-4">
-        {currentBookings.map((booking) => (
-          <Card key={booking.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4 flex-wrap">
-                  <span className="text-lg">{booking.full_name}</span>
-                  {getStatusBadge(booking.status)}
-                  {booking.contacted && (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      <Phone className="h-3 w-3 ml-1" />
-                      تم التواصل
+          <div className="flex gap-2 flex-wrap">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline">
+                  <Filter className="ml-2 h-4 w-4" />
+                  فلتر التاريخ
+                  {(dateFrom || dateTo) && (
+                    <Badge className="mr-2" variant="secondary">
+                      نشط
                     </Badge>
                   )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-4" align="end">
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">من تاريخ</Label>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={setDateFrom}
+                      locale={ar}
+                      className="rounded-md border"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">إلى تاريخ</Label>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={setDateTo}
+                      locale={ar}
+                      className="rounded-md border"
+                    />
+                  </div>
+                  <Button onClick={resetFilter} variant="outline" className="w-full bg-transparent">
+                    إعادة تعيين الكل
+                  </Button>
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => toggleContacted(booking.id, booking.contacted || false)}
-                    title={booking.contacted ? "إلغاء التواصل" : "تم التواصل"}
-                  >
-                    <Phone className={`h-4 w-4 ${booking.contacted ? "text-green-600" : "text-gray-400"}`} />
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline">
+                  <Download className="ml-2 h-4 w-4" />
+                  تصدير
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48" align="end">
+                <div className="space-y-2">
+                  <Button variant="ghost" className="w-full justify-start" onClick={exportToExcel}>
+                    <FileSpreadsheet className="ml-2 h-4 w-4 text-green-600" />
+                    تصدير Excel
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => incrementContactAttempts(booking.id, booking.contact_attempts || 0)}
-                    title="تسجيل محاولة تواصل"
-                  >
-                    <MessageSquare className="h-4 w-4 text-blue-600" />
+                  <Button variant="ghost" className="w-full justify-start" onClick={exportToPDF}>
+                    <FileText className="ml-2 h-4 w-4 text-red-600" />
+                    تصدير PDF
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setEditingBooking(booking)
-                      setAdminNotes(booking.admin_notes || "")
-                      setContactAttempts(booking.contact_attempts || 0)
-                    }}
-                    title="إضافة ملاحظات"
-                  >
-                    <Edit className="h-4 w-4 text-purple-600" />
+                  <Button variant="ghost" className="w-full justify-start" onClick={exportToCSV}>
+                    <Download className="ml-2 h-4 w-4 text-blue-600" />
+                    تصدير CSV
                   </Button>
-                  {booking.status === "pending" && (
-                    <>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              الفلاتر
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <Label className="text-sm mb-2 block">نموذج الحجز</Label>
+                <Select value={filterBookingForm} onValueChange={setFilterBookingForm}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="الكل" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    {bookingForms.map((form) => (
+                      <SelectItem key={form.id} value={form.id}>
+                        {form.name_ar}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm mb-2 block">الحالة</Label>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="الكل" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="pending">قيد الانتظار</SelectItem>
+                    <SelectItem value="confirmed">مؤكد</SelectItem>
+                    <SelectItem value="completed">مكتمل</SelectItem>
+                    <SelectItem value="cancelled">ملغي</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm mb-2 block">حالة التواصل</Label>
+                <Select value={filterContacted} onValueChange={setFilterContacted}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="الكل" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="contacted">تم التواصل</SelectItem>
+                    <SelectItem value="not_contacted">لم يتم التواصل</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-end">
+                <Button onClick={resetFilter} variant="outline" className="w-full bg-transparent">
+                  إعادة تعيين
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 gap-4">
+          {currentBookings.map((booking) => (
+            <Card key={booking.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <span className="text-lg">{booking.full_name}</span>
+                    {getStatusBadge(booking.status)}
+                    {booking.contacted && (
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <Phone className="h-3 w-3 ml-1" />
+                        تم التواصل
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => toggleContacted(booking.id, booking.contacted || false)}
+                      title={booking.contacted ? "إلغاء التواصل" : "تم التواصل"}
+                    >
+                      <Phone className={`h-4 w-4 ${booking.contacted ? "text-green-600" : "text-gray-400"}`} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => incrementContactAttempts(booking.id, booking.contact_attempts || 0)}
+                      title="تسجيل محاولة تواصل"
+                    >
+                      <MessageSquare className="h-4 w-4 text-blue-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setEditingBooking(booking)
+                        setAdminNotes(booking.admin_notes || "")
+                        setContactAttempts(booking.contact_attempts || 0)
+                      }}
+                      title="إضافة ملاحظات"
+                    >
+                      <Edit className="h-4 w-4 text-purple-600" />
+                    </Button>
+                    {booking.status === "pending" && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => updateStatus(booking.id, "confirmed")}
+                          title="تأكيد"
+                        >
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => updateStatus(booking.id, "cancelled")}
+                          title="إلغاء"
+                        >
+                          <XCircle className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(booking.id)} title="حذف">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">رقم الجوال</p>
+                    <p className="font-medium">{booking.phone}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">الخدمة</p>
+                    <p className="font-medium">{booking.service_name || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">نموذج الحجز</p>
+                    <p className="font-medium flex items-center gap-1">
+                      <FileCheck className="h-4 w-4 text-primary" />
+                      {getBookingFormName(booking.booking_form_id)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">مرات المحاولة</p>
+                    <p className="font-medium">{booking.contact_attempts || 0}</p>
+                  </div>
+                </div>
+                <div className="mt-4 text-sm text-muted-foreground">
+                  <p>تاريخ الإنشاء: {format(new Date(booking.created_at), "yyyy-MM-dd HH:mm", { locale: ar })}</p>
+                </div>
+                {booking.notes && (
+                  <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                    <p className="text-muted-foreground text-sm font-medium mb-1">ملاحظات العميل</p>
+                    <p className="text-sm">{booking.notes}</p>
+                  </div>
+                )}
+                {booking.admin_notes && (
+                  <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
+                    <p className="text-muted-foreground text-sm font-medium mb-1">ملاحظات الإدارة</p>
+                    <p className="text-sm">{booking.admin_notes}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredBookings.length > 0 && (
+          <Card>
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="text-sm text-muted-foreground">
+                  عرض {startIndex + 1} - {Math.min(endIndex, filteredBookings.length)} من {filteredBookings.length} حجز
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    السابق
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => updateStatus(booking.id, "confirmed")}
-                        title="تأكيد"
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className="min-w-[2.5rem]"
                       >
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        {page}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => updateStatus(booking.id, "cancelled")}
-                        title="إلغاء"
-                      >
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      </Button>
-                    </>
-                  )}
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(booking.id)} title="حذف">
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    التالي
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">رقم الجوال</p>
-                  <p className="font-medium">{booking.phone}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">الخدمة</p>
-                  <p className="font-medium">{booking.service_name || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">نموذج الحجز</p>
-                  <p className="font-medium flex items-center gap-1">
-                    <FileCheck className="h-4 w-4 text-primary" />
-                    {getBookingFormName(booking.booking_form_id)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">مرات المحاولة</p>
-                  <p className="font-medium">{booking.contact_attempts || 0}</p>
                 </div>
               </div>
-              <div className="mt-4 text-sm text-muted-foreground">
-                <p>تاريخ الإنشاء: {format(new Date(booking.created_at), "yyyy-MM-dd HH:mm", { locale: ar })}</p>
-              </div>
-              {booking.notes && (
-                <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                  <p className="text-muted-foreground text-sm font-medium mb-1">ملاحظات العميل</p>
-                  <p className="text-sm">{booking.notes}</p>
-                </div>
-              )}
-              {booking.admin_notes && (
-                <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
-                  <p className="text-muted-foreground text-sm font-medium mb-1">ملاحظات الإدارة</p>
-                  <p className="text-sm">{booking.admin_notes}</p>
-                </div>
-              )}
             </CardContent>
           </Card>
-        ))}
-      </div>
+        )}
 
-      {filteredBookings.length > 0 && (
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="text-sm text-muted-foreground">
-                عرض {startIndex + 1} - {Math.min(endIndex, filteredBookings.length)} من {filteredBookings.length} حجز
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                  السابق
-                </Button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <Button
-                      key={page}
-                      variant={currentPage === page ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(page)}
-                      className="min-w-[2.5rem]"
-                    >
-                      {page}
-                    </Button>
-                  ))}
+        {filteredBookings.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              {dateFrom || dateTo || filterBookingForm !== "all" || filterStatus !== "all" || filterContacted !== "all"
+                ? "لا توجد حجوزات تطابق الفلاتر المحددة"
+                : "لا يوجد حجوزات حالياً"}
+            </CardContent>
+          </Card>
+        )}
+
+        <Dialog open={!!editingBooking} onOpenChange={() => setEditingBooking(null)}>
+          <DialogClose />
+          <DialogOverlay />
+          <DialogPortal>
+            <DialogContent>
+              <DialogTitle>إضافة ملاحظات إدارية</DialogTitle>
+              <DialogDescription>أضف ملاحظات حول هذا الحجز لمتابعة أفضل</DialogDescription>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="contact-attempts">عدد محاولات التواصل</Label>
+                  <Input
+                    id="contact-attempts"
+                    type="number"
+                    value={contactAttempts}
+                    onChange={(e) => setContactAttempts(Number.parseInt(e.target.value) || 0)}
+                    min="0"
+                  />
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  التالي
-                  <ChevronLeft className="h-4 w-4" />
+                <div>
+                  <Label htmlFor="admin-notes">ملاحظات الإدارة</Label>
+                  <Textarea
+                    id="admin-notes"
+                    value={adminNotes}
+                    onChange={(e) => setAdminNotes(e.target.value)}
+                    placeholder="أضف ملاحظاتك هنا..."
+                    rows={4}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditingBooking(null)}>
+                  إلغاء
                 </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {filteredBookings.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            {dateFrom || dateTo || filterBookingForm !== "all" || filterStatus !== "all" || filterContacted !== "all"
-              ? "لا توجد حجوزات تطابق الفلاتر المحددة"
-              : "لا يوجد حجوزات حالياً"}
-          </CardContent>
-        </Card>
-      )}
-
-      <Dialog open={!!editingBooking} onOpenChange={() => setEditingBooking(null)}>
-        <DialogClose />
-        <DialogOverlay />
-        <DialogPortal>
-          <DialogContent>
-            <DialogTitle>إضافة ملاحظات إدارية</DialogTitle>
-            <DialogDescription>أضف ملاحظات حول هذا الحجز لمتابعة أفضل</DialogDescription>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="contact-attempts">عدد محاولات التواصل</Label>
-                <Input
-                  id="contact-attempts"
-                  type="number"
-                  value={contactAttempts}
-                  onChange={(e) => setContactAttempts(Number.parseInt(e.target.value) || 0)}
-                  min="0"
-                />
-              </div>
-              <div>
-                <Label htmlFor="admin-notes">ملاحظات الإدارة</Label>
-                <Textarea
-                  id="admin-notes"
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="أضف ملاحظاتك هنا..."
-                  rows={4}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingBooking(null)}>
-                إلغاء
-              </Button>
-              <Button onClick={saveAdminNotes}>حفظ</Button>
-            </DialogFooter>
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-    </div>
+                <Button onClick={saveAdminNotes}>حفظ</Button>
+              </DialogFooter>
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      </div>
+    </PermissionGuard>
   )
 }

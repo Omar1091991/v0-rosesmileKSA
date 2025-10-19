@@ -17,6 +17,8 @@ interface Service {
   id: string
   title_ar: string
   title_en?: string
+  subtitle_ar?: string
+  subtitle_en?: string
   description_ar: string
   description_en?: string
   icon?: string
@@ -38,6 +40,8 @@ export default function ServicesPage() {
   const [newService, setNewService] = useState({
     title_ar: "",
     title_en: "",
+    subtitle_ar: "",
+    subtitle_en: "",
     description_ar: "",
     description_en: "",
     icon: "",
@@ -104,6 +108,8 @@ export default function ServicesPage() {
       setNewService({
         title_ar: "",
         title_en: "",
+        subtitle_ar: "",
+        subtitle_en: "",
         description_ar: "",
         description_en: "",
         icon: "",
@@ -295,6 +301,11 @@ export default function ServicesPage() {
                       {service.icon && <span className="text-2xl">{service.icon}</span>}
                       <h3 className="font-semibold text-lg">{service.title_ar}</h3>
                     </div>
+                    {service.subtitle_ar && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <h4 className="font-medium text-base">{service.subtitle_ar}</h4>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-sm">
                       <span className={service.is_active ? "text-green-600" : "text-red-600"}>
                         {service.is_active ? "نشط" : "غير نشط"}
@@ -387,6 +398,16 @@ export default function ServicesPage() {
                 value={newService.title_ar}
                 onChange={(e) => setNewService({ ...newService, title_ar: e.target.value })}
                 placeholder="مثال: تقويم الأسنان"
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="subtitle_ar">العنوان الفرعي بالعربية</Label>
+              <Input
+                id="subtitle_ar"
+                value={newService.subtitle_ar}
+                onChange={(e) => setNewService({ ...newService, subtitle_ar: e.target.value })}
+                placeholder="مثال: حلول متقدمة لابتسامة مثالية"
                 disabled={loading}
               />
             </div>
@@ -487,6 +508,15 @@ export default function ServicesPage() {
                   id="edit_title_ar"
                   value={selectedService.title_ar}
                   onChange={(e) => setSelectedService({ ...selectedService, title_ar: e.target.value })}
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_subtitle_ar">العنوان الفرعي بالعربية</Label>
+                <Input
+                  id="edit_subtitle_ar"
+                  value={selectedService.subtitle_ar || ""}
+                  onChange={(e) => setSelectedService({ ...selectedService, subtitle_ar: e.target.value })}
                   disabled={loading}
                 />
               </div>
