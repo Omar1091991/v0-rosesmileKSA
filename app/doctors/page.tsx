@@ -43,19 +43,21 @@ export default async function DoctorsPage() {
                 <AnimatedSection key={doctor.id} animation="scale-in" delay={index * 0.1}>
                   <Card className="hover:shadow-lg transition-all hover:-translate-y-1 h-full">
                     <CardContent className="pt-6 space-y-4">
-                      {doctor.image_url ? (
-                        <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted">
-                          <img
-                            src={doctor.image_url || "/placeholder.svg"}
-                            alt={doctor.name_ar}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-6xl">
-                          👨‍⚕️
-                        </div>
-                      )}
+                      <Link href={`/doctors/${doctor.id}`} className="block">
+                        {doctor.image_url ? (
+                          <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity">
+                            <img
+                              src={doctor.image_url || "/placeholder.svg"}
+                              alt={doctor.name_ar}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-6xl cursor-pointer hover:opacity-90 transition-opacity">
+                            👨‍⚕️
+                          </div>
+                        )}
+                      </Link>
                       <div className="space-y-3">
                         <div>
                           <h3 className="text-2xl font-bold">{doctor.name_ar}</h3>

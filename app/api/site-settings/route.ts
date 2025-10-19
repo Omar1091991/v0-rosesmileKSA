@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 
+export const revalidate = 60
+
 export async function GET() {
   try {
     console.log("[v0] GET /api/site-settings - Starting...")
@@ -20,7 +22,14 @@ export async function GET() {
       updated_at: row.updated_at,
     }))
 
-    return NextResponse.json({ settings })
+    return NextResponse.json(
+      { settings },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+        },
+      },
+    )
   } catch (error: any) {
     console.error("[v0] Error fetching site settings:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

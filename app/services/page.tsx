@@ -4,6 +4,8 @@ import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { AnimatedSection } from "@/components/animated-section"
 import { query } from "@/lib/db"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export const dynamic = "force-dynamic"
 
@@ -44,32 +46,39 @@ export default async function ServicesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {services?.map((service, index) => (
                 <AnimatedSection key={service.id} animation="scale-in" delay={index * 0.1}>
-                  <Card className="hover:shadow-lg transition-all hover:-translate-y-1 h-full">
-                    <CardContent className="pt-6 space-y-4">
-                      {service.image_url ? (
-                        <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted">
-                          <img
-                            src={service.image_url || "/placeholder.svg"}
-                            alt={service.title_ar}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-6xl">
-                          {service.icon || "🏥"}
-                        </div>
-                      )}
-                      <div className="space-y-2">
+                  <Card className="hover:shadow-lg transition-all hover:-translate-y-1 h-full flex flex-col">
+                    <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
+                      <Link href={`/services/${service.id}`} className="block">
+                        {service.image_url ? (
+                          <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity">
+                            <img
+                              src={service.image_url || "/placeholder.svg"}
+                              alt={service.title_ar}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-6xl cursor-pointer hover:opacity-90 transition-opacity">
+                            {service.icon || "🏥"}
+                          </div>
+                        )}
+                      </Link>
+
+                      <div className="space-y-2 flex-1">
                         <h3 className="text-2xl font-bold">{service.title_ar}</h3>
-                        <p className="text-muted-foreground leading-relaxed">{service.description_ar}</p>
+                        {service.subtitle_ar && (
+                          <p className="text-muted-foreground leading-relaxed">{service.subtitle_ar}</p>
+                        )}
                       </div>
-                      <BookingDialog
-                        trigger={
-                          <button className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-                            احجز موعد
-                          </button>
-                        }
-                      />
+
+                      <div className="flex flex-col gap-2 mt-auto">
+                        <Link href={`/services/${service.id}`}>
+                          <Button variant="outline" className="w-full bg-transparent">
+                            التفاصيل
+                          </Button>
+                        </Link>
+                        <BookingDialog trigger={<Button className="w-full">احجز موعد</Button>} />
+                      </div>
                     </CardContent>
                   </Card>
                 </AnimatedSection>

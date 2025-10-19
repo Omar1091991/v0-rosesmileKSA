@@ -37,12 +37,12 @@ export default function HomePage() {
     async function fetchData() {
       try {
         const [servicesRes, doctorsRes, offersRes, articlesRes, settingsRes, formsRes] = await Promise.all([
-          fetch("/api/services"),
-          fetch("/api/doctors"),
-          fetch("/api/offers"),
-          fetch("/api/articles"),
-          fetch("/api/site-settings"),
-          fetch("/api/booking-forms"),
+          fetch("/api/services", { next: { revalidate: 60 } }),
+          fetch("/api/doctors", { next: { revalidate: 60 } }),
+          fetch("/api/offers", { next: { revalidate: 60 } }),
+          fetch("/api/articles", { next: { revalidate: 60 } }),
+          fetch("/api/site-settings", { next: { revalidate: 60 } }),
+          fetch("/api/booking-forms", { next: { revalidate: 60 } }),
         ])
 
         const servicesData = await servicesRes.json()
@@ -391,84 +391,110 @@ export default function HomePage() {
               </p>
             </motion.div>
 
-            <AutoScrollCarousel
-              itemsPerView={getServicesCarouselSettings().itemsPerView}
-              scrollDuration={getServicesCarouselSettings().scrollDuration}
-              direction={getServicesCarouselSettings().direction}
-              autoScroll={getServicesCarouselSettings().autoScroll}
-            >
-              {services?.map((service) => (
-                <motion.div
-                  key={service.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
+            <div className="relative">
+              {/* زر التمرير لليسار */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
+                onClick={() => scroll(servicesScrollRef, "left")}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+
+              {/* زر التمرير لليمين */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
+                onClick={() => scroll(servicesScrollRef, "right")}
+              >
+                <ArrowLeft className="h-5 w-5 rotate-180" />
+              </Button>
+
+              <div ref={servicesScrollRef} className="overflow-x-auto pb-4 scroll-smooth">
+                <AutoScrollCarousel
+                  itemsPerView={getServicesCarouselSettings().itemsPerView}
+                  scrollDuration={getServicesCarouselSettings().scrollDuration}
+                  direction={getServicesCarouselSettings().direction}
+                  autoScroll={getServicesCarouselSettings().autoScroll}
                 >
-                  <Card className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col">
-                    <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
-                      <Link href={`/services/${service.id}`} className="block">
-                        {service.image_url ? (
-                          <div className="w-full aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                            <Image
-                              src={service.image_url || "/placeholder.svg"}
-                              alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
-                              fill
-                              className="object-cover"
-                            />
+                  {services?.map((service) => (
+                    <motion.div
+                      key={service.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                    >
+                      <Card className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col">
+                        <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
+                          <Link href={`/services/${service.id}`} className="block">
+                            {service.image_url ? (
+                              <div className="w-full aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                <Image
+                                  src={service.image_url || "/placeholder.svg"}
+                                  alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-4xl sm:text-6xl cursor-pointer hover:opacity-90 transition-opacity">
+                                {service.icon || "🏥"}
+                              </div>
+                            )}
+                          </Link>
+                          <h3 className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2">
+                            {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                          </h3>
+                          <p className="text-muted-foreground leading-relaxed line-clamp-2 text-center text-xs sm:text-sm flex-1">
+                            {renderFormattedText(
+                              language === "ar"
+                                ? service.description_ar
+                                : service.description_en || service.description_ar,
+                            )}
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 bg-transparent text-xs sm:text-sm"
+                              asChild
+                            >
+                              <Link href={`/services/${service.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
+                            </Button>
+                            <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                              <Button
+                                size="sm"
+                                className="w-full text-xs sm:text-sm relative overflow-hidden group"
+                                asChild
+                              >
+                                <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                                  <motion.span
+                                    className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
+                                    animate={{
+                                      x: ["-100%", "100%"],
+                                    }}
+                                    transition={{
+                                      duration: 2,
+                                      repeat: Number.POSITIVE_INFINITY,
+                                      ease: "linear",
+                                    }}
+                                  />
+                                  <span className="relative z-10">
+                                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                                  </span>
+                                </Link>
+                              </Button>
+                            </motion.div>
                           </div>
-                        ) : (
-                          <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-4xl sm:text-6xl cursor-pointer hover:opacity-90 transition-opacity">
-                            {service.icon || "🏥"}
-                          </div>
-                        )}
-                      </Link>
-                      <h3 className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2">
-                        {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed line-clamp-2 text-center text-xs sm:text-sm flex-1">
-                        {renderFormattedText(
-                          language === "ar" ? service.description_ar : service.description_en || service.description_ar,
-                        )}
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 bg-transparent text-xs sm:text-sm"
-                          asChild
-                        >
-                          <Link href={`/services/${service.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
-                        </Button>
-                        <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button
-                            size="sm"
-                            className="w-full text-xs sm:text-sm relative overflow-hidden group"
-                            asChild
-                          >
-                            <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                              <motion.span
-                                className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
-                                animate={{
-                                  x: ["-100%", "100%"],
-                                }}
-                                transition={{
-                                  duration: 2,
-                                  repeat: Number.POSITIVE_INFINITY,
-                                  ease: "linear",
-                                }}
-                              />
-                              <span className="relative z-10">
-                                {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                              </span>
-                            </Link>
-                          </Button>
-                        </motion.div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </AutoScrollCarousel>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AutoScrollCarousel>
+              </div>
+            </div>
 
             <motion.div
               className="text-center mt-8 sm:mt-12"

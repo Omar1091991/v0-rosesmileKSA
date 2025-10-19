@@ -32,7 +32,9 @@ export function SocialMediaLinks() {
     async function fetchSettings() {
       try {
         console.log("[v0] Fetching social media settings...")
-        const response = await fetch("/api/site-settings")
+        const response = await fetch("/api/site-settings", {
+          next: { revalidate: 60 },
+        })
 
         console.log("[v0] Response status:", response.status)
 
