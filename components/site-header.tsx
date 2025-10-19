@@ -49,8 +49,8 @@ export function SiteHeader() {
           backgroundColor: headerBgColor || "hsl(var(--background) / 0.95)",
         }}
       >
-        <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
+        <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+          <Link href="/" className="flex items-center gap-3 px-2 sm:px-0">
             <Image
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled-2-Ipgz40KKLVCjXdRLpN2Uu3iW79G489.png"
               alt="ابتسامة الورود"
@@ -98,14 +98,14 @@ export function SiteHeader() {
             </Button>
           </div>
 
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <button className="md:hidden p-3" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
 
         {isMenuOpen && (
           <div className="md:hidden border-t border-border/40 bg-background">
-            <nav className="container flex flex-col gap-4 py-4">
+            <nav className="container flex flex-col gap-4 py-4 px-6">
               <Link
                 href="/"
                 className="text-sm font-medium hover:text-primary transition-colors"

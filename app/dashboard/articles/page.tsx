@@ -1,18 +1,20 @@
 "use client"
 
-import { Textarea } from "@/components/ui/textarea"
+import { useEffect } from "react"
 
-import type React from "react"
-import { TextFormatter } from "@/components/text-formatter"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+
+import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Pencil, Trash2, FileText } from "lucide-react"
+import { Plus, Pencil, Trash2, FileText, Loader2 } from "lucide-react"
 import { PermissionGuard } from "@/components/permission-guard"
+import { TextFormatter } from "@/components/text-formatter"
+import type React from "react"
 
 interface Article {
   id: string
@@ -35,6 +37,8 @@ export default function ArticlesPage() {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editingArticle, setEditingArticle] = useState<Article | null>(null)
   const [imagePreview, setImagePreview] = useState<string>("")
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({
@@ -83,11 +87,22 @@ export default function ArticlesPage() {
         return
       }
 
+      setIsUploadingImage(true)
+      toast({
+        title: "جاري رفع الصورة...",
+        description: "يرجى الانتظار",
+      })
+
       const reader = new FileReader()
       reader.onloadend = () => {
         const base64 = reader.result as string
         setFormData({ ...formData, image_url: base64 })
         setImagePreview(base64)
+        setIsUploadingImage(false)
+        toast({
+          title: "تم رفع الصورة بنجاح",
+          description: "يمكنك الآن حفظ المقال",
+        })
       }
       reader.readAsDataURL(file)
     }
@@ -103,6 +118,12 @@ export default function ArticlesPage() {
       return
     }
 
+    setIsSaving(true)
+    toast({
+      title: "جاري الحفظ...",
+      description: "يرجى الانتظار",
+    })
+
     try {
       const response = await fetch("/api/articles", {
         method: "POST",
@@ -112,8 +133,9 @@ export default function ArticlesPage() {
 
       if (response.ok) {
         toast({
-          title: "نجح",
+          title: "✅ تم الحفظ بنجاح",
           description: "تم إضافة المقال بنجاح",
+          className: "bg-green-50 border-green-200",
         })
         setIsAddOpen(false)
         resetForm()
@@ -131,11 +153,19 @@ export default function ArticlesPage() {
         description: "حدث خطأ أثناء إضافة المقال",
         variant: "destructive",
       })
+    } finally {
+      setIsSaving(false)
     }
   }
 
   const handleEdit = async () => {
     if (!editingArticle) return
+
+    setIsSaving(true)
+    toast({
+      title: "جاري الحفظ...",
+      description: "يرجى الانتظار",
+    })
 
     try {
       const response = await fetch("/api/articles", {
@@ -146,8 +176,9 @@ export default function ArticlesPage() {
 
       if (response.ok) {
         toast({
-          title: "نجح",
+          title: "✅ تم الحفظ بنجاح",
           description: "تم تحديث المقال بنجاح",
+          className: "bg-green-50 border-green-200",
         })
         setIsEditOpen(false)
         resetForm()
@@ -165,6 +196,8 @@ export default function ArticlesPage() {
         description: "حدث خطأ أثناء تحديث المقال",
         variant: "destructive",
       })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -326,7 +359,19 @@ export default function ArticlesPage() {
 
                 <div>
                   <Label htmlFor="image">صورة المقال</Label>
-                  <Input id="image" type="file" accept="image/*" onChange={handleImageChange} />
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    disabled={isUploadingImage || isSaving}
+                  />
+                  {isUploadingImage && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>جاري رفع الصورة...</span>
+                    </div>
+                  )}
                   {imagePreview && (
                     <div className="mt-2">
                       <img
@@ -338,8 +383,15 @@ export default function ArticlesPage() {
                   )}
                 </div>
 
-                <Button onClick={handleAdd} className="w-full">
-                  إضافة المقال
+                <Button onClick={handleAdd} className="w-full" disabled={isUploadingImage || isSaving}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                      جاري الحفظ...
+                    </>
+                  ) : (
+                    "إضافة المقال"
+                  )}
                 </Button>
               </div>
             </DialogContent>
@@ -456,7 +508,19 @@ export default function ArticlesPage() {
 
               <div>
                 <Label htmlFor="edit_image">صورة المقال</Label>
-                <Input id="edit_image" type="file" accept="image/*" onChange={handleImageChange} />
+                <Input
+                  id="edit_image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  disabled={isUploadingImage || isSaving}
+                />
+                {isUploadingImage && (
+                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>جاري رفع الصورة...</span>
+                  </div>
+                )}
                 {imagePreview && (
                   <div className="mt-2">
                     <img
@@ -468,8 +532,15 @@ export default function ArticlesPage() {
                 )}
               </div>
 
-              <Button onClick={handleEdit} className="w-full">
-                حفظ التعديلات
+              <Button onClick={handleEdit} className="w-full" disabled={isUploadingImage || isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                    جاري الحفظ...
+                  </>
+                ) : (
+                  "حفظ التعديلات"
+                )}
               </Button>
             </div>
           </DialogContent>

@@ -37,6 +37,11 @@ export function BookingDialog({ trigger, formId }: BookingDialogProps) {
   })
 
   useEffect(() => {
+    const event = new CustomEvent("bookingDialogChange", { detail: { isOpen: open } })
+    window.dispatchEvent(event)
+  }, [open])
+
+  useEffect(() => {
     const fetchFormData = async () => {
       if (formId) {
         try {

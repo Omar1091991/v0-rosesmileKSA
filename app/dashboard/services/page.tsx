@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Pencil, Trash2, Briefcase, Upload, X } from "lucide-react"
+import { Plus, Pencil, Trash2, Briefcase, Upload, X, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -35,6 +35,8 @@ export default function ServicesPage() {
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [imagePreview, setImagePreview] = useState<string>("")
   const [editImagePreview, setEditImagePreview] = useState<string>("")
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
 
   const [newService, setNewService] = useState({
@@ -84,7 +86,12 @@ export default function ServicesPage() {
       return
     }
 
-    setLoading(true)
+    setIsSaving(true)
+    toast({
+      title: "جاري الحفظ...",
+      description: "يرجى الانتظار",
+    })
+
     try {
       const response = await fetch("/api/services", {
         method: "POST",
@@ -99,8 +106,9 @@ export default function ServicesPage() {
       }
 
       toast({
-        title: "نجح",
+        title: "✅ تم الحفظ بنجاح",
         description: `تم إضافة الخدمة ${newService.title_ar} بنجاح`,
+        className: "bg-green-50 border-green-200",
       })
 
       setIsAddOpen(false)
@@ -126,14 +134,19 @@ export default function ServicesPage() {
         variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      setIsSaving(false)
     }
   }
 
   const handleUpdateService = async () => {
     if (!selectedService) return
 
-    setLoading(true)
+    setIsSaving(true)
+    toast({
+      title: "جاري الحفظ...",
+      description: "يرجى الانتظار",
+    })
+
     try {
       const response = await fetch("/api/services", {
         method: "PATCH",
@@ -148,8 +161,9 @@ export default function ServicesPage() {
       }
 
       toast({
-        title: "نجح",
+        title: "✅ تم الحفظ بنجاح",
         description: `تم تحديث الخدمة ${selectedService.title_ar} بنجاح`,
+        className: "bg-green-50 border-green-200",
       })
 
       setIsEditOpen(false)
@@ -164,7 +178,7 @@ export default function ServicesPage() {
         variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      setIsSaving(false)
     }
   }
 
@@ -205,7 +219,6 @@ export default function ServicesPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // التحقق من نوع الملف
     if (!file.type.startsWith("image/")) {
       toast({
         title: "خطأ",
@@ -215,7 +228,6 @@ export default function ServicesPage() {
       return
     }
 
-    // التحقق من حجم الملف (أقل من 2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast({
         title: "خطأ",
@@ -224,6 +236,12 @@ export default function ServicesPage() {
       })
       return
     }
+
+    setIsUploadingImage(true)
+    toast({
+      title: "جاري رفع الصورة...",
+      description: "يرجى الانتظار",
+    })
 
     const reader = new FileReader()
     reader.onloadend = () => {
@@ -235,6 +253,11 @@ export default function ServicesPage() {
         setNewService({ ...newService, image_url: base64String })
         setImagePreview(base64String)
       }
+      setIsUploadingImage(false)
+      toast({
+        title: "تم رفع الصورة بنجاح",
+        description: "يمكنك الآن حفظ الخدمة",
+      })
     }
     reader.readAsDataURL(file)
   }
@@ -259,7 +282,7 @@ export default function ServicesPage() {
           </h1>
           <p className="text-muted-foreground mt-2">إضافة وتعديل وحذف الخدمات الطبية</p>
         </div>
-        <Button onClick={() => setIsAddOpen(true)} disabled={loading}>
+        <Button onClick={() => setIsAddOpen(true)} disabled={loading || isSaving}>
           <Plus className="h-4 w-4 ml-2" />
           إضافة خدمة
         </Button>
@@ -275,7 +298,7 @@ export default function ServicesPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-center text-muted-foreground">لا توجد خدمات حالياً</p>
-            <Button size="sm" className="mt-4" onClick={() => setIsAddOpen(true)}>
+            <Button size="sm" className="mt-4" onClick={() => setIsAddOpen(true)} disabled={loading || isSaving}>
               <Plus className="h-4 w-4 ml-2" />
               إضافة أول خدمة
             </Button>
@@ -323,7 +346,7 @@ export default function ServicesPage() {
                         setEditImagePreview(service.image_url || "")
                         setIsEditOpen(true)
                       }}
-                      disabled={loading}
+                      disabled={loading || isSaving}
                     >
                       <Pencil className="h-4 w-4 ml-2" />
                       تعديل
@@ -333,7 +356,7 @@ export default function ServicesPage() {
                       size="sm"
                       className="flex-1"
                       onClick={() => handleDeleteService(service.id)}
-                      disabled={loading}
+                      disabled={loading || isSaving}
                     >
                       <Trash2 className="h-4 w-4 ml-2" />
                       حذف
@@ -366,6 +389,7 @@ export default function ServicesPage() {
                     size="icon"
                     className="absolute top-2 left-2"
                     onClick={() => removeImage(false)}
+                    disabled={isUploadingImage || isSaving}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -378,13 +402,19 @@ export default function ServicesPage() {
                     onChange={(e) => handleImageUpload(e, false)}
                     className="hidden"
                     id="image-upload"
-                    disabled={loading}
+                    disabled={isUploadingImage || isSaving}
                   />
                   <label htmlFor="image-upload" className="cursor-pointer">
                     <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-sm text-muted-foreground">اضغط لرفع صورة</p>
                     <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF (أقل من 2MB)</p>
                   </label>
+                </div>
+              )}
+              {isUploadingImage && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>جاري رفع الصورة...</span>
                 </div>
               )}
             </div>
@@ -398,7 +428,7 @@ export default function ServicesPage() {
                 value={newService.title_ar}
                 onChange={(e) => setNewService({ ...newService, title_ar: e.target.value })}
                 placeholder="مثال: تقويم الأسنان"
-                disabled={loading}
+                disabled={loading || isSaving}
               />
             </div>
             <div className="space-y-2">
@@ -408,7 +438,7 @@ export default function ServicesPage() {
                 value={newService.subtitle_ar}
                 onChange={(e) => setNewService({ ...newService, subtitle_ar: e.target.value })}
                 placeholder="مثال: حلول متقدمة لابتسامة مثالية"
-                disabled={loading}
+                disabled={loading || isSaving}
               />
             </div>
             <div className="space-y-2">
@@ -421,6 +451,7 @@ export default function ServicesPage() {
                 onChange={(value) => setNewService({ ...newService, description_ar: value })}
                 placeholder="وصف تفصيلي للخدمة"
                 rows={4}
+                disabled={loading || isSaving}
               />
             </div>
             <div className="space-y-2">
@@ -430,7 +461,7 @@ export default function ServicesPage() {
                 value={newService.icon}
                 onChange={(e) => setNewService({ ...newService, icon: e.target.value })}
                 placeholder="🦷"
-                disabled={loading}
+                disabled={loading || isSaving}
               />
             </div>
             <div className="flex items-center space-x-2 space-x-reverse">
@@ -438,17 +469,24 @@ export default function ServicesPage() {
                 id="is_active"
                 checked={newService.is_active}
                 onCheckedChange={(checked) => setNewService({ ...newService, is_active: checked })}
-                disabled={loading}
+                disabled={loading || isSaving}
               />
               <Label htmlFor="is_active">نشط</Label>
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setIsAddOpen(false)} disabled={loading}>
+            <Button variant="outline" onClick={() => setIsAddOpen(false)} disabled={isUploadingImage || isSaving}>
               إلغاء
             </Button>
-            <Button onClick={handleAddService} disabled={loading}>
-              {loading ? "جاري الإضافة..." : "إضافة الخدمة"}
+            <Button onClick={handleAddService} disabled={isUploadingImage || isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                  جاري الحفظ...
+                </>
+              ) : (
+                "إضافة الخدمة"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -479,6 +517,7 @@ export default function ServicesPage() {
                       size="icon"
                       className="absolute top-2 left-2"
                       onClick={() => removeImage(true)}
+                      disabled={isUploadingImage || isSaving}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -491,13 +530,19 @@ export default function ServicesPage() {
                       onChange={(e) => handleImageUpload(e, true)}
                       className="hidden"
                       id="edit-image-upload"
-                      disabled={loading}
+                      disabled={isUploadingImage || isSaving}
                     />
                     <label htmlFor="edit-image-upload" className="cursor-pointer">
                       <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                       <p className="text-sm text-muted-foreground">اضغط لرفع صورة</p>
                       <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF (أقل من 2MB)</p>
                     </label>
+                  </div>
+                )}
+                {isUploadingImage && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>جاري رفع الصورة...</span>
                   </div>
                 )}
               </div>
@@ -508,7 +553,7 @@ export default function ServicesPage() {
                   id="edit_title_ar"
                   value={selectedService.title_ar}
                   onChange={(e) => setSelectedService({ ...selectedService, title_ar: e.target.value })}
-                  disabled={loading}
+                  disabled={loading || isSaving}
                 />
               </div>
               <div className="space-y-2">
@@ -517,7 +562,7 @@ export default function ServicesPage() {
                   id="edit_subtitle_ar"
                   value={selectedService.subtitle_ar || ""}
                   onChange={(e) => setSelectedService({ ...selectedService, subtitle_ar: e.target.value })}
-                  disabled={loading}
+                  disabled={loading || isSaving}
                 />
               </div>
               <div className="space-y-2">
@@ -527,6 +572,7 @@ export default function ServicesPage() {
                   value={selectedService.description_ar}
                   onChange={(value) => setSelectedService({ ...selectedService, description_ar: value })}
                   rows={4}
+                  disabled={loading || isSaving}
                 />
               </div>
               <div className="space-y-2">
@@ -535,7 +581,7 @@ export default function ServicesPage() {
                   id="edit_icon"
                   value={selectedService.icon || ""}
                   onChange={(e) => setSelectedService({ ...selectedService, icon: e.target.value })}
-                  disabled={loading}
+                  disabled={loading || isSaving}
                 />
               </div>
               <div className="flex items-center space-x-2 space-x-reverse">
@@ -543,18 +589,25 @@ export default function ServicesPage() {
                   id="edit_is_active"
                   checked={selectedService.is_active}
                   onCheckedChange={(checked) => setSelectedService({ ...selectedService, is_active: checked })}
-                  disabled={loading}
+                  disabled={loading || isSaving}
                 />
                 <Label htmlFor="edit_is_active">نشط</Label>
               </div>
             </div>
           )}
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setIsEditOpen(false)} disabled={loading}>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)} disabled={isUploadingImage || isSaving}>
               إلغاء
             </Button>
-            <Button onClick={handleUpdateService} disabled={loading}>
-              {loading ? "جاري التحديث..." : "حفظ التغييرات"}
+            <Button onClick={handleUpdateService} disabled={isUploadingImage || isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                  جاري الحفظ...
+                </>
+              ) : (
+                "حفظ التغييرات"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
