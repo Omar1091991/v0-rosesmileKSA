@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
+import { revalidatePath } from "next/cache"
 
 export async function GET() {
   try {
@@ -30,9 +31,9 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    const settingKey = body.setting_key || body.key
-    const settingValue = body.setting_value || body.value_ar || body.value
-    const settingType = body.setting_type || body.type || "text"
+    const settingKey = body.key || body.setting_key
+    const settingValue = body.value_ar || body.setting_value || body.value
+    const settingType = body.type || body.setting_type || "text"
     const category = body.category || "general"
 
     const result = await query(
@@ -43,6 +44,15 @@ export async function POST(request: Request) {
     )
 
     const setting = result.rows[0]
+
+    revalidatePath("/")
+    revalidatePath("/privacy-policy")
+    revalidatePath("/terms-conditions")
+    revalidatePath("/services")
+    revalidatePath("/doctors")
+    revalidatePath("/articles")
+    revalidatePath("/offers")
+
     return NextResponse.json({
       id: setting.id,
       key: setting.setting_key,
@@ -66,7 +76,9 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "معرف الإعداد مطلوب" }, { status: 400 })
     }
 
-    const settingValue = body.setting_value || body.value_ar || body.value
+    const settingValue = body.value_ar || body.setting_value || body.value
+
+    console.log("[v0] Updating setting:", { id, settingValue })
 
     const result = await query(
       `UPDATE site_settings 
@@ -81,6 +93,18 @@ export async function PATCH(request: Request) {
     }
 
     const setting = result.rows[0]
+
+    console.log("[v0] Setting updated successfully:", setting.setting_key)
+
+    revalidatePath("/")
+    revalidatePath("/privacy-policy")
+    revalidatePath("/terms-conditions")
+    revalidatePath("/services")
+    revalidatePath("/doctors")
+    revalidatePath("/articles")
+    revalidatePath("/offers")
+    revalidatePath("/departments")
+
     return NextResponse.json({
       id: setting.id,
       key: setting.setting_key,
@@ -105,6 +129,11 @@ export async function DELETE(request: Request) {
     }
 
     await query("DELETE FROM site_settings WHERE id = $1", [id])
+
+    revalidatePath("/")
+    revalidatePath("/privacy-policy")
+    revalidatePath("/terms-conditions")
+
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error: any) {
     console.error("[v0] Error deleting site setting:", error)

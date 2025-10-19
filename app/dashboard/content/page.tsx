@@ -11,6 +11,7 @@ import { motion } from "framer-motion"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ImagePicker } from "@/components/image-picker"
+import { RichTextEditor } from "@/components/rich-text-editor"
 import Image from "next/image"
 
 const CONTENT_SECTIONS = [
@@ -222,13 +223,13 @@ const CONTENT_SECTIONS = [
       {
         key: "privacy_policy_content",
         label: "محتوى سياسة الخصوصية",
-        type: "textarea",
+        type: "richtext",
         defaultValue: "أضف محتوى سياسة الخصوصية هنا...",
       },
       {
         key: "terms_conditions_content",
         label: "محتوى الشروط والأحكام",
-        type: "textarea",
+        type: "richtext",
         defaultValue: "أضف محتوى الشروط والأحكام هنا...",
       },
     ],
@@ -624,8 +625,14 @@ export default function ContentManagementPage() {
     try {
       console.log("[v0] Saving settings...", Object.keys(settings).length, "settings")
 
+      toast({
+        title: "⏳ جاري الحفظ...",
+        description: `يتم حفظ ${Object.keys(settings).length} إعداد، يرجى الانتظار`,
+        duration: 3000,
+      })
+
       const promises = Object.entries(settings).map(async ([key, setting]) => {
-        console.log("[v0] Saving setting:", key, setting)
+        console.log("[v0] Updating setting:", { id: setting.id, settingValue: setting.value_ar })
 
         if (setting.id) {
           const response = await fetch("/api/site-settings", {
@@ -661,17 +668,21 @@ export default function ContentManagementPage() {
       console.log("[v0] All settings saved successfully")
 
       toast({
-        title: "نجح",
-        description: "تم حفظ جميع التغييرات بنجاح",
+        title: "✅ تم الحفظ بنجاح!",
+        description: "تم حفظ جميع التغييرات وتحديث الموقع العام. قد تحتاج إلى تحديث الصفحة لرؤية التغييرات.",
+        variant: "default",
+        duration: 7000,
+        className: "bg-green-50 border-green-200 text-green-900",
       })
 
-      fetchSettings()
+      await fetchSettings()
     } catch (error: any) {
       console.error("[v0] Error saving settings:", error)
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في حفظ التغييرات",
+        title: "❌ فشل الحفظ!",
+        description: error.message || "حدث خطأ أثناء حفظ التغييرات، يرجى المحاولة مرة أخرى",
         variant: "destructive",
+        duration: 7000,
       })
     } finally {
       setSaving(false)
@@ -679,15 +690,21 @@ export default function ContentManagementPage() {
   }
 
   async function handleSaveSection(sectionFields: string[]) {
-    setSavingSection(sectionFields[0]) // Use the first field key as a general indicator for the section
+    setSavingSection(sectionFields[0])
     try {
       console.log("[v0] Saving section settings...", sectionFields)
+
+      toast({
+        title: "⏳ جاري الحفظ...",
+        description: "يتم حفظ التغييرات، يرجى الانتظار",
+        duration: 2000,
+      })
 
       const promises = sectionFields.map(async (key) => {
         const setting = settings[key]
         if (!setting) return
 
-        console.log("[v0] Saving setting:", key, setting)
+        console.log("[v0] Updating setting:", { id: setting.id, settingValue: setting.value_ar })
 
         if (setting.id) {
           const response = await fetch("/api/site-settings", {
@@ -723,17 +740,21 @@ export default function ContentManagementPage() {
       console.log("[v0] Section settings saved successfully")
 
       toast({
-        title: "نجح",
-        description: "تم حفظ التغييرات بنجاح",
+        title: "✅ تم الحفظ بنجاح!",
+        description: "تم حفظ التغييرات وتحديث الموقع العام",
+        variant: "default",
+        duration: 5000,
+        className: "bg-green-50 border-green-200 text-green-900",
       })
 
-      await fetchSettings() // Refresh settings after saving
+      await fetchSettings()
     } catch (error: any) {
       console.error("[v0] Error saving section settings:", error)
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في حفظ التغييرات",
+        title: "❌ فشل الحفظ!",
+        description: error.message || "حدث خطأ أثناء حفظ التغييرات، يرجى المحاولة مرة أخرى",
         variant: "destructive",
+        duration: 7000,
       })
     } finally {
       setSavingSection(null)
@@ -902,6 +923,14 @@ export default function ContentManagementPage() {
                             onChange={(e) => handleChange(field.key, e.target.value, field.type)}
                             placeholder={field.defaultValue}
                             rows={3}
+                          />
+                        )}
+                        {field.type === "richtext" && (
+                          <RichTextEditor
+                            value={settings[field.key]?.value_ar ?? field.defaultValue ?? ""}
+                            onChange={(value) => handleChange(field.key, value, "textarea")}
+                            placeholder={field.defaultValue}
+                            rows={15}
                           />
                         )}
                         {field.type === "number" && (

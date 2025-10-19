@@ -65,10 +65,19 @@ export default function HomePage() {
         const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
         const settingsMap: Record<string, string> = {}
         settings.forEach((setting: any) => {
-          settingsMap[setting.key + "_ar"] = setting.value_ar || ""
-          settingsMap[setting.key + "_en"] = setting.value_en || setting.value_ar || ""
+          // إذا كان الـ key يحتوي بالفعل على _ar أو _en، استخدمه كما هو
+          if (setting.key.endsWith("_ar") || setting.key.endsWith("_en")) {
+            settingsMap[setting.key] = setting.value_ar || ""
+          } else {
+            // إذا لم يكن يحتوي على اللاحقة، أضفها
+            settingsMap[setting.key + "_ar"] = setting.value_ar || ""
+            settingsMap[setting.key + "_en"] = setting.value_en || setting.value_ar || ""
+          }
         })
         setSiteSettings(settingsMap)
+
+        console.log("[v0] Settings loaded:", Object.keys(settingsMap).length, "keys")
+        console.log("[v0] Hero title:", settingsMap["hero_title_ar"])
       } catch (error) {
         console.error("[v0] Error fetching data:", error)
       }
@@ -121,7 +130,8 @@ export default function HomePage() {
 
   const getText = (key: string) => {
     const langKey = `${key}_${language}`
-    return siteSettings[langKey] || siteSettings[`${key}_ar`] || ""
+    const value = siteSettings[langKey] || siteSettings[`${key}_ar`] || ""
+    return value
   }
 
   const getHeroImages = (): string[] => {
