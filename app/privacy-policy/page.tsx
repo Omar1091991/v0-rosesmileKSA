@@ -1,25 +1,20 @@
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
+import { query } from "@/lib/db"
 
 async function getPrivacyPolicy() {
   try {
-    const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"
+    const result = await query("SELECT setting_value FROM site_settings WHERE setting_key = $1", [
+      "privacy_policy_content",
+    ])
 
-    const response = await fetch(`${baseUrl}/api/site-settings`, {
-      cache: "no-store",
-    })
-
-    if (!response.ok) {
-      console.error("Error fetching settings:", response.statusText)
-      return ""
+    if (result.rows.length > 0) {
+      return result.rows[0].setting_value || ""
     }
 
-    const data = await response.json()
-    const settings = Array.isArray(data) ? data : data.settings || []
-    const privacyPolicy = settings.find((s: any) => s.key === "privacy_policy_content")
-    return privacyPolicy?.value_ar || ""
+    return ""
   } catch (error) {
-    console.error("Error fetching privacy policy:", error)
+    console.error("[v0] Error fetching privacy policy from database:", error)
     return ""
   }
 }
