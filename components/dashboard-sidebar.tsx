@@ -33,18 +33,42 @@ import {
 import { Badge } from "@/components/ui/badge"
 
 const menuItems = [
-  { title: "الرئيسية", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "editor", "user"] },
-  { title: "الحجوزات", href: "/dashboard/bookings", icon: Calendar, roles: ["admin", "user"] },
-  { title: "المقالات", href: "/dashboard/articles", icon: Newspaper, roles: ["admin", "editor"] },
-  { title: "الخدمات", href: "/dashboard/services", icon: Briefcase, roles: ["admin"] },
-  { title: "الأطباء", href: "/dashboard/doctors", icon: Stethoscope, roles: ["admin"] },
-  { title: "العروض", href: "/dashboard/offers", icon: Tag, roles: ["admin"] },
-  { title: "الأقسام", href: "/dashboard/departments", icon: Building2, roles: ["admin"] },
-  { title: "نماذج الحجز", href: "/dashboard/booking-forms", icon: FileText, roles: ["admin"] },
-  { title: "مكتبة الصور", href: "/dashboard/media", icon: ImageIconComponent, roles: ["admin"] },
-  { title: "المستخدمين", href: "/dashboard/users", icon: Users, roles: ["admin"] },
-  { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText, roles: ["admin"] },
-  { title: "إعداد قاعدة البيانات", href: "/dashboard/database-setup", icon: Database, roles: ["admin"] },
+  {
+    title: "الرئيسية",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    roles: ["admin", "editor", "user"],
+    color: "text-blue-500",
+  },
+  { title: "الحجوزات", href: "/dashboard/bookings", icon: Calendar, roles: ["admin", "user"], color: "text-green-500" },
+  {
+    title: "المقالات",
+    href: "/dashboard/articles",
+    icon: Newspaper,
+    roles: ["admin", "editor"],
+    color: "text-purple-500",
+  },
+  { title: "الخدمات", href: "/dashboard/services", icon: Briefcase, roles: ["admin"], color: "text-orange-500" },
+  { title: "الأطباء", href: "/dashboard/doctors", icon: Stethoscope, roles: ["admin"], color: "text-teal-500" },
+  { title: "العروض", href: "/dashboard/offers", icon: Tag, roles: ["admin"], color: "text-pink-500" },
+  { title: "الأقسام", href: "/dashboard/departments", icon: Building2, roles: ["admin"], color: "text-indigo-500" },
+  { title: "نماذج الحجز", href: "/dashboard/booking-forms", icon: FileText, roles: ["admin"], color: "text-cyan-500" },
+  {
+    title: "مكتبة الصور",
+    href: "/dashboard/media",
+    icon: ImageIconComponent,
+    roles: ["admin"],
+    color: "text-amber-500",
+  },
+  { title: "المستخدمين", href: "/dashboard/users", icon: Users, roles: ["admin"], color: "text-rose-500" },
+  { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText, roles: ["admin"], color: "text-lime-500" },
+  {
+    title: "إعداد قاعدة البيانات",
+    href: "/dashboard/database-setup",
+    icon: Database,
+    roles: ["admin"],
+    color: "text-slate-500",
+  },
 ]
 
 export function DashboardSidebar() {
@@ -145,7 +169,7 @@ export function DashboardSidebar() {
                     : "hover:bg-muted text-muted-foreground hover:text-foreground",
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className={cn("h-5 w-5", !isActive && item.color)} />
                 {item.title}
               </Link>
             )

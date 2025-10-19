@@ -17,6 +17,7 @@ import {
   FileText,
   Phone,
   Users,
+  MessageSquare,
 } from "lucide-react"
 
 export default function DatabaseSetupPage() {
@@ -47,6 +48,14 @@ export default function DatabaseSetupPage() {
   const [isDoctorCasesMigrating, setIsDoctorCasesMigrating] = useState(false)
   const [doctorCasesMigrationOutput, setDoctorCasesMigrationOutput] = useState<string[]>([])
   const [doctorCasesMigrationStatus, setDoctorCasesMigrationStatus] = useState<"idle" | "success" | "error">("idle")
+
+  const [isContactedMigrating, setIsContactedMigrating] = useState(false)
+  const [contactedMigrationOutput, setContactedMigrationOutput] = useState<string[]>([])
+  const [contactedMigrationStatus, setContactedMigrationStatus] = useState<"idle" | "success" | "error">("idle")
+
+  const [isTrackingMigrating, setIsTrackingMigrating] = useState(false)
+  const [trackingMigrationOutput, setTrackingMigrationOutput] = useState<string[]>([])
+  const [trackingMigrationStatus, setTrackingMigrationStatus] = useState<"idle" | "success" | "error">("idle")
 
   const runScript = async () => {
     setIsRunning(true)
@@ -252,6 +261,72 @@ export default function DatabaseSetupPage() {
       setDoctorCasesMigrationStatus("error")
     } finally {
       setIsDoctorCasesMigrating(false)
+    }
+  }
+
+  const runContactedMigration = async () => {
+    setIsContactedMigrating(true)
+    setContactedMigrationOutput([])
+    setContactedMigrationStatus("idle")
+
+    try {
+      const response = await fetch("/api/database-setup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "add_contacted_column",
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setContactedMigrationOutput([data.message])
+        setContactedMigrationStatus("success")
+      } else {
+        setContactedMigrationOutput([data.error || "حدث خطأ غير معروف"])
+        setContactedMigrationStatus("error")
+      }
+    } catch (error) {
+      setContactedMigrationOutput([`خطأ في الاتصال: ${error}`])
+      setContactedMigrationStatus("error")
+    } finally {
+      setIsContactedMigrating(false)
+    }
+  }
+
+  const runTrackingMigration = async () => {
+    setIsTrackingMigrating(true)
+    setTrackingMigrationOutput([])
+    setTrackingMigrationStatus("idle")
+
+    try {
+      const response = await fetch("/api/database-setup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "add_booking_tracking_columns",
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setTrackingMigrationOutput([data.message])
+        setTrackingMigrationStatus("success")
+      } else {
+        setTrackingMigrationOutput([data.error || "حدث خطأ غير معروف"])
+        setTrackingMigrationStatus("error")
+      }
+    } catch (error) {
+      setTrackingMigrationOutput([`خطأ في الاتصال: ${error}`])
+      setTrackingMigrationStatus("error")
+    } finally {
+      setIsTrackingMigrating(false)
     }
   }
 
@@ -590,6 +665,123 @@ export default function DatabaseSetupPage() {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            إصلاح: إضافة عمود التواصل للحجوزات
+          </CardTitle>
+          <CardDescription>
+            إذا كنت تواجه خطأ "column contacted does not exist"، استخدم هذا الزر لإضافة عمود contacted إلى جدول الحجوزات
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={runContactedMigration}
+              disabled={isContactedMigrating}
+              variant="secondary"
+              className="gap-2"
+            >
+              {isContactedMigrating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري التنفيذ...
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="h-5 w-5" />
+                  إضافة عمود التواصل
+                </>
+              )}
+            </Button>
+
+            {contactedMigrationStatus === "success" && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-semibold">تم بنجاح</span>
+              </div>
+            )}
+
+            {contactedMigrationStatus === "error" && (
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-semibold">فشل</span>
+              </div>
+            )}
+          </div>
+
+          {contactedMigrationOutput.length > 0 && (
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+              {contactedMigrationOutput.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            إصلاح: إضافة أعمدة التتبع للحجوزات
+          </CardTitle>
+          <CardDescription>
+            إذا كنت تواجه خطأ "column contacted/contact_attempts/admin_notes does not exist"، استخدم هذا الزر لإضافة
+            جميع أعمدة التتبع إلى جدول الحجوزات
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button onClick={runTrackingMigration} disabled={isTrackingMigrating} variant="secondary" className="gap-2">
+              {isTrackingMigrating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري التنفيذ...
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="h-5 w-5" />
+                  إضافة أعمدة التتبع
+                </>
+              )}
+            </Button>
+
+            {trackingMigrationStatus === "success" && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-semibold">تم بنجاح</span>
+              </div>
+            )}
+
+            {trackingMigrationStatus === "error" && (
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-semibold">فشل</span>
+              </div>
+            )}
+          </div>
+
+          {trackingMigrationOutput.length > 0 && (
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+              {trackingMigrationOutput.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-4 p-3 bg-muted/50 rounded-lg text-sm">
+            <p className="font-semibold mb-2">سيتم إضافة الأعمدة التالية:</p>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+              <li>contacted - لتتبع حالة التواصل مع العميل</li>
+              <li>contact_attempts - لتتبع عدد محاولات التواصل</li>
+              <li>admin_notes - لإضافة ملاحظات إدارية</li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
 
