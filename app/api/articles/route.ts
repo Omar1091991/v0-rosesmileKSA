@@ -16,10 +16,20 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     const result = await query(
-      `INSERT INTO articles (title_ar, title_en, content_ar, content_en, image_url, is_published)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO articles (title_ar, title_en, content_ar, content_en, excerpt_ar, excerpt_en, image_url, author_ar, is_published)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [body.title_ar, body.title_en, body.content_ar, body.content_en, body.image_url, body.is_published ?? true],
+      [
+        body.title_ar,
+        body.title_en,
+        body.content_ar,
+        body.content_en,
+        body.excerpt_ar,
+        body.excerpt_en,
+        body.image_url,
+        body.author_ar,
+        body.is_published ?? true,
+      ],
     )
 
     return NextResponse.json({ article: result.rows[0] })
@@ -34,8 +44,29 @@ export async function PATCH(request: Request) {
     const body = await request.json()
     const { id, ...updates } = body
 
-    const fields = Object.keys(updates)
-    const values = Object.values(updates)
+    const allowedFields = [
+      "title_ar",
+      "title_en",
+      "content_ar",
+      "content_en",
+      "excerpt_ar",
+      "excerpt_en",
+      "image_url",
+      "author_ar",
+      "author_en",
+      "is_published",
+      "published_at",
+    ]
+
+    const filteredUpdates: Record<string, any> = {}
+    Object.keys(updates).forEach((key) => {
+      if (allowedFields.includes(key)) {
+        filteredUpdates[key] = updates[key]
+      }
+    })
+
+    const fields = Object.keys(filteredUpdates)
+    const values = Object.values(filteredUpdates)
     const setClause = fields.map((field, index) => `${field} = $${index + 1}`).join(", ")
 
     const result = await query(`UPDATE articles SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`, [

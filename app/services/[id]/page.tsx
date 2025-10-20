@@ -59,7 +59,7 @@ export default async function ServiceDetailPage({ params }: { params: { id: stri
                       <div className="space-y-2">
                         <h2 className="text-xl font-semibold">وصف الخدمة</h2>
                         <div
-                          className="text-muted-foreground leading-relaxed text-lg prose prose-lg max-w-none"
+                          className="text-muted-foreground leading-relaxed text-lg prose prose-lg max-w-none whitespace-pre-line"
                           dangerouslySetInnerHTML={{
                             __html: service.description_ar.replace(
                               /<(?!\/?(?:strong|em|s|b|i|del|span)\b)[^>]*>/gi,
@@ -74,7 +74,7 @@ export default async function ServiceDetailPage({ params }: { params: { id: stri
                       <div className="space-y-2">
                         <h2 className="text-xl font-semibold">Service Description</h2>
                         <div
-                          className="text-muted-foreground leading-relaxed prose max-w-none"
+                          className="text-muted-foreground leading-relaxed prose max-w-none whitespace-pre-line"
                           dangerouslySetInnerHTML={{
                             __html: service.description_en.replace(
                               /<(?!\/?(?:strong|em|s|b|i|del|span)\b)[^>]*>/gi,

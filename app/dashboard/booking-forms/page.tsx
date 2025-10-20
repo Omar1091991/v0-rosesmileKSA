@@ -1,27 +1,31 @@
 "use client"
 
-import { Textarea } from "@/components/ui/textarea"
-
 import type React from "react"
-import { toast } from "@/hooks/use-toast"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Pencil, Trash2, FileText, LinkIcon, Copy, ExternalLink, Star } from "lucide-react"
+import { Plus, Pencil, Trash2, FileText, Star, X, Link2 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
-import Link from "next/link"
 import { ImagePicker } from "@/components/image-picker"
 import { TextFormatter } from "@/components/text-formatter"
+import { toast } from "@/hooks/use-toast"
 
 interface Service {
   id: string
   title_ar: string
   title_en: string
+}
+
+interface CustomService {
+  id: string
+  title_ar: string
+  title_en?: string
+  description_ar?: string
 }
 
 interface BookingForm {
@@ -34,6 +38,7 @@ interface BookingForm {
   is_active: boolean
   is_main: boolean
   order_index: number
+  custom_services?: CustomService[]
   booking_form_services?: Array<{
     service_id: string
     services: Service
@@ -45,7 +50,6 @@ export default function BookingFormsPage() {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
-  const [addServiceOpen, setAddServiceOpen] = useState(false)
   const [editingForm, setEditingForm] = useState<BookingForm | null>(null)
   const [initializing, setInitializing] = useState(false)
   const [formData, setFormData] = useState({
@@ -59,13 +63,9 @@ export default function BookingFormsPage() {
     order_index: 0,
   })
   const [selectedServices, setSelectedServices] = useState<string[]>([])
-  const [newService, setNewService] = useState({
-    title_ar: "",
-    title_en: "",
-    description_ar: "",
-    description_en: "",
-    image_url: "",
-  })
+  const [customServices, setCustomServices] = useState<CustomService[]>([])
+  const [formUrl, setFormUrl] = useState<string>("")
+  const [newCustomService, setNewCustomService] = useState({ title_ar: "", title_en: "", description_ar: "" })
 
   useEffect(() => {
     fetchForms()
@@ -79,7 +79,7 @@ export default function BookingFormsPage() {
         const data = await response.json()
         setForms(data)
       } else {
-        console.error("[v0] Failed to fetch forms, table might not exist")
+        console.error("[v0] Failed to fetch forms")
         setForms([])
       }
     } catch (error) {
@@ -110,8 +110,8 @@ export default function BookingFormsPage() {
       const url = "/api/booking-forms"
       const method = editingForm ? "PATCH" : "POST"
       const body = editingForm
-        ? { ...formData, id: editingForm.id, service_ids: selectedServices }
-        : { ...formData, service_ids: selectedServices }
+        ? { ...formData, id: editingForm.id, service_ids: selectedServices, custom_services: customServices }
+        : { ...formData, service_ids: selectedServices, custom_services: customServices }
 
       const response = await fetch(url, {
         method,
@@ -120,13 +120,25 @@ export default function BookingFormsPage() {
       })
 
       if (response.ok) {
+        const savedForm = await response.json()
+
+        const baseUrl = window.location.origin
+        const bookingUrl = `${baseUrl}/booking/${savedForm.id || editingForm?.id}`
+        setFormUrl(bookingUrl)
+
         toast({
-          title: "نجح",
+          title: "نجح ✓",
           description: editingForm ? "تم تحديث النموذج بنجاح" : "تم إضافة النموذج بنجاح",
         })
-        setOpen(false)
-        resetForm()
+
         fetchForms()
+
+        if (!editingForm) {
+          // للنماذج الجديدة، عرض رابط النموذج
+        } else {
+          setOpen(false)
+          resetForm()
+        }
       } else {
         const error = await response.json()
         toast({
@@ -160,6 +172,7 @@ export default function BookingFormsPage() {
       order_index: form.order_index ?? 0,
     })
     setSelectedServices(form.booking_form_services?.map((s) => s.service_id) || [])
+    setCustomServices(form.custom_services || [])
     setOpen(true)
   }
 
@@ -201,7 +214,10 @@ export default function BookingFormsPage() {
       order_index: 0,
     })
     setSelectedServices([])
+    setCustomServices([])
     setEditingForm(null)
+    setFormUrl("")
+    setNewCustomService({ title_ar: "", title_en: "", description_ar: "" })
   }
 
   const toggleService = (serviceId: string) => {
@@ -210,77 +226,38 @@ export default function BookingFormsPage() {
     )
   }
 
-  const initializeTables = async () => {
-    setInitializing(true)
-    try {
-      const response = await fetch("/api/booking-forms/init", {
-        method: "POST",
-      })
-
-      if (response.ok) {
-        toast({
-          title: "نجح",
-          description: "تم تهيئة نماذج الحجز بنجاح",
-        })
-        setTimeout(() => {
-          window.location.reload()
-        }, 1000)
-      } else {
-        const error = await response.json()
-        toast({
-          title: "خطأ",
-          description: error.error || "فشل في تهيئة الجداول",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
+  const handleAddCustomService = () => {
+    if (!newCustomService.title_ar.trim()) {
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء التهيئة",
+        description: "يرجى إدخال اسم الخدمة",
         variant: "destructive",
       })
-    } finally {
-      setInitializing(false)
+      return
     }
+
+    const customService: CustomService = {
+      id: `custom_${Date.now()}`,
+      title_ar: newCustomService.title_ar,
+      title_en: newCustomService.title_en || newCustomService.title_ar,
+      description_ar: newCustomService.description_ar,
+    }
+
+    setCustomServices([...customServices, customService])
+    setNewCustomService({ title_ar: "", title_en: "", description_ar: "" })
+
+    toast({
+      title: "تمت الإضافة",
+      description: "تم إضافة الخدمة المخصصة",
+    })
   }
 
-  const handleAddService = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      const response = await fetch("/api/services", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...newService, is_active: true, order_index: services.length }),
-      })
-
-      if (response.ok) {
-        const service = await response.json()
-        toast({
-          title: "نجح",
-          description: "تم إضافة الخدمة بنجاح",
-        })
-        setAddServiceOpen(false)
-        setNewService({ title_ar: "", title_en: "", description_ar: "", description_en: "", image_url: "" })
-        fetchServices()
-        setSelectedServices([...selectedServices, service.id])
-      } else {
-        toast({
-          title: "خطأ",
-          description: "فشل في إضافة الخدمة",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء إضافة الخدمة",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+  const removeCustomService = (serviceId: string) => {
+    setCustomServices(customServices.filter((s) => s.id !== serviceId))
+    toast({
+      title: "تم الحذف",
+      description: "تم حذف الخدمة المخصصة",
+    })
   }
 
   const toggleFormActive = async (id: string, currentStatus: boolean) => {
@@ -321,26 +298,6 @@ export default function BookingFormsPage() {
           description: "تم تعيين النموذج كنموذج رئيسي",
         })
         fetchForms()
-      } else {
-        const error = await response.json()
-        if (error.error && error.error.includes('column "is_main" does not exist')) {
-          toast({
-            title: "خطأ: عمود is_main غير موجود",
-            description: "يرجى الذهاب إلى صفحة إعداد قاعدة البيانات والضغط على زر 'إضافة عمود النموذج الرئيسي'",
-            variant: "destructive",
-            action: (
-              <Button variant="outline" size="sm" onClick={() => (window.location.href = "/dashboard/database-setup")}>
-                اذهب إلى الإعدادات
-              </Button>
-            ),
-          })
-        } else {
-          toast({
-            title: "خطأ",
-            description: error.error || "فشل في تعيين النموذج كرئيسي",
-            variant: "destructive",
-          })
-        }
       }
     } catch (error) {
       toast({
@@ -357,6 +314,33 @@ export default function BookingFormsPage() {
       title: "تم النسخ",
       description: `تم نسخ ${label} إلى الحافظة`,
     })
+  }
+
+  const initializeTables = async () => {
+    setInitializing(true)
+    try {
+      const response = await fetch("/api/booking-forms/init", {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        toast({
+          title: "نجح",
+          description: "تم تهيئة نماذج الحجز بنجاح",
+        })
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء التهيئة",
+        variant: "destructive",
+      })
+    } finally {
+      setInitializing(false)
+    }
   }
 
   if (loading) {
@@ -393,144 +377,217 @@ export default function BookingFormsPage() {
                 إضافة نموذج جديد
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingForm ? "تعديل نموذج الحجز" : "إضافة نموذج حجز جديد"}</DialogTitle>
+                <DialogTitle className="text-xl">
+                  {editingForm ? "تعديل نموذج الحجز" : "إضافة نموذج حجز جديد"}
+                </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              {formUrl && !editingForm && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <p className="font-semibold">تم إنشاء النموذج بنجاح!</p>
+                  </div>
                   <div className="space-y-2">
-                    <Label htmlFor="name_ar">الاسم بالعربية *</Label>
-                    <Input
-                      id="name_ar"
-                      required
-                      value={formData.name_ar ?? ""}
-                      onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
-                    />
+                    <Label className="text-sm text-green-800">رابط النموذج:</Label>
+                    <div className="flex gap-2">
+                      <Input value={formUrl} readOnly className="bg-white text-sm" />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(formUrl, "رابط النموذج")}
+                        className="flex-shrink-0"
+                      >
+                        نسخ
+                      </Button>
+                    </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="name_en">الاسم بالإنجليزية</Label>
-                    <Input
-                      id="name_en"
-                      value={formData.name_en ?? ""}
-                      onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                    />
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full bg-transparent"
+                    onClick={() => {
+                      setOpen(false)
+                      resetForm()
+                    }}
+                  >
+                    إغلاق
+                  </Button>
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="description_ar">الوصف بالعربية</Label>
-                  <TextFormatter
-                    id="description_ar"
-                    value={formData.description_ar ?? ""}
-                    onChange={(value) => setFormData({ ...formData, description_ar: value })}
-                    rows={3}
-                  />
-                </div>
+              {(!formUrl || editingForm) && (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-4">
+                    {/* المعلومات الأساسية */}
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+                      <h3 className="font-semibold text-sm text-muted-foreground">المعلومات الأساسية</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name_ar" className="text-sm font-medium">
+                            الاسم بالعربية <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="name_ar"
+                            required
+                            placeholder="مثال: نموذج حجز الفحص الشامل"
+                            value={formData.name_ar}
+                            onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
+                            className="bg-background"
+                          />
+                        </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="image_url">صورة النموذج</Label>
-                  <ImagePicker
-                    value={formData.image_url}
-                    onChange={(url) => setFormData({ ...formData, image_url: url })}
-                    onRemove={() => setFormData({ ...formData, image_url: "" })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>الخدمات المتاحة في النموذج</Label>
-                    <Dialog open={addServiceOpen} onOpenChange={setAddServiceOpen}>
-                      <DialogTrigger asChild>
-                        <Button type="button" variant="outline" size="sm">
-                          <Plus className="ml-2 h-4 w-4" />
-                          إضافة خدمة جديدة
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>إضافة خدمة جديدة</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleAddService} className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="service_title_ar">اسم الخدمة بالعربية *</Label>
-                            <Input
-                              id="service_title_ar"
-                              required
-                              value={newService.title_ar ?? ""}
-                              onChange={(e) => setNewService({ ...newService, title_ar: e.target.value })}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="service_title_en">اسم الخدمة بالإنجليزية</Label>
-                            <Input
-                              id="service_title_en"
-                              value={newService.title_en ?? ""}
-                              onChange={(e) => setNewService({ ...newService, title_en: e.target.value })}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="service_description_ar">الوصف بالعربية</Label>
-                            <Textarea
-                              id="service_description_ar"
-                              value={newService.description_ar ?? ""}
-                              onChange={(e) => setNewService({ ...newService, description_ar: e.target.value })}
-                              rows={3}
-                            />
-                          </div>
-                          <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? "جاري الإضافة..." : "إضافة الخدمة"}
-                          </Button>
-                        </form>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
-                    {services.map((service) => (
-                      <div key={service.id} className="flex items-center space-x-2 space-x-reverse">
-                        <Checkbox
-                          id={service.id}
-                          checked={selectedServices.includes(service.id)}
-                          onCheckedChange={() => toggleService(service.id)}
-                        />
-                        <label htmlFor={service.id} className="text-sm cursor-pointer">
-                          {service.title_ar}
-                        </label>
+                        <div className="space-y-2">
+                          <Label htmlFor="name_en" className="text-sm font-medium">
+                            الاسم بالإنجليزية
+                          </Label>
+                          <Input
+                            id="name_en"
+                            placeholder="Example: Comprehensive Checkup Form"
+                            value={formData.name_en}
+                            onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                            className="bg-background"
+                          />
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <Switch
-                      id="is_active"
-                      checked={formData.is_active}
-                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                    />
-                    <Label htmlFor="is_active">نشط</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="description_ar" className="text-sm font-medium">
+                          الوصف بالعربية
+                        </Label>
+                        <TextFormatter
+                          id="description_ar"
+                          value={formData.description_ar}
+                          onChange={(value) => setFormData({ ...formData, description_ar: value })}
+                          rows={3}
+                          placeholder="وصف مختصر عن النموذج..."
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="image_url" className="text-sm font-medium">
+                          صورة النموذج
+                        </Label>
+                        <ImagePicker
+                          value={formData.image_url}
+                          onChange={(url) => setFormData({ ...formData, image_url: url })}
+                          onRemove={() => setFormData({ ...formData, image_url: "" })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* الخدمات */}
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+                      <h3 className="font-semibold text-sm text-muted-foreground">الخدمات المتاحة</h3>
+
+                      <div className="space-y-3 border-b pb-4">
+                        <Label className="text-sm font-medium text-blue-600">الخدمات المخصصة</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="اسم الخدمة المخصصة"
+                            value={newCustomService.title_ar}
+                            onChange={(e) => setNewCustomService({ ...newCustomService, title_ar: e.target.value })}
+                            className="flex-1"
+                          />
+                          <Button type="button" onClick={handleAddCustomService} size="sm">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        {customServices.length > 0 && (
+                          <div className="space-y-2">
+                            {customServices.map((service) => (
+                              <div
+                                key={service.id}
+                                className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-md p-2"
+                              >
+                                <span className="text-sm font-medium text-blue-900">{service.title_ar}</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeCustomService(service.id)}
+                                  className="h-7 w-7 p-0 hover:bg-blue-100"
+                                >
+                                  <X className="h-4 w-4 text-blue-600" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* الخدمات العامة */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-muted-foreground">
+                          الخدمات العامة ({selectedServices.length} محددة)
+                        </Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3 bg-background">
+                          {services.map((service) => (
+                            <div key={service.id} className="flex items-center space-x-2 space-x-reverse">
+                              <Checkbox
+                                id={service.id}
+                                checked={selectedServices.includes(service.id)}
+                                onCheckedChange={() => toggleService(service.id)}
+                              />
+                              <label htmlFor={service.id} className="text-sm cursor-pointer flex-1">
+                                {service.title_ar}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* الإعدادات */}
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                      <h3 className="font-semibold text-sm text-muted-foreground">الإعدادات</h3>
+                      <div className="flex items-center justify-between p-3 bg-background rounded-md">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="is_active" className="text-sm font-medium">
+                            تفعيل النموذج
+                          </Label>
+                          <p className="text-xs text-muted-foreground">السماح للمستخدمين بالحجز من خلال هذا النموذج</p>
+                        </div>
+                        <Switch
+                          id="is_active"
+                          checked={formData.is_active}
+                          onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-background rounded-md">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="is_main" className="text-sm font-medium">
+                            نموذج رئيسي
+                          </Label>
+                          <p className="text-xs text-muted-foreground">سيظهر في زر "احجز موعد" في الصفحة الرئيسية</p>
+                        </div>
+                        <Switch
+                          id="is_main"
+                          checked={formData.is_main}
+                          onCheckedChange={(checked) => setFormData({ ...formData, is_main: checked })}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <Switch
-                      id="is_main"
-                      checked={formData.is_main}
-                      onCheckedChange={(checked) => setFormData({ ...formData, is_main: checked })}
-                    />
-                    <Label htmlFor="is_main">نموذج رئيسي</Label>
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "جاري الحفظ..." : editingForm ? "تحديث النموذج" : "إضافة النموذج"}
-                </Button>
-              </form>
+                  <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
+                    {loading ? "جاري الحفظ..." : editingForm ? "تحديث النموذج" : "حفظ النموذج"}
+                  </Button>
+                </form>
+              )}
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
+      {/* عرض النماذج */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {forms.map((form) => (
           <Card key={form.id}>
@@ -550,7 +607,7 @@ export default function BookingFormsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {form.image_url && typeof form.image_url === "string" && form.image_url.trim() !== "" && (
+              {form.image_url && (
                 <div className="relative w-full aspect-video rounded-lg overflow-hidden">
                   <Image src={form.image_url || "/placeholder.svg"} alt={form.name_ar} fill className="object-cover" />
                 </div>
@@ -558,40 +615,14 @@ export default function BookingFormsPage() {
               {form.description_ar && (
                 <p className="text-sm text-muted-foreground line-clamp-2">{form.description_ar}</p>
               )}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <LinkIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">رابط النموذج:</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/booking/${form.id}`}
-                    target="_blank"
-                    className="text-xs text-primary hover:underline truncate flex-1"
-                  >
-                    {typeof window !== "undefined" && `${window.location.origin}/booking/${form.id}`}
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() =>
-                      typeof window !== "undefined" &&
-                      copyToClipboard(window.location.origin + `/booking/${form.id}`, "رابط النموذج")
-                    }
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                  <Link href={`/booking/${form.id}`} target="_blank">
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-              <div className="text-sm">
+              <div className="text-sm space-y-1">
                 <p className="text-muted-foreground">الخدمات المتاحة:</p>
-                <p className="font-medium">{form.booking_form_services?.length || 0} خدمة</p>
+                <p className="font-medium">
+                  {(form.booking_form_services?.length || 0) + (form.custom_services?.length || 0)} خدمة
+                </p>
+                {form.custom_services && form.custom_services.length > 0 && (
+                  <p className="text-xs text-blue-600">({form.custom_services.length} خدمة مخصصة)</p>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 {!form.is_main && (
@@ -606,6 +637,19 @@ export default function BookingFormsPage() {
                   </Button>
                 )}
                 <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const bookingUrl = `${window.location.origin}/booking/${form.id}`
+                      copyToClipboard(bookingUrl, "رابط النموذج")
+                    }}
+                    className="flex-1"
+                    title="نسخ رابط النموذج"
+                  >
+                    <Link2 className="ml-2 h-4 w-4" />
+                    نسخ الرابط
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => handleEdit(form)} className="flex-1">
                     <Pencil className="ml-2 h-4 w-4" />
                     تعديل

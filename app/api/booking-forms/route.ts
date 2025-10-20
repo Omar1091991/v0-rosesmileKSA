@@ -23,10 +23,14 @@ export async function GET(request: Request) {
       )
 
       const dbForm = formResult.rows[0]
+      const fields = typeof dbForm.fields === "string" ? JSON.parse(dbForm.fields) : dbForm.fields || {}
+      const customServices = fields.custom_services || []
+
       const form = {
         ...dbForm,
         name_ar: dbForm.title_ar,
         name_en: dbForm.title_en,
+        custom_services: customServices,
         booking_form_services: servicesResult.rows.map((s) => ({ service_id: s.id, services: s })),
       }
 
@@ -47,10 +51,14 @@ export async function GET(request: Request) {
         [dbForm.id],
       )
 
+      const fields = typeof dbForm.fields === "string" ? JSON.parse(dbForm.fields) : dbForm.fields || {}
+      const customServices = fields.custom_services || []
+
       forms.push({
         ...dbForm,
         name_ar: dbForm.title_ar,
         name_en: dbForm.title_en,
+        custom_services: customServices,
         booking_form_services: servicesResult.rows.map((s) => ({ service_id: s.id, services: s })),
       })
     }
@@ -65,14 +73,16 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { service_ids, ...formData } = body
+    const { service_ids, custom_services, ...formData } = body
 
     console.log("[v0] Creating booking form with data:", formData)
 
-    // If this form is marked as main, unset all other main forms first
     if (formData.is_main) {
       await db.query("UPDATE booking_forms SET is_main = false WHERE is_main = true")
     }
+
+    const fields = typeof formData.fields === "string" ? JSON.parse(formData.fields) : formData.fields || {}
+    fields.custom_services = custom_services || []
 
     const result = await db.query(
       `
@@ -86,7 +96,7 @@ export async function POST(request: Request) {
         formData.description_ar,
         formData.description_en,
         formData.image_url || null,
-        formData.fields || "[]",
+        JSON.stringify(fields),
         formData.is_main || false,
         formData.is_active !== false,
         formData.order_index || 0,
@@ -114,7 +124,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json()
-    const { id, service_ids, ...formData } = body
+    const { id, service_ids, custom_services, ...formData } = body
 
     const fieldMapping: Record<string, string> = {
       name_ar: "title_ar",
@@ -130,7 +140,6 @@ export async function PATCH(request: Request) {
       order_index: "order_index",
     }
 
-    // If this form is being marked as main, unset all other main forms first
     if (formData.is_main) {
       await db.query("UPDATE booking_forms SET is_main = false WHERE is_main = true AND id != $1", [id])
     }
@@ -145,6 +154,21 @@ export async function PATCH(request: Request) {
         dbValues.push(value)
       }
     })
+
+    if (custom_services !== undefined) {
+      const currentForm = await db.query("SELECT fields FROM booking_forms WHERE id = $1", [id])
+      const currentFields = currentForm.rows[0]?.fields || {}
+      const fields = typeof currentFields === "string" ? JSON.parse(currentFields) : currentFields
+      fields.custom_services = custom_services
+
+      const fieldsIndex = dbFields.indexOf("fields")
+      if (fieldsIndex >= 0) {
+        dbValues[fieldsIndex] = JSON.stringify(fields)
+      } else {
+        dbFields.push("fields")
+        dbValues.push(JSON.stringify(fields))
+      }
+    }
 
     if (dbFields.length === 0) {
       return NextResponse.json({ error: "لا توجد حقول للتحديث" }, { status: 400 })
@@ -173,6 +197,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json(result.rows[0])
   } catch (error: any) {
     console.error("[v0] Error updating booking form:", error)
+    console.log("[v0] ❌ خطأ في الاستعلام:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

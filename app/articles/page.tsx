@@ -63,7 +63,12 @@ async function ArticlesList() {
           )}
           <CardHeader>
             <CardTitle className="line-clamp-2">{article.title_ar}</CardTitle>
-            <CardDescription className="line-clamp-3">{article.content_ar}</CardDescription>
+            <CardDescription
+              className="line-clamp-3 whitespace-pre-line"
+              dangerouslySetInnerHTML={{
+                __html: article.excerpt_ar || article.content_ar?.substring(0, 150) + "...",
+              }}
+            />
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between text-sm text-muted-foreground">

@@ -25,7 +25,8 @@ interface Article {
   excerpt_ar?: string
   excerpt_en?: string
   image_url?: string
-  author?: string
+  author_ar?: string
+  author_en?: string
   published: boolean
   created_at: string
 }
@@ -49,7 +50,7 @@ export default function ArticlesPage() {
     excerpt_ar: "",
     excerpt_en: "",
     image_url: "",
-    author: "",
+    author_ar: "",
     published: true,
   })
 
@@ -243,7 +244,7 @@ export default function ArticlesPage() {
       excerpt_ar: article.excerpt_ar || "",
       excerpt_en: article.excerpt_en || "",
       image_url: article.image_url || "",
-      author: article.author || "",
+      author_ar: article.author_ar || "",
       published: article.published,
     })
     setImagePreview(article.image_url || "")
@@ -259,7 +260,7 @@ export default function ArticlesPage() {
       excerpt_ar: "",
       excerpt_en: "",
       image_url: "",
-      author: "",
+      author_ar: "",
       published: true,
     })
     setImagePreview("")
@@ -348,11 +349,11 @@ export default function ArticlesPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="author">الكاتب</Label>
+                  <Label htmlFor="author_ar">الكاتب</Label>
                   <Input
-                    id="author"
-                    value={formData.author}
-                    onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                    id="author_ar"
+                    value={formData.author_ar}
+                    onChange={(e) => setFormData({ ...formData, author_ar: e.target.value })}
                     placeholder="اسم الكاتب"
                   />
                 </div>
@@ -425,7 +426,7 @@ export default function ArticlesPage() {
                   )}
                   <div className="flex-1">
                     {article.excerpt_ar && <p className="text-sm text-muted-foreground mb-2">{article.excerpt_ar}</p>}
-                    {article.author && <p className="text-sm">الكاتب: {article.author}</p>}
+                    {article.author_ar && <p className="text-sm">الكاتب: {article.author_ar}</p>}
                     <p className="text-xs text-muted-foreground mt-2">
                       {new Date(article.created_at).toLocaleDateString("ar-SA")}
                     </p>
@@ -498,11 +499,11 @@ export default function ArticlesPage() {
               </div>
 
               <div>
-                <Label htmlFor="edit_author">الكاتب</Label>
+                <Label htmlFor="edit_author_ar">الكاتب</Label>
                 <Input
-                  id="edit_author"
-                  value={formData.author}
-                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                  id="edit_author_ar"
+                  value={formData.author_ar}
+                  onChange={(e) => setFormData({ ...formData, author_ar: e.target.value })}
                 />
               </div>
 

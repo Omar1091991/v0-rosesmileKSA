@@ -68,7 +68,7 @@ export default async function ArticlePage({ params }: { params: { id: string } }
             </CardHeader>
             <CardContent>
               <div
-                className="prose prose-lg max-w-none dark:prose-invert"
+                className="prose prose-lg max-w-none dark:prose-invert whitespace-pre-line"
                 dangerouslySetInnerHTML={{
                   __html: article.content_ar.replace(/<(?!\/?(?:strong|em|s|b|i|del|span)\b)[^>]*>/gi, ""),
                 }}

@@ -11,7 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectGroup,
+  SelectLabel,
+} from "@/components/ui/select"
 import { Calendar, Loader2 } from "lucide-react"
 import { useLanguage } from "@/components/language-switcher"
 import Image from "next/image"
@@ -24,6 +32,7 @@ export default function BookingPage() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [services, setServices] = useState<any[]>([])
+  const [customServices, setCustomServices] = useState<any[]>([])
   const [googleSheetId, setGoogleSheetId] = useState<string>("")
   const [formTitle, setFormTitle] = useState<string>("")
   const [formImage, setFormImage] = useState<string>("")
@@ -48,6 +57,9 @@ export default function BookingPage() {
             setGoogleSheetId(form.google_sheet_id || "")
             if (form.booking_form_services) {
               setServices(form.booking_form_services.map((s: any) => s.services))
+            }
+            if (form.custom_services) {
+              setCustomServices(form.custom_services)
             }
           }
         } catch (error) {
@@ -196,14 +208,37 @@ export default function BookingPage() {
                       <SelectValue placeholder={language === "ar" ? "اختر الخدمة" : "Select Service"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {services.length > 0 ? (
-                        services.map((service) => (
-                          <SelectItem key={service.id} value={service.title_ar}>
-                            {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <>
+                      {customServices.length > 0 && (
+                        <SelectGroup>
+                          <SelectLabel className="text-blue-600 font-semibold">
+                            {language === "ar" ? "الخدمات المخصصة" : "Custom Services"}
+                          </SelectLabel>
+                          {customServices.map((service) => (
+                            <SelectItem key={service.id} value={service.title_ar} className="pr-6">
+                              {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )}
+
+                      {services.length > 0 && (
+                        <SelectGroup>
+                          <SelectLabel className="text-primary font-semibold">
+                            {language === "ar" ? "الخدمات العامة" : "General Services"}
+                          </SelectLabel>
+                          {services.map((service) => (
+                            <SelectItem key={service.id} value={service.title_ar} className="pr-6">
+                              {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )}
+
+                      {customServices.length === 0 && services.length === 0 && (
+                        <SelectGroup>
+                          <SelectLabel className="text-muted-foreground">
+                            {language === "ar" ? "الخدمات المتاحة" : "Available Services"}
+                          </SelectLabel>
                           <SelectItem value="طب الأسنان">{language === "ar" ? "طب الأسنان" : "Dentistry"}</SelectItem>
                           <SelectItem value="تجميل الأسنان">
                             {language === "ar" ? "تجميل الأسنان" : "Cosmetic Dentistry"}
@@ -221,7 +256,7 @@ export default function BookingPage() {
                             {language === "ar" ? "طب الأطفال" : "Pediatric Dentistry"}
                           </SelectItem>
                           <SelectItem value="أخرى">{language === "ar" ? "أخرى" : "Other"}</SelectItem>
-                        </>
+                        </SelectGroup>
                       )}
                     </SelectContent>
                   </Select>

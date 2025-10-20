@@ -13,11 +13,9 @@ import {
   Key,
   Wrench,
   ImageIcon,
-  Star,
   FileText,
   Phone,
-  Users,
-  MessageSquare,
+  Tag,
 } from "lucide-react"
 
 export default function DatabaseSetupPage() {
@@ -56,6 +54,10 @@ export default function DatabaseSetupPage() {
   const [isTrackingMigrating, setIsTrackingMigrating] = useState(false)
   const [trackingMigrationOutput, setTrackingMigrationOutput] = useState<string[]>([])
   const [trackingMigrationStatus, setTrackingMigrationStatus] = useState<"idle" | "success" | "error">("idle")
+
+  const [isPublicMigrating, setIsPublicMigrating] = useState(false)
+  const [isPublicMigrationOutput, setIsPublicMigrationOutput] = useState<string[]>([])
+  const [isPublicMigrationStatus, setIsPublicMigrationStatus] = useState<"idle" | "success" | "error">("idle")
 
   const runScript = async () => {
     setIsRunning(true)
@@ -330,6 +332,33 @@ export default function DatabaseSetupPage() {
     }
   }
 
+  const runIsPublicMigration = async () => {
+    setIsPublicMigrating(true)
+    setIsPublicMigrationOutput([])
+    setIsPublicMigrationStatus("idle")
+
+    try {
+      const response = await fetch("/api/migrations/add-is-public", {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setIsPublicMigrationOutput([data.message || "تم إضافة عمود is_public بنجاح"])
+        setIsPublicMigrationStatus("success")
+      } else {
+        setIsPublicMigrationOutput([data.error || "حدث خطأ غير معروف", data.details || ""])
+        setIsPublicMigrationStatus("error")
+      }
+    } catch (error) {
+      setIsPublicMigrationOutput([`خطأ في الاتصال: ${error}`])
+      setIsPublicMigrationStatus("error")
+    } finally {
+      setIsPublicMigrating(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -562,38 +591,35 @@ export default function DatabaseSetupPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Star className="h-5 w-5" />
-            إصلاح: إضافة عمود النموذج الرئيسي
+            <Tag className="h-5 w-5" />
+            إصلاح: إضافة عمود الخدمات المخصصة
           </CardTitle>
-          <CardDescription>
-            إذا كان زر "احجز موعد" لا يعمل، استخدم هذا الزر لإضافة عمود is_main إلى جدول booking_forms وتعيين نموذج
-            رئيسي
-          </CardDescription>
+          <CardDescription>إضافة عمود is_public إلى جدول services للتمييز بين الخدمات العامة والمخصصة</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            <Button onClick={runIsMainMigration} disabled={isMainMigrating} variant="secondary" className="gap-2">
-              {isMainMigrating ? (
+            <Button onClick={runIsPublicMigration} disabled={isPublicMigrating} variant="secondary" className="gap-2">
+              {isPublicMigrating ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
                   جاري التنفيذ...
                 </>
               ) : (
                 <>
-                  <Star className="h-5 w-5" />
-                  إضافة عمود النموذج الرئيسي
+                  <Tag className="h-5 w-5" />
+                  إضافة عمود is_public
                 </>
               )}
             </Button>
 
-            {isMainMigrationStatus === "success" && (
+            {isPublicMigrationStatus === "success" && (
               <div className="flex items-center gap-2 text-green-600">
                 <CheckCircle className="h-5 w-5" />
                 <span className="font-semibold">تم بنجاح</span>
               </div>
             )}
 
-            {isMainMigrationStatus === "error" && (
+            {isPublicMigrationStatus === "error" && (
               <div className="flex items-center gap-2 text-red-600">
                 <XCircle className="h-5 w-5" />
                 <span className="font-semibold">فشل</span>
@@ -601,187 +627,13 @@ export default function DatabaseSetupPage() {
             )}
           </div>
 
-          {isMainMigrationOutput.length > 0 && (
+          {isPublicMigrationOutput.length > 0 && (
             <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
-              {isMainMigrationOutput.map((line, index) => (
+              {isPublicMigrationOutput.map((line, index) => (
                 <div key={index}>{line}</div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            إصلاح: جدول حالات الأطباء
-          </CardTitle>
-          <CardDescription>
-            إذا كنت تواجه خطأ "null value in column title_ar violates not-null constraint"، استخدم هذا الزر لإصلاح جدول
-            حالات الأطباء
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={runDoctorCasesMigration}
-              disabled={isDoctorCasesMigrating}
-              variant="secondary"
-              className="gap-2"
-            >
-              {isDoctorCasesMigrating ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  جاري التنفيذ...
-                </>
-              ) : (
-                <>
-                  <Users className="h-5 w-5" />
-                  إصلاح جدول حالات الأطباء
-                </>
-              )}
-            </Button>
-
-            {doctorCasesMigrationStatus === "success" && (
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle className="h-5 w-5" />
-                <span className="font-semibold">تم بنجاح</span>
-              </div>
-            )}
-
-            {doctorCasesMigrationStatus === "error" && (
-              <div className="flex items-center gap-2 text-red-600">
-                <XCircle className="h-5 w-5" />
-                <span className="font-semibold">فشل</span>
-              </div>
-            )}
-          </div>
-
-          {doctorCasesMigrationOutput.length > 0 && (
-            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
-              {doctorCasesMigrationOutput.map((line, index) => (
-                <div key={index}>{line}</div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            إصلاح: إضافة عمود التواصل للحجوزات
-          </CardTitle>
-          <CardDescription>
-            إذا كنت تواجه خطأ "column contacted does not exist"، استخدم هذا الزر لإضافة عمود contacted إلى جدول الحجوزات
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={runContactedMigration}
-              disabled={isContactedMigrating}
-              variant="secondary"
-              className="gap-2"
-            >
-              {isContactedMigrating ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  جاري التنفيذ...
-                </>
-              ) : (
-                <>
-                  <MessageSquare className="h-5 w-5" />
-                  إضافة عمود التواصل
-                </>
-              )}
-            </Button>
-
-            {contactedMigrationStatus === "success" && (
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle className="h-5 w-5" />
-                <span className="font-semibold">تم بنجاح</span>
-              </div>
-            )}
-
-            {contactedMigrationStatus === "error" && (
-              <div className="flex items-center gap-2 text-red-600">
-                <XCircle className="h-5 w-5" />
-                <span className="font-semibold">فشل</span>
-              </div>
-            )}
-          </div>
-
-          {contactedMigrationOutput.length > 0 && (
-            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
-              {contactedMigrationOutput.map((line, index) => (
-                <div key={index}>{line}</div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            إصلاح: إضافة أعمدة التتبع للحجوزات
-          </CardTitle>
-          <CardDescription>
-            إذا كنت تواجه خطأ "column contacted/contact_attempts/admin_notes does not exist"، استخدم هذا الزر لإضافة
-            جميع أعمدة التتبع إلى جدول الحجوزات
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Button onClick={runTrackingMigration} disabled={isTrackingMigrating} variant="secondary" className="gap-2">
-              {isTrackingMigrating ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  جاري التنفيذ...
-                </>
-              ) : (
-                <>
-                  <MessageSquare className="h-5 w-5" />
-                  إضافة أعمدة التتبع
-                </>
-              )}
-            </Button>
-
-            {trackingMigrationStatus === "success" && (
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle className="h-5 w-5" />
-                <span className="font-semibold">تم بنجاح</span>
-              </div>
-            )}
-
-            {trackingMigrationStatus === "error" && (
-              <div className="flex items-center gap-2 text-red-600">
-                <XCircle className="h-5 w-5" />
-                <span className="font-semibold">فشل</span>
-              </div>
-            )}
-          </div>
-
-          {trackingMigrationOutput.length > 0 && (
-            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
-              {trackingMigrationOutput.map((line, index) => (
-                <div key={index}>{line}</div>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-4 p-3 bg-muted/50 rounded-lg text-sm">
-            <p className="font-semibold mb-2">سيتم إضافة الأعمدة التالية:</p>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>contacted - لتتبع حالة التواصل مع العميل</li>
-              <li>contact_attempts - لتتبع عدد محاولات التواصل</li>
-              <li>admin_notes - لإضافة ملاحظات إدارية</li>
-            </ul>
-          </div>
         </CardContent>
       </Card>
 
