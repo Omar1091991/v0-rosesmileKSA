@@ -12,23 +12,22 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "النموذج غير موجود" }, { status: 404 })
       }
 
-      const servicesResult = await db.query(
-        `
-        SELECT s.id, s.title_ar, s.title_en
-        FROM booking_form_services bfs
-        JOIN services s ON bfs.service_id = s.id
-        WHERE bfs.booking_form_id = $1
-      `,
-        [id],
-      )
-
       const dbForm = formResult.rows[0]
-      const fields = typeof dbForm.fields === "string" ? JSON.parse(dbForm.fields) : dbForm.fields || {}
-      const customServices = fields.custom_services || []
+
+      let servicesResult = { rows: [] }
+      if (dbForm.services && dbForm.services.length > 0) {
+        servicesResult = await db.query(
+          `
+          SELECT s.id, s.title_ar, s.title_en
+          FROM services s
+          WHERE s.id = ANY($1)
+        `,
+          [dbForm.services],
+        )
+      }
 
       const form = {
         ...dbForm,
-        custom_services: customServices,
         booking_form_services: servicesResult.rows.map((s) => ({ service_id: s.id, services: s })),
       }
 
@@ -39,22 +38,20 @@ export async function GET(request: Request) {
     const forms = []
 
     for (const dbForm of formsResult.rows) {
-      const servicesResult = await db.query(
-        `
-        SELECT s.id, s.title_ar, s.title_en
-        FROM booking_form_services bfs
-        JOIN services s ON bfs.service_id = s.id
-        WHERE bfs.booking_form_id = $1
-      `,
-        [dbForm.id],
-      )
-
-      const fields = typeof dbForm.fields === "string" ? JSON.parse(dbForm.fields) : dbForm.fields || {}
-      const customServices = fields.custom_services || []
+      let servicesResult = { rows: [] }
+      if (dbForm.services && dbForm.services.length > 0) {
+        servicesResult = await db.query(
+          `
+          SELECT s.id, s.title_ar, s.title_en
+          FROM services s
+          WHERE s.id = ANY($1)
+        `,
+          [dbForm.services],
+        )
+      }
 
       forms.push({
         ...dbForm,
-        custom_services: customServices,
         booking_form_services: servicesResult.rows.map((s) => ({ service_id: s.id, services: s })),
       })
     }
@@ -77,13 +74,10 @@ export async function POST(request: Request) {
       await db.query("UPDATE booking_forms SET is_main = false WHERE is_main = true")
     }
 
-    const fields = typeof formData.fields === "string" ? JSON.parse(formData.fields) : formData.fields || {}
-    fields.custom_services = custom_services || []
-
     const result = await db.query(
       `
-      INSERT INTO booking_forms (name_ar, name_en, title_ar, title_en, description_ar, description_en, image_url, fields, is_main, is_active, order_index)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      INSERT INTO booking_forms (name_ar, name_en, title_ar, title_en, description_ar, description_en, image_url, services, custom_services, is_main, is_active, order_index)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `,
       [
@@ -94,25 +88,15 @@ export async function POST(request: Request) {
         formData.description_ar,
         formData.description_en,
         formData.image_url || null,
-        JSON.stringify(fields),
+        service_ids || [],
+        custom_services || [],
         formData.is_main || false,
         formData.is_active !== false,
         formData.order_index || 0,
       ],
     )
 
-    const form = result.rows[0]
-
-    if (service_ids && service_ids.length > 0) {
-      for (const service_id of service_ids) {
-        await db.query("INSERT INTO booking_form_services (booking_form_id, service_id) VALUES ($1, $2)", [
-          form.id,
-          service_id,
-        ])
-      }
-    }
-
-    return NextResponse.json(form)
+    return NextResponse.json(result.rows[0])
   } catch (error: any) {
     console.error("[v0] Error creating booking form:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -132,7 +116,6 @@ export async function PATCH(request: Request) {
       description_ar: "description_ar",
       description_en: "description_en",
       image_url: "image_url",
-      fields: "fields",
       is_main: "is_main",
       is_active: "is_active",
       order_index: "order_index",
@@ -153,19 +136,14 @@ export async function PATCH(request: Request) {
       }
     })
 
-    if (custom_services !== undefined) {
-      const currentForm = await db.query("SELECT fields FROM booking_forms WHERE id = $1", [id])
-      const currentFields = currentForm.rows[0]?.fields || {}
-      const fields = typeof currentFields === "string" ? JSON.parse(currentFields) : currentFields
-      fields.custom_services = custom_services
+    if (service_ids !== undefined) {
+      dbFields.push("services")
+      dbValues.push(service_ids)
+    }
 
-      const fieldsIndex = dbFields.indexOf("fields")
-      if (fieldsIndex >= 0) {
-        dbValues[fieldsIndex] = JSON.stringify(fields)
-      } else {
-        dbFields.push("fields")
-        dbValues.push(JSON.stringify(fields))
-      }
+    if (custom_services !== undefined) {
+      dbFields.push("custom_services")
+      dbValues.push(custom_services)
     }
 
     if (dbFields.length === 0) {
@@ -178,19 +156,6 @@ export async function PATCH(request: Request) {
       `UPDATE booking_forms SET ${setClause}, updated_at = NOW() WHERE id = $${dbFields.length + 1} RETURNING *`,
       [...dbValues, id],
     )
-
-    if (service_ids !== undefined) {
-      await db.query("DELETE FROM booking_form_services WHERE booking_form_id = $1", [id])
-
-      if (service_ids.length > 0) {
-        for (const service_id of service_ids) {
-          await db.query("INSERT INTO booking_form_services (booking_form_id, service_id) VALUES ($1, $2)", [
-            id,
-            service_id,
-          ])
-        }
-      }
-    }
 
     return NextResponse.json(result.rows[0])
   } catch (error: any) {
