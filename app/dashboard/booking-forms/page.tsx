@@ -32,6 +32,8 @@ interface BookingForm {
   id: string
   name_ar: string
   name_en: string
+  title_ar: string
+  title_en: string
   description_ar: string
   description_en: string
   image_url: string
@@ -55,6 +57,8 @@ export default function BookingFormsPage() {
   const [formData, setFormData] = useState({
     name_ar: "",
     name_en: "",
+    title_ar: "",
+    title_en: "",
     description_ar: "",
     description_en: "",
     image_url: "",
@@ -164,6 +168,8 @@ export default function BookingFormsPage() {
     setFormData({
       name_ar: form.name_ar ?? "",
       name_en: form.name_en ?? "",
+      title_ar: form.title_ar ?? "",
+      title_en: form.title_en ?? "",
       description_ar: form.description_ar ?? "",
       description_en: form.description_en ?? "",
       image_url: form.image_url ?? "",
@@ -206,6 +212,8 @@ export default function BookingFormsPage() {
     setFormData({
       name_ar: "",
       name_en: "",
+      title_ar: "",
+      title_en: "",
       description_ar: "",
       description_en: "",
       image_url: "",
@@ -427,30 +435,62 @@ export default function BookingFormsPage() {
                     {/* المعلومات الأساسية */}
                     <div className="bg-muted/50 rounded-lg p-4 space-y-4">
                       <h3 className="font-semibold text-sm text-muted-foreground">المعلومات الأساسية</h3>
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="name_ar" className="text-sm font-medium">
-                            الاسم بالعربية <span className="text-destructive">*</span>
+                            الاسم الداخلي بالعربية <span className="text-destructive">*</span>
                           </Label>
                           <Input
                             id="name_ar"
                             required
-                            placeholder="مثال: نموذج حجز الفحص الشامل"
+                            placeholder="مثال: نموذج حجز سريع"
                             value={formData.name_ar}
                             onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
                             className="bg-background"
                           />
+                          <p className="text-xs text-muted-foreground">للاستخدام الداخلي فقط (يظهر في لوحة التحكم)</p>
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="name_en" className="text-sm font-medium">
-                            الاسم بالإنجليزية
+                            الاسم الداخلي بالإنجليزية
                           </Label>
                           <Input
                             id="name_en"
-                            placeholder="Example: Comprehensive Checkup Form"
+                            placeholder="Example: Quick Booking Form"
                             value={formData.name_en}
                             onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                            className="bg-background"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="title_ar" className="text-sm font-medium">
+                            العنوان العام بالعربية <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="title_ar"
+                            required
+                            placeholder="مثال: احجز موعدك الآن"
+                            value={formData.title_ar}
+                            onChange={(e) => setFormData({ ...formData, title_ar: e.target.value })}
+                            className="bg-background"
+                          />
+                          <p className="text-xs text-muted-foreground">يظهر للمستخدمين في صفحة الحجز</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="title_en" className="text-sm font-medium">
+                            العنوان العام بالإنجليزية
+                          </Label>
+                          <Input
+                            id="title_en"
+                            placeholder="Example: Book Your Appointment Now"
+                            value={formData.title_en}
+                            onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
                             className="bg-background"
                           />
                         </div>

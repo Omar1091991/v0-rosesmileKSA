@@ -5,71 +5,55 @@ export async function GET() {
   try {
     console.log("[v0] Fetching bookings...")
 
-    let result
-    let usingNewSchema = false
+    const result = await db.query(`
+      SELECT 
+        b.id,
+        b.patient_name,
+        b.phone,
+        b.email,
+        b.service,
+        b.doctor_id,
+        b.preferred_date,
+        b.preferred_time,
+        b.notes,
+        b.status,
+        b.created_at,
+        b.updated_at,
+        COALESCE(b.booking_form_id, NULL) as booking_form_id,
+        COALESCE(b.service_id, NULL) as service_id,
+        COALESCE(b.service_name, b.service, '') as service_name,
+        COALESCE(b.contacted, false) as contacted,
+        COALESCE(b.admin_notes, '') as admin_notes,
+        COALESCE(b.contact_attempts, 0) as contact_attempts,
+        COALESCE(bf.name_ar, '') as booking_form_name_ar,
+        COALESCE(bf.name_en, '') as booking_form_name_en,
+        COALESCE(s.title_ar, '') as service_title_ar,
+        COALESCE(s.title_en, '') as service_title_en
+      FROM bookings b
+      LEFT JOIN booking_forms bf ON b.booking_form_id = bf.id
+      LEFT JOIN services s ON b.service_id = s.id
+      ORDER BY b.created_at DESC
+    `)
 
-    try {
-      result = await db.query(`
-        SELECT 
-          b.*,
-          b.patient_name as full_name,
-          bf.name_ar as booking_form_name_ar,
-          bf.name_en as booking_form_name_en,
-          s.title_ar as service_title_ar,
-          s.title_en as service_title_en
-        FROM bookings b
-        LEFT JOIN booking_forms bf ON b.booking_form_id = bf.id
-        LEFT JOIN services s ON b.service_id = s.id
-        ORDER BY b.created_at DESC
-      `)
-      usingNewSchema = true
-      console.log("[v0] ✅ Using new schema with booking_form_id and service_id")
-    } catch (error: any) {
-      if (error.message?.includes("does not exist") || error.code === "42703") {
-        console.log("[v0] ℹ️ Using old schema (some columns missing)")
-
-        // Try without the JOINs but with new columns
-        try {
-          result = await db.query(`
-            SELECT 
-              *,
-              patient_name as full_name
-            FROM bookings
-            ORDER BY created_at DESC
-          `)
-        } catch (fallbackError: any) {
-          // If even basic query fails, return empty result
-          console.error("[v0] ❌ Failed to fetch bookings:", fallbackError.message)
-          return NextResponse.json({
-            bookings: [],
-            usingNewSchema: false,
-            message: "Database schema needs migration",
-          })
-        }
-      } else {
-        throw error
-      }
-    }
-
-    console.log("[v0] Fetched bookings:", result.rows.length)
+    console.log("[v0] ✅ Fetched bookings:", result.rows.length)
 
     const bookings = result.rows.map((booking) => ({
       id: booking.id,
-      full_name: booking.patient_name || booking.full_name,
+      full_name: booking.patient_name,
       phone: booking.phone,
       email: booking.email,
-      service_id: booking.service_id || null,
-      service_name: booking.service_name || booking.service_title_ar || booking.service || "",
+      service_id: booking.service_id,
+      service_name: booking.service_title_ar || booking.service_name || booking.service || "",
       doctor_id: booking.doctor_id,
       preferred_date: booking.preferred_date,
       preferred_time: booking.preferred_time,
       notes: booking.notes,
       status: booking.status,
-      contacted: booking.contacted || false,
-      admin_notes: booking.admin_notes || "",
-      contact_attempts: booking.contact_attempts || 0,
-      booking_form_id: booking.booking_form_id || null,
-      booking_form_name: booking.booking_form_name_ar || "",
+      contacted: booking.contacted,
+      admin_notes: booking.admin_notes,
+      contact_attempts: booking.contact_attempts,
+      booking_form_id: booking.booking_form_id,
+      booking_form_name: booking.booking_form_name_ar || booking.booking_form_name_en || "",
       created_at: booking.created_at,
       updated_at: booking.updated_at,
     }))
@@ -78,21 +62,64 @@ export async function GET() {
       console.log("[v0] Sample booking:", JSON.stringify(bookings[0], null, 2))
     }
 
-    return NextResponse.json({
-      bookings,
-      usingNewSchema,
-      message: usingNewSchema ? "Using enhanced schema" : "Using basic schema - run migration to enable form names",
-    })
+    return NextResponse.json({ bookings })
   } catch (error: any) {
     console.error("[v0] ❌ Error fetching bookings:", error.message)
-    return NextResponse.json(
-      {
-        bookings: [],
-        usingNewSchema: false,
-        error: error.message,
-      },
-      { status: 500 },
-    )
+    console.error("[v0] Error details:", error)
+
+    try {
+      console.log("[v0] Trying fallback query without JOINs...")
+      const fallbackResult = await db.query(`
+        SELECT 
+          id,
+          patient_name,
+          phone,
+          email,
+          service,
+          doctor_id,
+          preferred_date,
+          preferred_time,
+          notes,
+          status,
+          created_at,
+          updated_at,
+          booking_form_id,
+          service_id,
+          service_name,
+          contacted,
+          admin_notes,
+          contact_attempts
+        FROM bookings
+        ORDER BY created_at DESC
+      `)
+
+      const bookings = fallbackResult.rows.map((booking) => ({
+        id: booking.id,
+        full_name: booking.patient_name,
+        phone: booking.phone,
+        email: booking.email,
+        service_id: booking.service_id || null,
+        service_name: booking.service_name || booking.service || "",
+        doctor_id: booking.doctor_id,
+        preferred_date: booking.preferred_date,
+        preferred_time: booking.preferred_time,
+        notes: booking.notes,
+        status: booking.status,
+        contacted: booking.contacted || false,
+        admin_notes: booking.admin_notes || "",
+        contact_attempts: booking.contact_attempts || 0,
+        booking_form_id: booking.booking_form_id || null,
+        booking_form_name: "",
+        created_at: booking.created_at,
+        updated_at: booking.updated_at,
+      }))
+
+      console.log("[v0] ✅ Fallback query succeeded:", bookings.length)
+      return NextResponse.json({ bookings })
+    } catch (fallbackError: any) {
+      console.error("[v0] ❌ Fallback query also failed:", fallbackError.message)
+      return NextResponse.json({ error: error.message, bookings: [] }, { status: 500 })
+    }
   }
 }
 

@@ -50,6 +50,7 @@ interface Booking {
   admin_notes?: string
   contact_attempts?: number
   booking_form_id?: string
+  booking_form_name?: string
   created_at: string
 }
 
@@ -166,9 +167,9 @@ export default function BookingsPage() {
   }
 
   const getBookingFormName = (bookingFormId?: string) => {
-    if (!bookingFormId) return "-"
+    if (!bookingFormId) return "غير محدد"
     const form = bookingForms.find((f) => f.id === bookingFormId)
-    return form ? form.name_ar : "-"
+    return form ? form.name_ar : "غير محدد"
   }
 
   const updateStatus = async (id: string, status: string) => {
@@ -304,7 +305,7 @@ export default function BookingsPage() {
       booking.contact_attempts || 0,
       booking.notes || "-",
       booking.admin_notes || "-",
-      getBookingFormName(booking.booking_form_id),
+      booking.booking_form_name || getBookingFormName(booking.booking_form_id),
       format(new Date(booking.created_at), "yyyy-MM-dd", { locale: ar }),
     ])
 
@@ -377,7 +378,7 @@ export default function BookingsPage() {
       doc.text((booking.service_name || "-").substring(0, 12), 85, yPosition)
       doc.text(booking.status, 120, yPosition)
       doc.text(booking.contacted ? "Yes" : "No", 145, yPosition)
-      doc.text(getBookingFormName(booking.booking_form_id), 170, yPosition)
+      doc.text(booking.booking_form_name || getBookingFormName(booking.booking_form_id), 170, yPosition)
       doc.text(format(new Date(booking.created_at), "yyyy-MM-dd"), 195, yPosition)
 
       yPosition += 8
@@ -438,7 +439,7 @@ export default function BookingsPage() {
         booking.contact_attempts || 0,
         booking.notes || "-",
         booking.admin_notes || "-",
-        getBookingFormName(booking.booking_form_id),
+        booking.booking_form_name || getBookingFormName(booking.booking_form_id),
         format(new Date(booking.created_at), "yyyy-MM-dd HH:mm", { locale: ar }),
       ]),
     ]
@@ -785,7 +786,7 @@ export default function BookingsPage() {
                     <p className="text-muted-foreground">نموذج الحجز</p>
                     <p className="font-medium flex items-center gap-1">
                       <FileCheck className="h-4 w-4 text-primary" />
-                      {getBookingFormName(booking.booking_form_id)}
+                      {booking.booking_form_name || getBookingFormName(booking.booking_form_id)}
                     </p>
                   </div>
                   <div>

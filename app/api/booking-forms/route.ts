@@ -28,8 +28,6 @@ export async function GET(request: Request) {
 
       const form = {
         ...dbForm,
-        name_ar: dbForm.title_ar,
-        name_en: dbForm.title_en,
         custom_services: customServices,
         booking_form_services: servicesResult.rows.map((s) => ({ service_id: s.id, services: s })),
       }
@@ -56,8 +54,6 @@ export async function GET(request: Request) {
 
       forms.push({
         ...dbForm,
-        name_ar: dbForm.title_ar,
-        name_en: dbForm.title_en,
         custom_services: customServices,
         booking_form_services: servicesResult.rows.map((s) => ({ service_id: s.id, services: s })),
       })
@@ -86,13 +82,15 @@ export async function POST(request: Request) {
 
     const result = await db.query(
       `
-      INSERT INTO booking_forms (title_ar, title_en, description_ar, description_en, image_url, fields, is_main, is_active, order_index)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO booking_forms (name_ar, name_en, title_ar, title_en, description_ar, description_en, image_url, fields, is_main, is_active, order_index)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `,
       [
-        formData.title_ar || formData.name_ar,
-        formData.title_en || formData.name_en,
+        formData.name_ar,
+        formData.name_en || formData.name_ar,
+        formData.title_ar,
+        formData.title_en || formData.title_ar,
         formData.description_ar,
         formData.description_en,
         formData.image_url || null,
@@ -127,8 +125,8 @@ export async function PATCH(request: Request) {
     const { id, service_ids, custom_services, ...formData } = body
 
     const fieldMapping: Record<string, string> = {
-      name_ar: "title_ar",
-      name_en: "title_en",
+      name_ar: "name_ar",
+      name_en: "name_en",
       title_ar: "title_ar",
       title_en: "title_en",
       description_ar: "description_ar",

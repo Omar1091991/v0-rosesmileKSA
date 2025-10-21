@@ -147,3 +147,5 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
     </form>
   )
 }
+
+export default BookingFormClient

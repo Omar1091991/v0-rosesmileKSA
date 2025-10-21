@@ -17,6 +17,7 @@ import {
   Phone,
   Tag,
   CalendarIcon,
+  FormInput,
 } from "lucide-react"
 
 export default function DatabaseSetupPage() {
@@ -63,6 +64,10 @@ export default function DatabaseSetupPage() {
   const [isBookingMigrating, setIsBookingMigrating] = useState(false)
   const [bookingMigrationOutput, setBookingMigrationOutput] = useState<string[]>([])
   const [bookingMigrationStatus, setBookingMigrationStatus] = useState<"idle" | "success" | "error">("idle")
+
+  const [isBookingFormsMigrating, setIsBookingFormsMigrating] = useState(false)
+  const [bookingFormsMigrationOutput, setBookingFormsMigrationOutput] = useState<string[]>([])
+  const [bookingFormsMigrationStatus, setBookingFormsMigrationStatus] = useState<"idle" | "success" | "error">("idle")
 
   const runScript = async () => {
     setIsRunning(true)
@@ -326,10 +331,11 @@ export default function DatabaseSetupPage() {
         setTrackingMigrationOutput([data.message])
         setTrackingMigrationStatus("success")
       } else {
-        setTrackingMigrationOutput([data.error || "حدث خطأ غير معروف"])
+        setTrackingMigrationOutput([data.error || "حدث خطأ غير معروف", data.details || ""])
         setTrackingMigrationStatus("error")
       }
     } catch (error) {
+      console.error("[v0] ❌ خطأ في migration:", error)
       setTrackingMigrationOutput([`خطأ في الاتصال: ${error}`])
       setTrackingMigrationStatus("error")
     } finally {
@@ -409,6 +415,42 @@ export default function DatabaseSetupPage() {
     }
   }
 
+  const runBookingFormsMigration = async () => {
+    setIsBookingFormsMigrating(true)
+    setBookingFormsMigrationOutput([])
+    setBookingFormsMigrationStatus("idle")
+
+    try {
+      const response = await fetch("/api/migrations/fix-booking-forms", {
+        method: "POST",
+      })
+
+      const contentType = response.headers.get("content-type")
+      let data
+
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json()
+      } else {
+        const text = await response.text()
+        data = { error: text }
+      }
+
+      if (response.ok && data.success) {
+        setBookingFormsMigrationOutput([data.message || "تم إصلاح جدول booking_forms بنجاح"])
+        setBookingFormsMigrationStatus("success")
+      } else {
+        setBookingFormsMigrationOutput([data.error || "حدث خطأ غير معروف", data.details || ""])
+        setBookingFormsMigrationStatus("error")
+      }
+    } catch (error) {
+      console.error("[v0] ❌ خطأ في migration:", error)
+      setBookingFormsMigrationOutput([`خطأ في الاتصال: ${error}`])
+      setBookingFormsMigrationStatus("error")
+    } finally {
+      setIsBookingFormsMigrating(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -431,6 +473,63 @@ export default function DatabaseSetupPage() {
           </div>
         </AlertDescription>
       </Alert>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FormInput className="h-5 w-5" />
+            إصلاح: جدول نماذج الحجز (booking_forms)
+          </CardTitle>
+          <CardDescription>
+            إصلاح جدول booking_forms وإضافة الأعمدة المفقودة (name_ar, name_en, title_ar, title_en) لعرض أسماء النماذج
+            في صفحة الحجوزات
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={runBookingFormsMigration}
+              disabled={isBookingFormsMigrating}
+              variant="secondary"
+              className="gap-2"
+            >
+              {isBookingFormsMigrating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري التنفيذ...
+                </>
+              ) : (
+                <>
+                  <FormInput className="h-5 w-5" />
+                  إصلاح جدول booking_forms
+                </>
+              )}
+            </Button>
+
+            {bookingFormsMigrationStatus === "success" && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-semibold">تم بنجاح</span>
+              </div>
+            )}
+
+            {bookingFormsMigrationStatus === "error" && (
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-semibold">فشل</span>
+              </div>
+            )}
+          </div>
+
+          {bookingFormsMigrationOutput.length > 0 && (
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+              {bookingFormsMigrationOutput.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
