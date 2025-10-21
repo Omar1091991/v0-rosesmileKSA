@@ -65,7 +65,6 @@ export default function BookingsPage() {
   const [bookingForms, setBookingForms] = useState<BookingForm[]>([])
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
-  const [needsMigration, setNeedsMigration] = useState(false)
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
   const [adminNotes, setAdminNotes] = useState("")
   const [contactAttempts, setContactAttempts] = useState(0)
@@ -136,11 +135,6 @@ export default function BookingsPage() {
         } else {
           setBookings(data.bookings || [])
           setFilteredBookings(data.bookings || [])
-          setNeedsMigration(!data.usingNewSchema)
-
-          if (!data.usingNewSchema) {
-            console.log("[v0] ℹ️ Migration needed:", data.message)
-          }
         }
       }
     } catch (error) {
@@ -610,32 +604,6 @@ export default function BookingsPage() {
             </Popover>
           </div>
         </div>
-
-        {needsMigration && (
-          <Card className="border-yellow-500 bg-yellow-50">
-            <CardContent className="py-4">
-              <div className="flex items-start gap-3">
-                <div className="rounded-full bg-yellow-500 p-1">
-                  <FileCheck className="h-4 w-4 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-yellow-900">تحديث قاعدة البيانات مطلوب</h3>
-                  <p className="text-sm text-yellow-800 mt-1">
-                    لعرض أسماء نماذج الحجز والخدمات بشكل صحيح، يرجى تشغيل migration من صفحة إعداد قاعدة البيانات.
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 bg-white hover:bg-yellow-100"
-                    onClick={() => (window.location.href = "/dashboard/database-setup")}
-                  >
-                    الذهاب إلى إعداد قاعدة البيانات
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <Card>
           <CardHeader>
