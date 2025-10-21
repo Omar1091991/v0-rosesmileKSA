@@ -11,9 +11,7 @@ export const dynamic = "force-dynamic"
 
 async function getServices() {
   try {
-    const result = await query(
-      "SELECT * FROM services WHERE is_active = true AND is_public = true ORDER BY order_index",
-    )
+    const result = await query("SELECT * FROM services WHERE is_active = true ORDER BY order_index")
     return result.rows || []
   } catch (error) {
     console.error("[v0] Error fetching services:", error)

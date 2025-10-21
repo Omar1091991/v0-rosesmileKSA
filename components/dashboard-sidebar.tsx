@@ -13,7 +13,6 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
-  Database,
   LucideComponent as ImageIconComponent,
   Newspaper,
   UserCircle,
@@ -62,13 +61,6 @@ const menuItems = [
   },
   { title: "المستخدمين", href: "/dashboard/users", icon: Users, roles: ["admin"], color: "text-rose-500" },
   { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText, roles: ["admin"], color: "text-lime-500" },
-  {
-    title: "إعداد قاعدة البيانات",
-    href: "/dashboard/database-setup",
-    icon: Database,
-    roles: ["admin"],
-    color: "text-slate-500",
-  },
 ]
 
 export function DashboardSidebar() {
