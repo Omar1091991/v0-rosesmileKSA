@@ -16,6 +16,7 @@ import {
   FileText,
   Phone,
   Tag,
+  CalendarIcon,
 } from "lucide-react"
 
 export default function DatabaseSetupPage() {
@@ -58,6 +59,10 @@ export default function DatabaseSetupPage() {
   const [isPublicMigrating, setIsPublicMigrating] = useState(false)
   const [isPublicMigrationOutput, setIsPublicMigrationOutput] = useState<string[]>([])
   const [isPublicMigrationStatus, setIsPublicMigrationStatus] = useState<"idle" | "success" | "error">("idle")
+
+  const [isBookingMigrating, setIsBookingMigrating] = useState(false)
+  const [bookingMigrationOutput, setBookingMigrationOutput] = useState<string[]>([])
+  const [bookingMigrationStatus, setBookingMigrationStatus] = useState<"idle" | "success" | "error">("idle")
 
   const runScript = async () => {
     setIsRunning(true)
@@ -342,7 +347,15 @@ export default function DatabaseSetupPage() {
         method: "POST",
       })
 
-      const data = await response.json()
+      const contentType = response.headers.get("content-type")
+      let data
+
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json()
+      } else {
+        const text = await response.text()
+        data = { error: text }
+      }
 
       if (response.ok) {
         setIsPublicMigrationOutput([data.message || "تم إضافة عمود is_public بنجاح"])
@@ -352,10 +365,47 @@ export default function DatabaseSetupPage() {
         setIsPublicMigrationStatus("error")
       }
     } catch (error) {
+      console.error("[v0] ❌ خطأ في migration:", error)
       setIsPublicMigrationOutput([`خطأ في الاتصال: ${error}`])
       setIsPublicMigrationStatus("error")
     } finally {
       setIsPublicMigrating(false)
+    }
+  }
+
+  const runBookingMigration = async () => {
+    setIsBookingMigrating(true)
+    setBookingMigrationOutput([])
+    setBookingMigrationStatus("idle")
+
+    try {
+      const response = await fetch("/api/migrations/add-booking-columns", {
+        method: "POST",
+      })
+
+      const contentType = response.headers.get("content-type")
+      let data
+
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json()
+      } else {
+        const text = await response.text()
+        data = { error: text }
+      }
+
+      if (response.ok && data.success) {
+        setBookingMigrationOutput([data.message || "تم إضافة الأعمدة المفقودة لجدول الحجوزات بنجاح"])
+        setBookingMigrationStatus("success")
+      } else {
+        setBookingMigrationOutput([data.error || "حدث خطأ غير معروف", data.details || ""])
+        setBookingMigrationStatus("error")
+      }
+    } catch (error) {
+      console.error("[v0] ❌ خطأ في migration:", error)
+      setBookingMigrationOutput([`خطأ في الاتصال: ${error}`])
+      setBookingMigrationStatus("error")
+    } finally {
+      setIsBookingMigrating(false)
     }
   }
 
@@ -381,6 +431,58 @@ export default function DatabaseSetupPage() {
           </div>
         </AlertDescription>
       </Alert>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5" />
+            إصلاح: إضافة أعمدة الحجوزات المفقودة
+          </CardTitle>
+          <CardDescription>
+            إضافة الأعمدة المفقودة لجدول الحجوزات (booking_form_id, service_id, service_name, contacted, admin_notes,
+            contact_attempts)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button onClick={runBookingMigration} disabled={isBookingMigrating} variant="secondary" className="gap-2">
+              {isBookingMigrating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري التنفيذ...
+                </>
+              ) : (
+                <>
+                  <CalendarIcon className="h-5 w-5" />
+                  إضافة أعمدة الحجوزات
+                </>
+              )}
+            </Button>
+
+            {bookingMigrationStatus === "success" && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-semibold">تم بنجاح</span>
+              </div>
+            )}
+
+            {bookingMigrationStatus === "error" && (
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-semibold">فشل</span>
+              </div>
+            )}
+          </div>
+
+          {bookingMigrationOutput.length > 0 && (
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+              {bookingMigrationOutput.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -590,55 +692,6 @@ export default function DatabaseSetupPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Tag className="h-5 w-5" />
-            إصلاح: إضافة عمود الخدمات المخصصة
-          </CardTitle>
-          <CardDescription>إضافة عمود is_public إلى جدول services للتمييز بين الخدمات العامة والمخصصة</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Button onClick={runIsPublicMigration} disabled={isPublicMigrating} variant="secondary" className="gap-2">
-              {isPublicMigrating ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  جاري التنفيذ...
-                </>
-              ) : (
-                <>
-                  <Tag className="h-5 w-5" />
-                  إضافة عمود is_public
-                </>
-              )}
-            </Button>
-
-            {isPublicMigrationStatus === "success" && (
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle className="h-5 w-5" />
-                <span className="font-semibold">تم بنجاح</span>
-              </div>
-            )}
-
-            {isPublicMigrationStatus === "error" && (
-              <div className="flex items-center gap-2 text-red-600">
-                <XCircle className="h-5 w-5" />
-                <span className="font-semibold">فشل</span>
-              </div>
-            )}
-          </div>
-
-          {isPublicMigrationOutput.length > 0 && (
-            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
-              {isPublicMigrationOutput.map((line, index) => (
-                <div key={index}>{line}</div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>سكريبت التهيئة</CardTitle>
           <CardDescription>
             سيقوم هذا السكريبت بإنشاء جميع الجداول المطلوبة وإضافة البيانات الافتراضية بما في ذلك مستخدم المدير
@@ -707,6 +760,55 @@ export default function DatabaseSetupPage() {
               <li>إضافة الإعدادات الافتراضية للموقع</li>
             </ul>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Tag className="h-5 w-5" />
+            إصلاح: إضافة عمود الخدمات المخصصة
+          </CardTitle>
+          <CardDescription>إضافة عمود is_public إلى جدول services للتمييز بين الخدمات العامة والمخصصة</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button onClick={runIsPublicMigration} disabled={isPublicMigrating} variant="secondary" className="gap-2">
+              {isPublicMigrating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري التنفيذ...
+                </>
+              ) : (
+                <>
+                  <Tag className="h-5 w-5" />
+                  إضافة عمود is_public
+                </>
+              )}
+            </Button>
+
+            {isPublicMigrationStatus === "success" && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-5 w-5" />
+                <span className="font-semibold">تم بنجاح</span>
+              </div>
+            )}
+
+            {isPublicMigrationStatus === "error" && (
+              <div className="flex items-center gap-2 text-red-600">
+                <XCircle className="h-5 w-5" />
+                <span className="font-semibold">فشل</span>
+              </div>
+            )}
+          </div>
+
+          {isPublicMigrationOutput.length > 0 && (
+            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+              {isPublicMigrationOutput.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
