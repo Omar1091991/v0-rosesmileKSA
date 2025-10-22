@@ -17,6 +17,7 @@ import { HeroSlideshow } from "@/components/hero-slideshow"
 import { AutoScrollCarousel } from "@/components/auto-scroll-carousel"
 import { AnimatedBackground } from "@/components/animated-background"
 import { SocialMediaLinks } from "@/components/social-media-links"
+import { useRouter } from "next/navigation" // Import useRouter
 
 export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
@@ -27,6 +28,7 @@ export default function HomePage() {
   const [siteSettings, setSiteSettings] = useState<Record<string, string>>({})
   const [mainBookingFormId, setMainBookingFormId] = useState<string>("")
   const language = useLanguage()
+  const router = useRouter() // Initialize useRouter
 
   const servicesScrollRef = useRef<HTMLDivElement>(null)
   const doctorsScrollRef = useRef<HTMLDivElement>(null)
@@ -123,8 +125,8 @@ export default function HomePage() {
   }
 
   const renderFormattedText = (text: string) => {
-    // السماح فقط بالوسوم الآمنة: strong, em, s, b, i, del
-    const sanitizedText = text.replace(/<(?!\/?(?:strong|em|s|b|i|del)\b)[^>]*>/gi, "")
+    // السماح فقط بالوسوم الآمنة: strong, em, b, i, s, del
+    const sanitizedText = text.replace(/<(?!\/?(?:strong|em|b|i|s|del)\b)[^>]*>/gi, "")
     return <span dangerouslySetInnerHTML={{ __html: sanitizedText }} style={{ whiteSpace: "pre-wrap" }} />
   }
 
@@ -576,7 +578,9 @@ export default function HomePage() {
                   >
                     <Card
                       className="text-center h-full hover:shadow-lg transition-all hover:scale-105 flex flex-col cursor-pointer"
-                      onClick={() => (window.location.href = `/doctors/${doctor.id}`)}
+                      onClick={() => {
+                        router.push(`/doctors/${doctor.id}`)
+                      }}
                     >
                       <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
                         <div className="w-full aspect-square relative bg-muted flex items-center justify-center text-4xl sm:text-6xl overflow-hidden rounded-lg mx-auto max-w-xs">
@@ -606,7 +610,7 @@ export default function HomePage() {
                             className="flex-1 bg-transparent text-xs sm:text-sm"
                             onClick={(e) => {
                               e.stopPropagation()
-                              window.location.href = `/doctors/${doctor.id}`
+                              router.push(`/doctors/${doctor.id}`)
                             }}
                           >
                             {language === "ar" ? "التفاصيل" : "Details"}

@@ -20,8 +20,12 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
   useEffect(() => {
     async function fetchData() {
       try {
+        setLoading(true)
+        setDoctor(null)
+
         const response = await fetch(`/api/doctors?id=${params.id}`)
         const data = await response.json()
+
         if (data.length > 0) {
           setDoctor(data[0])
         }
@@ -32,7 +36,7 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
       }
     }
     fetchData()
-  }, [params.id])
+  }, [params.id]) // التأكد من إعادة التحميل عند تغيير المعرف
 
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">جاري التحميل...</div>
