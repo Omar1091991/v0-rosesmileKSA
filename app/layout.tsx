@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Cairo } from "next/font/google"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css"
 import { Suspense } from "react"
 import { Toaster } from "@/components/ui/toaster"
@@ -31,6 +32,7 @@ export default function RootLayout({
         <Suspense fallback={<div>Loading...</div>}>
           {children}
           <Analytics />
+          <SpeedInsights />
           <Toaster />
           <WhatsAppButton />
         </Suspense>

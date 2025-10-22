@@ -1,28 +1,46 @@
+"use client"
+
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { db } from "@/lib/db"
 import { AnimatedSection } from "@/components/animated-section"
-import { notFound } from "next/navigation"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { useLanguage } from "@/components/language-switcher"
+import { useEffect, useState } from "react"
 
-export const dynamic = "force-dynamic"
+export default function DoctorDetailPage({ params }: { params: { id: string } }) {
+  const language = useLanguage()
+  const [doctor, setDoctor] = useState<any>(null)
+  const [cases, setCases] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-export default async function DoctorDetailPage({ params }: { params: { id: string } }) {
-  const doctorResult = await db.query("SELECT * FROM doctors WHERE id = $1", [params.id])
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await fetch(`/api/doctors?id=${params.id}`)
+        const data = await response.json()
+        if (data.length > 0) {
+          setDoctor(data[0])
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching doctor:", error)
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [params.id])
 
-  if (doctorResult.rows.length === 0) {
-    notFound()
+  if (loading) {
+    return <div className="flex min-h-screen items-center justify-center">جاري التحميل...</div>
   }
 
-  const doctor = doctorResult.rows[0]
-  const casesResult = await db.query("SELECT * FROM doctor_cases WHERE doctor_id = $1 ORDER BY order_index", [
-    params.id,
-  ])
-  const cases = casesResult.rows
+  if (!doctor) {
+    return <div className="flex min-h-screen items-center justify-center">الطبيب غير موجود</div>
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -30,63 +48,57 @@ export default async function DoctorDetailPage({ params }: { params: { id: strin
 
       <main className="flex-1">
         <AnimatedSection animation="fade-up">
-          <section className="bg-gradient-to-b from-muted/50 to-background py-16 md:py-24">
-            <div className="container">
-              <Link href="/doctors" className="inline-flex items-center gap-2 text-primary hover:underline mb-8">
+          <section className="bg-gradient-to-b from-muted/50 to-background py-12 sm:py-16 md:py-24">
+            <div className="container px-4 sm:px-6 lg:px-8">
+              <Link
+                href="/doctors"
+                className="inline-flex items-center gap-2 text-primary hover:underline mb-6 sm:mb-8"
+              >
                 <ArrowRight className="h-4 w-4" />
-                العودة إلى الأطباء
+                {language === "ar" ? "العودة إلى الأطباء" : "Back to Doctors"}
               </Link>
 
-              <div className="grid md:grid-cols-2 gap-12 items-start max-w-6xl">
+              <div className="grid md:grid-cols-2 gap-8 sm:gap-12 items-start max-w-6xl">
                 <AnimatedSection animation="scale-in">
                   <div className="w-full aspect-square rounded-2xl overflow-hidden bg-muted">
                     {doctor.image_url ? (
                       <img
                         src={doctor.image_url || "/placeholder.svg"}
-                        alt={doctor.name_ar}
+                        alt={language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-9xl">👨‍⚕️</div>
+                      <div className="w-full h-full flex items-center justify-center text-7xl sm:text-9xl">👨‍⚕️</div>
                     )}
                   </div>
                 </AnimatedSection>
 
                 <AnimatedSection animation="fade-up" delay={0.2}>
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
                     <div>
-                      <h1 className="text-4xl md:text-5xl font-bold mb-2">{doctor.name_ar}</h1>
-                      {doctor.name_en && <p className="text-2xl text-muted-foreground">{doctor.name_en}</p>}
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
+                        {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
+                      </h1>
                     </div>
 
                     <div>
-                      <Badge className="text-lg px-4 py-2">{doctor.specialty_ar}</Badge>
-                      {doctor.specialty_en && (
-                        <Badge variant="outline" className="text-lg px-4 py-2 mr-2">
-                          {doctor.specialty_en}
-                        </Badge>
-                      )}
+                      <Badge className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2">
+                        {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
+                      </Badge>
                     </div>
 
-                    {doctor.bio_ar && (
+                    {((language === "ar" && doctor.bio_ar) || (language === "en" && doctor.bio_en)) && (
                       <div className="space-y-2">
-                        <h2 className="text-xl font-semibold">نبذة عن الطبيب</h2>
+                        <h2 className="text-lg sm:text-xl font-semibold">
+                          {language === "ar" ? "نبذة عن الطبيب" : "About the Doctor"}
+                        </h2>
                         <div
-                          className="text-muted-foreground leading-relaxed text-lg whitespace-pre-line"
+                          className="text-muted-foreground leading-relaxed text-base sm:text-lg whitespace-pre-line"
                           dangerouslySetInnerHTML={{
-                            __html: doctor.bio_ar.replace(/<(?!\/?(?:strong|em|s|b|i|del|span)\b)[^>]*>/gi, ""),
-                          }}
-                        />
-                      </div>
-                    )}
-
-                    {doctor.bio_en && (
-                      <div className="space-y-2">
-                        <h2 className="text-xl font-semibold">About the Doctor</h2>
-                        <div
-                          className="text-muted-foreground leading-relaxed whitespace-pre-line"
-                          dangerouslySetInnerHTML={{
-                            __html: doctor.bio_en.replace(/<(?!\/?(?:strong|em|s|b|i|del|span)\b)[^>]*>/gi, ""),
+                            __html: (language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar).replace(
+                              /<(?!\/?(?:strong|em|s|b|i|del|span)\b)[^>]*>/gi,
+                              "",
+                            ),
                           }}
                         />
                       </div>
@@ -94,8 +106,10 @@ export default async function DoctorDetailPage({ params }: { params: { id: strin
 
                     <BookingDialog
                       trigger={
-                        <button className="w-full py-3 px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">
-                          احجز موعد مع {doctor.name_ar.split(" ")[0]}
+                        <button className="w-full py-3 px-4 sm:px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-base sm:text-lg font-semibold">
+                          {language === "ar"
+                            ? `احجز موعد مع ${doctor.name_ar.split(" ")[0]}`
+                            : `Book with ${(doctor.name_en || doctor.name_ar).split(" ")[0]}`}
                         </button>
                       }
                     />
@@ -107,16 +121,24 @@ export default async function DoctorDetailPage({ params }: { params: { id: strin
         </AnimatedSection>
 
         {cases && cases.length > 0 && (
-          <section className="py-16 md:py-24">
-            <div className="container">
+          <section className="py-12 sm:py-16 md:py-24">
+            <div className="container px-4 sm:px-6 lg:px-8">
               <AnimatedSection animation="fade-up">
-                <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">حالات {doctor.name_ar.split(" ")[0]}</h2>
-                  <p className="text-lg text-muted-foreground">نماذج من الحالات التي تم علاجها بنجاح</p>
+                <div className="text-center mb-8 sm:mb-12">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
+                    {language === "ar"
+                      ? `حالات ${doctor.name_ar.split(" ")[0]}`
+                      : `${(doctor.name_en || doctor.name_ar).split(" ")[0]}'s Cases`}
+                  </h2>
+                  <p className="text-base sm:text-lg text-muted-foreground">
+                    {language === "ar"
+                      ? "نماذج من الحالات التي تم علاجها بنجاح"
+                      : "Examples of successfully treated cases"}
+                  </p>
                 </div>
               </AnimatedSection>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                 {cases.map((case_, index) => (
                   <AnimatedSection key={case_.id} animation="scale-in" delay={index * 0.05}>
                     <Card className="overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1">
@@ -124,13 +146,19 @@ export default async function DoctorDetailPage({ params }: { params: { id: strin
                         <div className="aspect-square">
                           <img
                             src={case_.image_url || "/placeholder.svg"}
-                            alt={case_.caption_ar || "حالة"}
+                            alt={
+                              language === "ar"
+                                ? case_.caption_ar || "حالة"
+                                : case_.caption_en || case_.caption_ar || "Case"
+                            }
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        {case_.caption_ar && (
-                          <div className="p-3">
-                            <p className="text-sm text-center">{case_.caption_ar}</p>
+                        {((language === "ar" && case_.caption_ar) || (language === "en" && case_.caption_en)) && (
+                          <div className="p-2 sm:p-3">
+                            <p className="text-xs sm:text-sm text-center">
+                              {language === "ar" ? case_.caption_ar : case_.caption_en || case_.caption_ar}
+                            </p>
                           </div>
                         )}
                       </CardContent>
@@ -143,11 +171,17 @@ export default async function DoctorDetailPage({ params }: { params: { id: strin
         )}
 
         <AnimatedSection animation="fade-up">
-          <section className="py-16 md:py-24 bg-muted/30">
-            <div className="container">
-              <div className="max-w-3xl mx-auto text-center space-y-6">
-                <h2 className="text-3xl md:text-4xl font-bold">احجز موعدك مع {doctor.name_ar.split(" ")[0]}</h2>
-                <p className="text-lg text-muted-foreground">نحن هنا لخدمتك على مدار الساعة</p>
+          <section className="py-12 sm:py-16 md:py-24 bg-muted/30">
+            <div className="container px-4 sm:px-6 lg:px-8">
+              <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+                  {language === "ar"
+                    ? `احجز موعدك مع ${doctor.name_ar.split(" ")[0]}`
+                    : `Book with ${(doctor.name_en || doctor.name_ar).split(" ")[0]}`}
+                </h2>
+                <p className="text-base sm:text-lg text-muted-foreground">
+                  {language === "ar" ? "نحن هنا لخدمتك على مدار الساعة" : "We are here to serve you 24/7"}
+                </p>
                 <BookingDialog />
               </div>
             </div>

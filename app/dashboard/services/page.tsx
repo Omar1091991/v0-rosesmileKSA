@@ -432,12 +432,32 @@ export default function ServicesPage() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="title_en">العنوان بالإنجليزية</Label>
+              <Input
+                id="title_en"
+                value={newService.title_en}
+                onChange={(e) => setNewService({ ...newService, title_en: e.target.value })}
+                placeholder="Example: Orthodontics"
+                disabled={loading || isSaving}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="subtitle_ar">العنوان الفرعي بالعربية</Label>
               <Input
                 id="subtitle_ar"
                 value={newService.subtitle_ar}
                 onChange={(e) => setNewService({ ...newService, subtitle_ar: e.target.value })}
                 placeholder="مثال: حلول متقدمة لابتسامة مثالية"
+                disabled={loading || isSaving}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="subtitle_en">العنوان الفرعي بالإنجليزية</Label>
+              <Input
+                id="subtitle_en"
+                value={newService.subtitle_en}
+                onChange={(e) => setNewService({ ...newService, subtitle_en: e.target.value })}
+                placeholder="Example: Advanced solutions for a perfect smile"
                 disabled={loading || isSaving}
               />
             </div>
@@ -450,6 +470,17 @@ export default function ServicesPage() {
                 value={newService.description_ar}
                 onChange={(value) => setNewService({ ...newService, description_ar: value })}
                 placeholder="وصف تفصيلي للخدمة"
+                rows={4}
+                disabled={loading || isSaving}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description_en">الوصف بالإنجليزية</Label>
+              <TextFormatter
+                id="description_en"
+                value={newService.description_en}
+                onChange={(value) => setNewService({ ...newService, description_en: value })}
+                placeholder="Detailed service description"
                 rows={4}
                 disabled={loading || isSaving}
               />
@@ -557,6 +588,15 @@ export default function ServicesPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="edit_title_en">العنوان بالإنجليزية</Label>
+                <Input
+                  id="edit_title_en"
+                  value={selectedService.title_en || ""}
+                  onChange={(e) => setSelectedService({ ...selectedService, title_en: e.target.value })}
+                  disabled={loading || isSaving}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="edit_subtitle_ar">العنوان الفرعي بالعربية</Label>
                 <Input
                   id="edit_subtitle_ar"
@@ -566,11 +606,30 @@ export default function ServicesPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="edit_subtitle_en">العنوان الفرعي بالإنجليزية</Label>
+                <Input
+                  id="edit_subtitle_en"
+                  value={selectedService.subtitle_en || ""}
+                  onChange={(e) => setSelectedService({ ...selectedService, subtitle_en: e.target.value })}
+                  disabled={loading || isSaving}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="edit_description_ar">الوصف بالعربية</Label>
                 <TextFormatter
                   id="edit_description_ar"
                   value={selectedService.description_ar}
                   onChange={(value) => setSelectedService({ ...selectedService, description_ar: value })}
+                  rows={4}
+                  disabled={loading || isSaving}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_description_en">الوصف بالإنجليزية</Label>
+                <TextFormatter
+                  id="edit_description_en"
+                  value={selectedService.description_en || ""}
+                  onChange={(value) => setSelectedService({ ...selectedService, description_en: value })}
                   rows={4}
                   disabled={loading || isSaving}
                 />

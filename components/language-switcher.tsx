@@ -28,7 +28,7 @@ export function LanguageSwitcher() {
   return (
     <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-2">
       <Globe className="h-4 w-4" />
-      {language === "ar" ? "English" : "العربية"}
+      {language === "ar" ? "EN" : "ع"}
     </Button>
   )
 }

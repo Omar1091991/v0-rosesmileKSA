@@ -426,24 +426,25 @@ export default function HomePage() {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                     >
-                      <Card className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col">
+                      <Card
+                        className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
+                        onClick={() => (window.location.href = `/services/${service.id}`)}
+                      >
                         <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
-                          <Link href={`/services/${service.id}`} className="block">
-                            {service.image_url ? (
-                              <div className="w-full aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                                <Image
-                                  src={service.image_url || "/placeholder.svg"}
-                                  alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-4xl sm:text-6xl cursor-pointer hover:opacity-90 transition-opacity">
-                                {service.icon || "🏥"}
-                              </div>
-                            )}
-                          </Link>
+                          {service.image_url ? (
+                            <div className="w-full aspect-square relative rounded-lg overflow-hidden">
+                              <Image
+                                src={service.image_url || "/placeholder.svg"}
+                                alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-4xl sm:text-6xl">
+                              {service.icon || "🏥"}
+                            </div>
+                          )}
                           <h3 className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2">
                             {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
                           </h3>
@@ -459,32 +460,39 @@ export default function HomePage() {
                               variant="outline"
                               size="sm"
                               className="flex-1 bg-transparent text-xs sm:text-sm"
-                              asChild
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                window.location.href = `/services/${service.id}`
+                              }}
                             >
-                              <Link href={`/services/${service.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
+                              {language === "ar" ? "التفاصيل" : "Details"}
                             </Button>
                             <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                               <Button
                                 size="sm"
                                 className="w-full text-xs sm:text-sm relative overflow-hidden group"
-                                asChild
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  window.location.href = mainBookingFormId
+                                    ? `/booking/${mainBookingFormId}`
+                                    : "/booking"
+                                }}
                               >
-                                <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                                  <motion.span
-                                    className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
-                                    animate={{
-                                      x: ["-100%", "100%"],
-                                    }}
-                                    transition={{
-                                      duration: 2,
-                                      repeat: Number.POSITIVE_INFINITY,
-                                      ease: "linear",
-                                    }}
-                                  />
-                                  <span className="relative z-10">
-                                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                                  </span>
-                                </Link>
+                                <motion.span
+                                  className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
+                                  animate={{
+                                    x: ["-100%", "100%"],
+                                  }}
+                                  transition={{
+                                    duration: 2,
+                                    repeat: Number.POSITIVE_INFINITY,
+                                    ease: "linear",
+                                  }}
+                                />
+                                <span className="relative z-10">
+                                  {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                                </span>
                               </Button>
                             </motion.div>
                           </div>
@@ -566,22 +574,23 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                   >
-                    <Card className="text-center h-full hover:shadow-lg transition-all hover:scale-105 flex flex-col">
+                    <Card
+                      className="text-center h-full hover:shadow-lg transition-all hover:scale-105 flex flex-col cursor-pointer"
+                      onClick={() => (window.location.href = `/doctors/${doctor.id}`)}
+                    >
                       <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
-                        <Link href={`/doctors/${doctor.id}`} className="block">
-                          <div className="w-full aspect-square relative bg-muted flex items-center justify-center text-4xl sm:text-6xl overflow-hidden rounded-lg cursor-pointer hover:opacity-90 transition-opacity mx-auto max-w-xs">
-                            {doctor.image_url ? (
-                              <Image
-                                src={doctor.image_url || "/placeholder.svg"}
-                                alt={doctor.name_ar}
-                                fill
-                                className="object-cover"
-                              />
-                            ) : (
-                              "👨‍⚕️"
-                            )}
-                          </div>
-                        </Link>
+                        <div className="w-full aspect-square relative bg-muted flex items-center justify-center text-4xl sm:text-6xl overflow-hidden rounded-lg mx-auto max-w-xs">
+                          {doctor.image_url ? (
+                            <Image
+                              src={doctor.image_url || "/placeholder.svg"}
+                              alt={doctor.name_ar}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            "👨‍⚕️"
+                          )}
+                        </div>
                         <div className="flex-1">
                           <h3 className="text-base sm:text-lg md:text-xl font-semibold line-clamp-2">
                             {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
@@ -595,32 +604,37 @@ export default function HomePage() {
                             variant="outline"
                             size="sm"
                             className="flex-1 bg-transparent text-xs sm:text-sm"
-                            asChild
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              window.location.href = `/doctors/${doctor.id}`
+                            }}
                           >
-                            <Link href={`/doctors/${doctor.id}`}>{language === "ar" ? "التفاصيل" : "Details"}</Link>
+                            {language === "ar" ? "التفاصيل" : "Details"}
                           </Button>
                           <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Button
                               size="sm"
                               className="w-full text-xs sm:text-sm relative overflow-hidden group"
-                              asChild
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                window.location.href = mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"
+                              }}
                             >
-                              <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                                <motion.span
-                                  className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
-                                  animate={{
-                                    x: ["-100%", "100%"],
-                                  }}
-                                  transition={{
-                                    duration: 2,
-                                    repeat: Number.POSITIVE_INFINITY,
-                                    ease: "linear",
-                                  }}
-                                />
-                                <span className="relative z-10">
-                                  {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                                </span>
-                              </Link>
+                              <motion.span
+                                className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
+                                animate={{
+                                  x: ["-100%", "100%"],
+                                }}
+                                transition={{
+                                  duration: 2,
+                                  repeat: Number.POSITIVE_INFINITY,
+                                  ease: "linear",
+                                }}
+                              />
+                              <span className="relative z-10">
+                                {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                              </span>
                             </Button>
                           </motion.div>
                         </div>
@@ -756,19 +770,20 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                   >
-                    <Card className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col">
+                    <Card
+                      className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
+                      onClick={() => (window.location.href = `/articles/${article.id}`)}
+                    >
                       <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
                         {article.image_url && (
-                          <Link href={`/articles/${article.id}`} className="block">
-                            <div className="w-full aspect-video relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                              <Image
-                                src={article.image_url || "/placeholder.svg"}
-                                alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          </Link>
+                          <div className="w-full aspect-video relative rounded-lg overflow-hidden">
+                            <Image
+                              src={article.image_url || "/placeholder.svg"}
+                              alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
                         )}
                         <h3 className="text-xl font-semibold line-clamp-2">
                           {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
@@ -780,10 +795,16 @@ export default function HomePage() {
                               : article.content_en?.substring(0, 120) || article.content_ar?.substring(0, 120)) + "...",
                           )}
                         </p>
-                        <Button variant="outline" size="sm" className="w-full bg-transparent" asChild>
-                          <Link href={`/articles/${article.id}`}>
-                            {language === "ar" ? "اقرأ المزيد" : "Read More"}
-                          </Link>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full bg-transparent"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            window.location.href = `/articles/${article.id}`
+                          }}
+                        >
+                          {language === "ar" ? "اقرأ المزيد" : "Read More"}
                         </Button>
                       </CardContent>
                     </Card>

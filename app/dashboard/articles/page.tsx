@@ -1,9 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-
 import { useState } from "react"
-
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,7 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Plus, Pencil, Trash2, FileText, Loader2 } from "lucide-react"
 import { PermissionGuard } from "@/components/permission-guard"
 import { TextFormatter } from "@/components/text-formatter"
-import type React from "react"
+import { ImageLibraryPicker } from "@/components/image-library-picker"
 
 interface Article {
   id: string
@@ -73,39 +71,6 @@ export default function ArticlesPage() {
       })
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "خطأ",
-          description: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت",
-          variant: "destructive",
-        })
-        return
-      }
-
-      setIsUploadingImage(true)
-      toast({
-        title: "جاري رفع الصورة...",
-        description: "يرجى الانتظار",
-      })
-
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64 = reader.result as string
-        setFormData({ ...formData, image_url: base64 })
-        setImagePreview(base64)
-        setIsUploadingImage(false)
-        toast({
-          title: "تم رفع الصورة بنجاح",
-          description: "يمكنك الآن حفظ المقال",
-        })
-      }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -359,32 +324,15 @@ export default function ArticlesPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="image">صورة المقال</Label>
-                  <Input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    disabled={isUploadingImage || isSaving}
+                  <ImageLibraryPicker
+                    value={formData.image_url}
+                    onChange={(url) => setFormData({ ...formData, image_url: url })}
+                    label="صورة المقال"
+                    disabled={isSaving}
                   />
-                  {isUploadingImage && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>جاري رفع الصورة...</span>
-                    </div>
-                  )}
-                  {imagePreview && (
-                    <div className="mt-2">
-                      <img
-                        src={imagePreview || "/placeholder.svg"}
-                        alt="Preview"
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
-                    </div>
-                  )}
                 </div>
 
-                <Button onClick={handleAdd} className="w-full" disabled={isUploadingImage || isSaving}>
+                <Button onClick={handleAdd} className="w-full" disabled={isSaving}>
                   {isSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin ml-2" />
@@ -508,32 +456,15 @@ export default function ArticlesPage() {
               </div>
 
               <div>
-                <Label htmlFor="edit_image">صورة المقال</Label>
-                <Input
-                  id="edit_image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  disabled={isUploadingImage || isSaving}
+                <ImageLibraryPicker
+                  value={formData.image_url}
+                  onChange={(url) => setFormData({ ...formData, image_url: url })}
+                  label="صورة المقال"
+                  disabled={isSaving}
                 />
-                {isUploadingImage && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>جاري رفع الصورة...</span>
-                  </div>
-                )}
-                {imagePreview && (
-                  <div className="mt-2">
-                    <img
-                      src={imagePreview || "/placeholder.svg"}
-                      alt="Preview"
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                  </div>
-                )}
               </div>
 
-              <Button onClick={handleEdit} className="w-full" disabled={isUploadingImage || isSaving}>
+              <Button onClick={handleEdit} className="w-full" disabled={isSaving}>
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin ml-2" />

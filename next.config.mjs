@@ -38,9 +38,7 @@ const nextConfig = {
     
     return config
   },
-  experimental: {
-    serverComponentsExternalPackages: ['pg', 'pg-connection-string', 'pg-pool'],
-  },
+  serverExternalPackages: ['pg', 'pg-connection-string', 'pg-pool'],
 }
 
 export default nextConfig

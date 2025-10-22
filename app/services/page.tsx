@@ -28,11 +28,11 @@ export default async function ServicesPage() {
 
       <main className="flex-1">
         <AnimatedSection animation="fade-up">
-          <section className="bg-gradient-to-b from-muted/50 to-background py-16 md:py-24">
-            <div className="container">
-              <div className="max-w-3xl mx-auto text-center space-y-6">
-                <h1 className="text-4xl md:text-5xl font-bold text-balance">خدماتنا الطبية</h1>
-                <p className="text-lg text-muted-foreground text-balance leading-relaxed">
+          <section className="bg-gradient-to-b from-muted/50 to-background py-12 sm:py-16 md:py-24">
+            <div className="container px-4 sm:px-6 lg:px-8">
+              <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-balance">خدماتنا الطبية</h1>
+                <p className="text-base sm:text-lg text-muted-foreground text-balance leading-relaxed">
                   نقدم مجموعة شاملة من الخدمات الطبية المتخصصة بأحدث التقنيات وأعلى معايير الجودة
                 </p>
               </div>
@@ -41,13 +41,13 @@ export default async function ServicesPage() {
         </AnimatedSection>
 
         {/* Services Grid */}
-        <section className="py-16 md:py-24">
-          <div className="container">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <section className="py-12 sm:py-16 md:py-24">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {services?.map((service, index) => (
                 <AnimatedSection key={service.id} animation="scale-in" delay={index * 0.1}>
                   <Card className="hover:shadow-lg transition-all hover:-translate-y-1 h-full flex flex-col">
-                    <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
+                    <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
                       <Link href={`/services/${service.id}`} className="block">
                         {service.image_url ? (
                           <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity">
@@ -58,26 +58,28 @@ export default async function ServicesPage() {
                             />
                           </div>
                         ) : (
-                          <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-6xl cursor-pointer hover:opacity-90 transition-opacity">
+                          <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-5xl sm:text-6xl cursor-pointer hover:opacity-90 transition-opacity">
                             {service.icon || "🏥"}
                           </div>
                         )}
                       </Link>
 
                       <div className="space-y-2 flex-1">
-                        <h3 className="text-2xl font-bold">{service.title_ar}</h3>
+                        <h3 className="text-xl sm:text-2xl font-bold">{service.title_ar}</h3>
                         {service.subtitle_ar && (
-                          <p className="text-muted-foreground leading-relaxed">{service.subtitle_ar}</p>
+                          <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                            {service.subtitle_ar}
+                          </p>
                         )}
                       </div>
 
                       <div className="flex flex-col gap-2 mt-auto">
                         <Link href={`/services/${service.id}`}>
-                          <Button variant="outline" className="w-full bg-transparent">
+                          <Button variant="outline" className="w-full bg-transparent text-sm sm:text-base">
                             التفاصيل
                           </Button>
                         </Link>
-                        <BookingDialog trigger={<Button className="w-full">احجز موعد</Button>} />
+                        <BookingDialog trigger={<Button className="w-full text-sm sm:text-base">احجز موعد</Button>} />
                       </div>
                     </CardContent>
                   </Card>
@@ -87,18 +89,18 @@ export default async function ServicesPage() {
 
             {(!services || services.length === 0) && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">لا توجد خدمات متاحة حالياً</p>
+                <p className="text-muted-foreground text-base sm:text-lg">لا توجد خدمات متاحة حالياً</p>
               </div>
             )}
           </div>
         </section>
 
         <AnimatedSection animation="fade-up">
-          <section className="py-16 md:py-24 bg-muted/30">
-            <div className="container">
-              <div className="max-w-3xl mx-auto text-center space-y-6">
-                <h2 className="text-3xl md:text-4xl font-bold">هل تحتاج لاستشارة طبية؟</h2>
-                <p className="text-lg text-muted-foreground">احجز موعدك الآن واحصل على استشارة مجانية</p>
+          <section className="py-12 sm:py-16 md:py-24 bg-muted/30">
+            <div className="container px-4 sm:px-6 lg:px-8">
+              <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">هل تحتاج لاستشارة طبية؟</h2>
+                <p className="text-base sm:text-lg text-muted-foreground">احجز موعدك الآن واحصل على استشارة مجانية</p>
                 <BookingDialog />
               </div>
             </div>

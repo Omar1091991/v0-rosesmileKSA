@@ -26,8 +26,11 @@ export async function GET(request: Request) {
         )
       }
 
+      const customServices = dbForm.fields?.custom_services || []
+
       const form = {
         ...dbForm,
+        custom_services: customServices,
         booking_form_services: servicesResult.rows.map((s) => ({ service_id: s.id, services: s })),
       }
 
@@ -50,8 +53,11 @@ export async function GET(request: Request) {
         )
       }
 
+      const customServices = dbForm.fields?.custom_services || []
+
       forms.push({
         ...dbForm,
+        custom_services: customServices,
         booking_form_services: servicesResult.rows.map((s) => ({ service_id: s.id, services: s })),
       })
     }
@@ -69,14 +75,20 @@ export async function POST(request: Request) {
     const { service_ids, custom_services, ...formData } = body
 
     console.log("[v0] Creating booking form with data:", formData)
+    console.log("[v0] Custom services:", custom_services)
 
     if (formData.is_main) {
       await db.query("UPDATE booking_forms SET is_main = false WHERE is_main = true")
     }
 
+    const fields = {
+      ...(formData.fields || {}),
+      custom_services: custom_services || [],
+    }
+
     const result = await db.query(
       `
-      INSERT INTO booking_forms (name_ar, name_en, title_ar, title_en, description_ar, description_en, image_url, services, custom_services, is_main, is_active, order_index)
+      INSERT INTO booking_forms (name_ar, name_en, title_ar, title_en, description_ar, description_en, image_url, services, fields, is_main, is_active, order_index)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `,
@@ -89,7 +101,7 @@ export async function POST(request: Request) {
         formData.description_en,
         formData.image_url || null,
         service_ids || [],
-        custom_services || [],
+        JSON.stringify(fields),
         formData.is_main || false,
         formData.is_active !== false,
         formData.order_index || 0,
@@ -107,6 +119,9 @@ export async function PATCH(request: Request) {
   try {
     const body = await request.json()
     const { id, service_ids, custom_services, ...formData } = body
+
+    console.log("[v0] Updating booking form:", id)
+    console.log("[v0] Custom services:", custom_services)
 
     const fieldMapping: Record<string, string> = {
       name_ar: "name_ar",
@@ -142,8 +157,17 @@ export async function PATCH(request: Request) {
     }
 
     if (custom_services !== undefined) {
-      dbFields.push("custom_services")
-      dbValues.push(custom_services)
+      // Get existing fields first
+      const existingForm = await db.query("SELECT fields FROM booking_forms WHERE id = $1", [id])
+      const existingFields = existingForm.rows[0]?.fields || {}
+
+      const updatedFields = {
+        ...existingFields,
+        custom_services: custom_services,
+      }
+
+      dbFields.push("fields")
+      dbValues.push(JSON.stringify(updatedFields))
     }
 
     if (dbFields.length === 0) {
