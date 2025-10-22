@@ -1,10 +1,22 @@
 import { query } from "@/lib/db"
 import { NextResponse } from "next/server"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const result = await query("SELECT * FROM articles ORDER BY created_at DESC")
-    return NextResponse.json(result.rows)
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    if (id) {
+      // جلب مقال واحد بناءً على المعرف
+      console.log("[v0] Fetching article with ID:", id)
+      const result = await query("SELECT * FROM articles WHERE id = $1", [id])
+      console.log("[v0] Found article:", result.rows.length > 0 ? result.rows[0].title_ar : "not found")
+      return NextResponse.json(result.rows)
+    } else {
+      // جلب جميع المقالات
+      const result = await query("SELECT * FROM articles ORDER BY created_at DESC")
+      return NextResponse.json(result.rows)
+    }
   } catch (error: any) {
     console.error("[v0] Error fetching articles:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

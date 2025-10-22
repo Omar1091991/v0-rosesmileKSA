@@ -1,12 +1,24 @@
 import { query } from "@/lib/db"
 import { NextResponse } from "next/server"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    console.log("[v0] Fetching doctors...")
-    const result = await query("SELECT * FROM doctors ORDER BY created_at DESC")
-    console.log("[v0] Found", result.rows.length, "doctors")
-    return NextResponse.json(result.rows)
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    if (id) {
+      // جلب طبيب واحد بناءً على المعرف
+      console.log("[v0] Fetching doctor with ID:", id)
+      const result = await query("SELECT * FROM doctors WHERE id = $1", [id])
+      console.log("[v0] Found doctor:", result.rows.length > 0 ? result.rows[0].name_ar : "not found")
+      return NextResponse.json(result.rows)
+    } else {
+      // جلب جميع الأطباء
+      console.log("[v0] Fetching all doctors...")
+      const result = await query("SELECT * FROM doctors ORDER BY created_at DESC")
+      console.log("[v0] Found", result.rows.length, "doctors")
+      return NextResponse.json(result.rows)
+    }
   } catch (error: any) {
     console.error("[v0] Error fetching doctors:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

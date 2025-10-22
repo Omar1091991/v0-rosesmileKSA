@@ -10,7 +10,7 @@ async function getDbQuery() {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const query = await getDbQuery()
 
@@ -18,8 +18,20 @@ export async function GET() {
       return NextResponse.json([], { status: 200 })
     }
 
-    const result = await query("SELECT * FROM services ORDER BY order_index")
-    return NextResponse.json(result.rows, { status: 200 })
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    if (id) {
+      // جلب خدمة واحدة بناءً على المعرف
+      console.log("[v0] Fetching service with ID:", id)
+      const result = await query("SELECT * FROM services WHERE id = $1", [id])
+      console.log("[v0] Found service:", result.rows.length > 0 ? result.rows[0].title_ar : "not found")
+      return NextResponse.json(result.rows, { status: 200 })
+    } else {
+      // جلب جميع الخدمات
+      const result = await query("SELECT * FROM services ORDER BY order_index")
+      return NextResponse.json(result.rows, { status: 200 })
+    }
   } catch (error: any) {
     console.error("[v0] Error in GET /api/services:", error)
     return NextResponse.json([], { status: 200 })

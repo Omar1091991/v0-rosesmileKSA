@@ -17,14 +17,20 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     async function fetchData() {
       try {
+        console.log("[v0] Fetching service with ID:", params.id)
+        setLoading(true)
+        setService(null)
+
         const response = await fetch(`/api/services?id=${params.id}`)
         const data = await response.json()
+
+        console.log("[v0] Service data received:", data)
         if (data.length > 0) {
           setService(data[0])
         }
         setLoading(false)
       } catch (error) {
-        console.error("Error fetching service:", error)
+        console.error("[v0] Error fetching service:", error)
         setLoading(false)
       }
     }

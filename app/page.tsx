@@ -430,7 +430,10 @@ export default function HomePage() {
                     >
                       <Card
                         className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
-                        onClick={() => (window.location.href = `/services/${service.id}`)}
+                        onClick={() => {
+                          console.log("[v0] Navigating to service:", service.id)
+                          window.location.href = `/services/${service.id}`
+                        }}
                       >
                         <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
                           {service.image_url ? (
@@ -579,6 +582,7 @@ export default function HomePage() {
                     <Card
                       className="text-center h-full hover:shadow-lg transition-all hover:scale-105 flex flex-col cursor-pointer"
                       onClick={() => {
+                        console.log("[v0] Navigating to doctor:", doctor.id)
                         router.push(`/doctors/${doctor.id}`)
                       }}
                     >
@@ -776,7 +780,10 @@ export default function HomePage() {
                   >
                     <Card
                       className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
-                      onClick={() => (window.location.href = `/articles/${article.id}`)}
+                      onClick={() => {
+                        console.log("[v0] Navigating to article:", article.id)
+                        window.location.href = `/articles/${article.id}`
+                      }}
                     >
                       <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
                         {article.image_url && (

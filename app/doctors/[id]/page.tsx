@@ -20,18 +20,20 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
   useEffect(() => {
     async function fetchData() {
       try {
+        console.log("[v0] Fetching doctor with ID:", params.id)
         setLoading(true)
         setDoctor(null)
 
         const response = await fetch(`/api/doctors?id=${params.id}`)
         const data = await response.json()
 
+        console.log("[v0] Doctor data received:", data)
         if (data.length > 0) {
           setDoctor(data[0])
         }
         setLoading(false)
       } catch (error) {
-        console.error("Error fetching doctor:", error)
+        console.error("[v0] Error fetching doctor:", error)
         setLoading(false)
       }
     }
