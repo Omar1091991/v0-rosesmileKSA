@@ -33,17 +33,6 @@ export function AutoScrollCarousel({
   const totalItems = children.length
 
   useEffect(() => {
-    console.log("[v0] AutoScrollCarousel initialized:", {
-      totalItems,
-      itemsPerView,
-      scrollDuration,
-      direction,
-      autoScroll,
-      canScroll: totalItems > itemsPerView,
-    })
-  }, [totalItems, itemsPerView, scrollDuration, direction, autoScroll])
-
-  useEffect(() => {
     const scrollElement = scrollRef.current
     if (!scrollElement) return
 
@@ -155,7 +144,6 @@ export function AutoScrollCarousel({
 
   useEffect(() => {
     if (!autoScroll) {
-      console.log("[v0] AutoScroll disabled by prop")
       if (autoScrollIntervalRef.current) {
         clearInterval(autoScrollIntervalRef.current)
         autoScrollIntervalRef.current = null
@@ -164,7 +152,6 @@ export function AutoScrollCarousel({
     }
 
     if (totalItems <= itemsPerView) {
-      console.log("[v0] AutoScroll disabled: not enough items", { totalItems, itemsPerView })
       if (autoScrollIntervalRef.current) {
         clearInterval(autoScrollIntervalRef.current)
         autoScrollIntervalRef.current = null
@@ -173,7 +160,6 @@ export function AutoScrollCarousel({
     }
 
     if (isPaused || isManualScrolling || isWaitingToLoop) {
-      console.log("[v0] AutoScroll paused:", { isPaused, isManualScrolling, isWaitingToLoop })
       if (autoScrollIntervalRef.current) {
         clearInterval(autoScrollIntervalRef.current)
         autoScrollIntervalRef.current = null
@@ -181,9 +167,7 @@ export function AutoScrollCarousel({
       return
     }
 
-    console.log("[v0] Starting auto-scroll interval:", { direction, scrollDuration })
     autoScrollIntervalRef.current = setInterval(() => {
-      console.log("[v0] Auto-scrolling...")
       scrollByOneItem(direction)
     }, scrollDuration * 1000)
 
