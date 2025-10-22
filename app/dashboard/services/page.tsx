@@ -1,17 +1,16 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Pencil, Trash2, Briefcase, Upload, X, Loader2 } from "lucide-react"
+import { Plus, Pencil, Trash2, Briefcase, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { TextFormatter } from "@/components/text-formatter"
+import { ImageLibraryPicker } from "@/components/image-library-picker"
 
 interface Service {
   id: string
@@ -215,63 +214,6 @@ export default function ServicesPage() {
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "خطأ",
-        description: "يرجى اختيار ملف صورة صحيح",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast({
-        title: "خطأ",
-        description: "حجم الصورة يجب أن يكون أقل من 2 ميجابايت",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsUploadingImage(true)
-    toast({
-      title: "جاري رفع الصورة...",
-      description: "يرجى الانتظار",
-    })
-
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const base64String = reader.result as string
-      if (isEdit && selectedService) {
-        setSelectedService({ ...selectedService, image_url: base64String })
-        setEditImagePreview(base64String)
-      } else {
-        setNewService({ ...newService, image_url: base64String })
-        setImagePreview(base64String)
-      }
-      setIsUploadingImage(false)
-      toast({
-        title: "تم رفع الصورة بنجاح",
-        description: "يمكنك الآن حفظ الخدمة",
-      })
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const removeImage = (isEdit = false) => {
-    if (isEdit && selectedService) {
-      setSelectedService({ ...selectedService, image_url: "" })
-      setEditImagePreview("")
-    } else {
-      setNewService({ ...newService, image_url: "" })
-      setImagePreview("")
-    }
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -381,42 +323,12 @@ export default function ServicesPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>صورة الخدمة</Label>
-              {imagePreview ? (
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
-                  <img src={imagePreview || "/placeholder.svg"} alt="معاينة" className="w-full h-full object-cover" />
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 left-2"
-                    onClick={() => removeImage(false)}
-                    disabled={isUploadingImage || isSaving}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, false)}
-                    className="hidden"
-                    id="image-upload"
-                    disabled={isUploadingImage || isSaving}
-                  />
-                  <label htmlFor="image-upload" className="cursor-pointer">
-                    <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-sm text-muted-foreground">اضغط لرفع صورة</p>
-                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF (أقل من 2MB)</p>
-                  </label>
-                </div>
-              )}
-              {isUploadingImage && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>جاري رفع الصورة...</span>
-                </div>
-              )}
+              <ImageLibraryPicker
+                value={newService.image_url}
+                onChange={(url) => setNewService({ ...newService, image_url: url })}
+                onUploadStart={() => setIsUploadingImage(true)}
+                onUploadEnd={() => setIsUploadingImage(false)}
+              />
             </div>
 
             <div className="space-y-2">
@@ -536,46 +448,12 @@ export default function ServicesPage() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label>صورة الخدمة</Label>
-                {editImagePreview ? (
-                  <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={editImagePreview || "/placeholder.svg"}
-                      alt="معاينة"
-                      className="w-full h-full object-cover"
-                    />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 left-2"
-                      onClick={() => removeImage(true)}
-                      disabled={isUploadingImage || isSaving}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, true)}
-                      className="hidden"
-                      id="edit-image-upload"
-                      disabled={isUploadingImage || isSaving}
-                    />
-                    <label htmlFor="edit-image-upload" className="cursor-pointer">
-                      <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-sm text-muted-foreground">اضغط لرفع صورة</p>
-                      <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF (أقل من 2MB)</p>
-                    </label>
-                  </div>
-                )}
-                {isUploadingImage && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>جاري رفع الصورة...</span>
-                  </div>
-                )}
+                <ImageLibraryPicker
+                  value={selectedService.image_url || ""}
+                  onChange={(url) => setSelectedService({ ...selectedService, image_url: url })}
+                  onUploadStart={() => setIsUploadingImage(true)}
+                  onUploadEnd={() => setIsUploadingImage(false)}
+                />
               </div>
 
               <div className="space-y-2">

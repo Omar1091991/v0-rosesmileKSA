@@ -1,6 +1,4 @@
 "use client"
-
-import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Pencil, Trash2, Tag, Loader2, X, Upload } from "lucide-react"
+import { Plus, Pencil, Trash2, Tag, Loader2 } from "lucide-react"
+import { ImageLibraryPicker } from "@/components/image-library-picker"
 
 interface Offer {
   id: string
@@ -71,37 +70,9 @@ export default function OffersPage() {
     }
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "خطأ",
-          description: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت",
-          variant: "destructive",
-        })
-        return
-      }
-
-      setIsUploadingImage(true)
-      toast({
-        title: "جاري رفع الصورة...",
-        description: "يرجى الانتظار",
-      })
-
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64 = reader.result as string
-        setFormData({ ...formData, image_url: base64 })
-        setImagePreview(base64)
-        setIsUploadingImage(false)
-        toast({
-          title: "تم رفع الصورة بنجاح",
-          description: "يمكنك الآن حفظ العرض",
-        })
-      }
-      reader.readAsDataURL(file)
-    }
+  const handleImageChange = (url: string) => {
+    setFormData({ ...formData, image_url: url })
+    setImagePreview(url)
   }
 
   const handleAdd = async () => {
@@ -384,45 +355,12 @@ export default function OffersPage() {
 
               <div>
                 <Label>صورة العرض</Label>
-                {imagePreview ? (
-                  <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
-                    <img src={imagePreview || "/placeholder.svg"} alt="معاينة" className="w-full h-full object-cover" />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 left-2"
-                      onClick={() => {
-                        setImagePreview("")
-                        setFormData({ ...formData, image_url: "" })
-                      }}
-                      disabled={isUploadingImage || isSaving}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                      id="image-upload"
-                      disabled={isUploadingImage || isSaving}
-                    />
-                    <label htmlFor="image-upload" className="cursor-pointer">
-                      <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-sm text-muted-foreground">اضغط لرفع صورة</p>
-                      <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF (أقل من 5MB)</p>
-                    </label>
-                  </div>
-                )}
-                {isUploadingImage && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>جاري رفع الصورة...</span>
-                  </div>
-                )}
+                <ImageLibraryPicker
+                  value={formData.image_url}
+                  onChange={(url) => setFormData({ ...formData, image_url: url })}
+                  onUploadStart={() => setIsUploadingImage(true)}
+                  onUploadEnd={() => setIsUploadingImage(false)}
+                />
               </div>
 
               <Button onClick={handleAdd} className="w-full" disabled={isUploadingImage || isSaving}>
@@ -575,45 +513,12 @@ export default function OffersPage() {
 
             <div>
               <Label>صورة العرض</Label>
-              {imagePreview ? (
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
-                  <img src={imagePreview || "/placeholder.svg"} alt="معاينة" className="w-full h-full object-cover" />
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 left-2"
-                    onClick={() => {
-                      setImagePreview("")
-                      setFormData({ ...formData, image_url: "" })
-                    }}
-                    disabled={isUploadingImage || isSaving}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                    id="edit-image-upload"
-                    disabled={isUploadingImage || isSaving}
-                  />
-                  <label htmlFor="edit-image-upload" className="cursor-pointer">
-                    <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-sm text-muted-foreground">اضغط لرفع صورة</p>
-                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF (أقل من 5MB)</p>
-                  </label>
-                </div>
-              )}
-              {isUploadingImage && (
-                <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>جاري رفع الصورة...</span>
-                </div>
-              )}
+              <ImageLibraryPicker
+                value={formData.image_url}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                onUploadStart={() => setIsUploadingImage(true)}
+                onUploadEnd={() => setIsUploadingImage(false)}
+              />
             </div>
 
             <Button onClick={handleEdit} className="w-full" disabled={isUploadingImage || isSaving}>
