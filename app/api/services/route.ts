@@ -120,8 +120,8 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Database not available" }, { status: 200 })
     }
 
-    const body = await request.json()
-    const { id } = body
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
 
     if (!id) {
       return NextResponse.json({ error: "Service ID is required" }, { status: 400 })

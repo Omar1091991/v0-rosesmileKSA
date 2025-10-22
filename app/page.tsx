@@ -39,12 +39,12 @@ export default function HomePage() {
     async function fetchData() {
       try {
         const [servicesRes, doctorsRes, offersRes, articlesRes, settingsRes, formsRes] = await Promise.all([
-          fetch("/api/services", { next: { revalidate: 60 } }),
-          fetch("/api/doctors", { next: { revalidate: 60 } }),
-          fetch("/api/offers", { next: { revalidate: 60 } }),
-          fetch("/api/articles", { next: { revalidate: 60 } }),
-          fetch("/api/site-settings", { next: { revalidate: 60 } }),
-          fetch("/api/booking-forms", { next: { revalidate: 60 } }),
+          fetch("/api/services", { next: { revalidate: 300 } }),
+          fetch("/api/doctors", { next: { revalidate: 300 } }),
+          fetch("/api/offers", { next: { revalidate: 300 } }),
+          fetch("/api/articles", { next: { revalidate: 300 } }),
+          fetch("/api/site-settings", { next: { revalidate: 300 } }),
+          fetch("/api/booking-forms", { next: { revalidate: 300 } }),
         ])
 
         const servicesData = await servicesRes.json()

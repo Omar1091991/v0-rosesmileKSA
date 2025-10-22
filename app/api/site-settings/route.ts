@@ -2,14 +2,11 @@ import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 
-export const revalidate = 60
+export const revalidate = 300
 
 export async function GET() {
   try {
-    console.log("[v0] GET /api/site-settings - Starting...")
-
     const result = await query("SELECT * FROM site_settings ORDER BY setting_key")
-    console.log("[v0] Successfully fetched", result.rows.length, "settings")
 
     const settings = result.rows.map((row: any) => ({
       id: row.id,
@@ -26,7 +23,7 @@ export async function GET() {
       { settings },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
         },
       },
     )
