@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Phone, Mail, MapPin } from "lucide-react"
+import { Phone, MapPin } from "lucide-react"
 import { SocialMediaLinks } from "@/components/social-media-links"
 import { useEffect, useState } from "react"
 
@@ -111,10 +111,6 @@ export function SiteFooter() {
               <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                 <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
                 <span className="break-all">{footerPhone}</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
-                <span className="break-all">{footerEmail}</span>
               </div>
               <div className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground">
                 <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0 mt-0.5" />

@@ -33,7 +33,7 @@ export default function HomePage() {
   const servicesScrollRef = useRef<HTMLDivElement>(null)
   const doctorsScrollRef = useRef<HTMLDivElement>(null)
   const offersScrollRef = useRef<HTMLDivElement>(null)
-  const articlesScrollRef = useRef<HTMLDivElement>(null)
+  const articlesScrollRef = useRef<HTMLDivElement>(null) // Added for articles scroll
 
   useEffect(() => {
     async function fetchData() {
@@ -566,91 +566,114 @@ export default function HomePage() {
                 </p>
               </motion.div>
 
-              <AutoScrollCarousel
-                itemsPerView={getDoctorsCarouselSettings().itemsPerView}
-                scrollDuration={getDoctorsCarouselSettings().scrollDuration}
-                direction={getDoctorsCarouselSettings().direction}
-                autoScroll={getDoctorsCarouselSettings().autoScroll}
-              >
-                {doctors.map((doctor) => (
-                  <motion.div
-                    key={doctor.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                  >
-                    <Card
-                      className="text-center h-full hover:shadow-lg transition-all hover:scale-105 flex flex-col cursor-pointer"
-                      onClick={() => {
-                        console.log("[v0] Navigating to doctor:", doctor.id)
-                        router.push(`/doctors/${doctor.id}`)
-                      }}
-                    >
-                      <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
-                        <div className="w-full aspect-square relative bg-muted flex items-center justify-center text-4xl sm:text-6xl overflow-hidden rounded-lg mx-auto max-w-xs">
-                          {doctor.image_url ? (
-                            <Image
-                              src={doctor.image_url || "/placeholder.svg"}
-                              alt={doctor.name_ar}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            "👨‍⚕️"
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-base sm:text-lg md:text-xl font-semibold line-clamp-2">
-                            {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
-                          </h3>
-                          <p className="text-primary font-medium mt-2 text-sm sm:text-base line-clamp-2">
-                            {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
-                          </p>
-                        </div>
-                        <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 bg-transparent text-xs sm:text-sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              router.push(`/doctors/${doctor.id}`)
-                            }}
-                          >
-                            {language === "ar" ? "التفاصيل" : "Details"}
-                          </Button>
-                          <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Button
-                              size="sm"
-                              className="w-full text-xs sm:text-sm relative overflow-hidden group"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                window.location.href = mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"
-                              }}
-                            >
-                              <motion.span
-                                className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
-                                animate={{
-                                  x: ["-100%", "100%"],
+              {/* CHANGE: Changed doctors layout to show 2 cards vertically with horizontal scroll */}
+              <div className="relative">
+                {/* زر التمرير لليسار */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
+                  onClick={() => scroll(doctorsScrollRef, "left")}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+
+                {/* زر التمرير لليمين */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
+                  onClick={() => scroll(doctorsScrollRef, "right")}
+                >
+                  <ArrowLeft className="h-5 w-5 rotate-180" />
+                </Button>
+
+                <div ref={doctorsScrollRef} className="overflow-x-auto pb-4 scroll-smooth">
+                  <div className="flex gap-6" style={{ width: "max-content" }}>
+                    {doctors.map((doctor) => (
+                      <motion.div
+                        key={doctor.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="w-[300px] sm:w-[350px]"
+                      >
+                        <Card
+                          className="text-center h-full hover:shadow-lg transition-all hover:scale-105 flex flex-col cursor-pointer"
+                          onClick={() => {
+                            console.log("[v0] Navigating to doctor:", doctor.id)
+                            router.push(`/doctors/${doctor.id}`)
+                          }}
+                        >
+                          <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
+                            <div className="w-full aspect-square relative bg-muted flex items-center justify-center text-4xl sm:text-6xl overflow-hidden rounded-lg mx-auto max-w-xs">
+                              {doctor.image_url ? (
+                                <Image
+                                  src={doctor.image_url || "/placeholder.svg"}
+                                  alt={doctor.name_ar}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                "👨‍⚕️"
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-base sm:text-lg md:text-xl font-semibold line-clamp-2">
+                                {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
+                              </h3>
+                              <p className="text-primary font-medium mt-2 text-sm sm:text-base line-clamp-2">
+                                {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
+                              </p>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 bg-transparent text-xs sm:text-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  router.push(`/doctors/${doctor.id}`)
                                 }}
-                                transition={{
-                                  duration: 2,
-                                  repeat: Number.POSITIVE_INFINITY,
-                                  ease: "linear",
-                                }}
-                              />
-                              <span className="relative z-10">
-                                {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                              </span>
-                            </Button>
-                          </motion.div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AutoScrollCarousel>
+                              >
+                                {language === "ar" ? "التفاصيل" : "Details"}
+                              </Button>
+                              <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <Button
+                                  size="sm"
+                                  className="w-full text-xs sm:text-sm relative overflow-hidden group"
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    window.location.href = mainBookingFormId
+                                      ? `/booking/${mainBookingFormId}`
+                                      : "/booking"
+                                  }}
+                                >
+                                  <motion.span
+                                    className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
+                                    animate={{
+                                      x: ["-100%", "100%"],
+                                    }}
+                                    transition={{
+                                      duration: 2,
+                                      repeat: Number.POSITIVE_INFINITY,
+                                      ease: "linear",
+                                    }}
+                                  />
+                                  <span className="relative z-10">
+                                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                                  </span>
+                                </Button>
+                              </motion.div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               <motion.div
                 className="text-center mt-8 sm:mt-12"
@@ -765,63 +788,85 @@ export default function HomePage() {
                 </p>
               </motion.div>
 
-              <AutoScrollCarousel
-                itemsPerView={getArticlesCarouselSettings().itemsPerView}
-                scrollDuration={getArticlesCarouselSettings().scrollDuration}
-                direction={getArticlesCarouselSettings().direction}
-                autoScroll={getArticlesCarouselSettings().autoScroll}
-              >
-                {articles.map((article) => (
-                  <motion.div
-                    key={article.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                  >
-                    <Card
-                      className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
-                      onClick={() => {
-                        console.log("[v0] Navigating to article:", article.id)
-                        window.location.href = `/articles/${article.id}`
-                      }}
-                    >
-                      <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
-                        {article.image_url && (
-                          <div className="w-full aspect-video relative rounded-lg overflow-hidden">
-                            <Image
-                              src={article.image_url || "/placeholder.svg"}
-                              alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        <h3 className="text-xl font-semibold line-clamp-2">
-                          {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
-                        </h3>
-                        <p className="text-muted-foreground leading-relaxed line-clamp-2 text-sm">
-                          {renderFormattedText(
-                            (language === "ar"
-                              ? article.content_ar?.substring(0, 120)
-                              : article.content_en?.substring(0, 120) || article.content_ar?.substring(0, 120)) + "...",
-                          )}
-                        </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full bg-transparent"
-                          onClick={(e) => {
-                            e.stopPropagation()
+              {/* CHANGE: Changed articles layout to show 2 cards vertically with horizontal scroll */}
+              <div className="relative">
+                {/* زر التمرير لليسار */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
+                  onClick={() => scroll(articlesScrollRef, "left")}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+
+                {/* زر التمرير لليمين */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
+                  onClick={() => scroll(articlesScrollRef, "right")}
+                >
+                  <ArrowLeft className="h-5 w-5 rotate-180" />
+                </Button>
+
+                <div ref={articlesScrollRef} className="overflow-x-auto pb-4 scroll-smooth">
+                  <div className="flex gap-6" style={{ width: "max-content" }}>
+                    {articles.map((article) => (
+                      <motion.div
+                        key={article.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="w-[300px] sm:w-[350px]"
+                      >
+                        <Card
+                          className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
+                          onClick={() => {
+                            console.log("[v0] Navigating to article:", article.id)
                             window.location.href = `/articles/${article.id}`
                           }}
                         >
-                          {language === "ar" ? "اقرأ المزيد" : "Read More"}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AutoScrollCarousel>
+                          <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
+                            {article.image_url && (
+                              <div className="w-full aspect-video relative rounded-lg overflow-hidden">
+                                <Image
+                                  src={article.image_url || "/placeholder.svg"}
+                                  alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+                            <h3 className="text-xl font-semibold line-clamp-2">
+                              {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                            </h3>
+                            <p className="text-muted-foreground leading-relaxed line-clamp-2 text-sm">
+                              {renderFormattedText(
+                                (language === "ar"
+                                  ? article.content_ar?.substring(0, 120)
+                                  : article.content_en?.substring(0, 120) || article.content_ar?.substring(0, 120)) +
+                                  "...",
+                              )}
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full bg-transparent"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                window.location.href = `/articles/${article.id}`
+                              }}
+                            >
+                              {language === "ar" ? "اقرأ المزيد" : "Read More"}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               <motion.div
                 className="text-center mt-12"
