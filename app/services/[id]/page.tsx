@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { BookingDialog } from "@/components/booking-dialog"
 import { AnimatedSection } from "@/components/animated-section"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/components/language-switcher"
@@ -17,20 +18,18 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     async function fetchData() {
       try {
-        console.log("[v0] Fetching service with ID:", params.id)
         setLoading(true)
         setService(null)
 
         const response = await fetch(`/api/services?id=${params.id}`)
         const data = await response.json()
 
-        console.log("[v0] Service data received:", data)
         if (data.length > 0) {
           setService(data[0])
         }
         setLoading(false)
       } catch (error) {
-        console.error("[v0] Error fetching service:", error)
+        console.error("Error fetching service:", error)
         setLoading(false)
       }
     }
@@ -38,7 +37,13 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
   }, [params.id])
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">جاري التحميل...</div>
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <LoadingSpinner />
+        <SiteFooter />
+      </div>
+    )
   }
 
   if (!service) {

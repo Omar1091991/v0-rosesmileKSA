@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 
-export const revalidate = 300
+export const revalidate = 600
 
 export async function GET() {
   try {
@@ -23,7 +23,7 @@ export async function GET() {
       { settings },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+          "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
         },
       },
     )

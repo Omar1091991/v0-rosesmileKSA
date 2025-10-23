@@ -3,6 +3,7 @@
 import type React from "react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { SiteHeader } from "@/components/site-header"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
@@ -19,14 +20,13 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <LoadingSpinner />
       </div>
     )
   }
+  // </CHANGE>
 
   if (!user) {
     return null

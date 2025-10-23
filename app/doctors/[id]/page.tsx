@@ -6,6 +6,7 @@ import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AnimatedSection } from "@/components/animated-section"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/components/language-switcher"
@@ -41,8 +42,15 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
   }, [params.id]) // التأكد من إعادة التحميل عند تغيير المعرف
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">جاري التحميل...</div>
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <LoadingSpinner />
+        <SiteFooter />
+      </div>
+    )
   }
+  // </CHANGE>
 
   if (!doctor) {
     return <div className="flex min-h-screen items-center justify-center">الطبيب غير موجود</div>

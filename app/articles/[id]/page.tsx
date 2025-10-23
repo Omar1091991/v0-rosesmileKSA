@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { useLanguage } from "@/components/language-switcher"
 import { useEffect, useState } from "react"
 
@@ -32,8 +33,15 @@ export default function ArticlePage({ params }: { params: { id: string } }) {
   }, [params.id])
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">جاري التحميل...</div>
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <LoadingSpinner />
+        <SiteFooter />
+      </div>
+    )
   }
+  // </CHANGE>
 
   if (!article) {
     return <div className="flex min-h-screen items-center justify-center">المقال غير موجود</div>

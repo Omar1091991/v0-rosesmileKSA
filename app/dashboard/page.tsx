@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { Users, Stethoscope, Briefcase, CalendarIcon, FileText, ImageIcon, Phone, User, Clock } from "lucide-react"
 import { useState, useEffect } from "react"
 import { format } from "date-fns"
@@ -242,12 +243,9 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
-      {/* </CHANGE> */}
 
       {loading ? (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
+        <LoadingSpinner />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -12,6 +12,8 @@ interface HeroSlideshowProps {
 
 export function HeroSlideshow({ images, duration = 5, animationType = "fade-in" }: HeroSlideshowProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     if (images.length <= 1) return
@@ -22,6 +24,24 @@ export function HeroSlideshow({ images, duration = 5, animationType = "fade-in" 
 
     return () => clearInterval(interval)
   }, [images.length, duration])
+
+  useEffect(() => {
+    if (images.length === 0) {
+      setIsLoading(false)
+      return
+    }
+
+    // Preload first image
+    const img = new window.Image()
+    img.src = images[0]
+    img.onload = () => {
+      setLoadedImages((prev) => new Set(prev).add(0))
+      setIsLoading(false)
+    }
+    img.onerror = () => {
+      setIsLoading(false)
+    }
+  }, [images])
 
   const animations: Record<string, any> = {
     "fade-in": {
@@ -53,10 +73,65 @@ export function HeroSlideshow({ images, duration = 5, animationType = "fade-in" 
 
   const animation = animations[animationType] || animations["fade-in"]
 
-  if (images.length === 0) {
+  if (isLoading || images.length === 0) {
     return (
-      <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl bg-muted flex items-center justify-center">
-        <span className="text-muted-foreground">لا توجد صور</span>
+      <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-primary/5 to-secondary/5 flex flex-col items-center justify-center gap-6 p-8">
+        {/* Logo with pulse animation */}
+        <motion.div
+          animate={{
+            scale: [1, 1.05, 1],
+            opacity: [0.8, 1, 0.8],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "easeInOut",
+          }}
+          className="relative w-32 h-32 sm:w-40 sm:h-40"
+        >
+          <Image
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%D9%84%D9%88%D8%AC%D9%88%20512%D8%B4%D9%81%D8%A7%D9%81-qVL2lmwIonjbkJG7Aoappul690hNUb.png"
+            alt="RoseSmile Logo"
+            fill
+            className="object-contain"
+            priority
+          />
+        </motion.div>
+
+        {/* Loading text with animated dots */}
+        <div className="flex items-center gap-2">
+          <motion.span
+            className="text-lg sm:text-xl font-semibold text-primary"
+            animate={{
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "easeInOut",
+            }}
+          >
+            جاري التحميل
+          </motion.span>
+          <div className="flex gap-1">
+            {[0, 1, 2].map((i) => (
+              <motion.span
+                key={i}
+                className="w-2 h-2 bg-primary rounded-full"
+                animate={{
+                  y: [0, -8, 0],
+                  opacity: [0.3, 1, 0.3],
+                }}
+                transition={{
+                  duration: 0.8,
+                  repeat: Number.POSITIVE_INFINITY,
+                  delay: i * 0.2,
+                  ease: "easeInOut",
+                }}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -100,6 +175,7 @@ export function HeroSlideshow({ images, duration = 5, animationType = "fade-in" 
               index === currentIndex ? "bg-white w-8" : "bg-white/50 hover:bg-white/75"
             }`}
             aria-label={`الانتقال إلى الصورة ${index + 1}`}
+            type="button"
           />
         ))}
       </div>

@@ -31,36 +31,28 @@ export function SocialMediaLinks() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        console.log("[v0] Fetching social media settings...")
         const response = await fetch("/api/site-settings", {
           next: { revalidate: 300 },
         })
 
-        console.log("[v0] Response status:", response.status)
-
         if (!response.ok) {
-          console.error("[v0] API returned error status:", response.status)
           return
         }
 
         const contentType = response.headers.get("content-type")
         if (!contentType || !contentType.includes("application/json")) {
-          console.error("[v0] Error: Response is not JSON, content-type:", contentType)
           return
         }
 
         const data = await response.json()
-        console.log("[v0] Received data:", data)
 
         if (data.error) {
-          console.error("[v0] Error in response:", data.error)
           return
         }
 
         const settings = Array.isArray(data) ? data : data.settings || []
 
         if (!Array.isArray(settings)) {
-          console.error("[v0] Invalid data format, expected array")
           return
         }
 
@@ -82,8 +74,6 @@ export function SocialMediaLinks() {
           const isVisible = visibleSetting?.value_ar === "true" || visibleSetting?.value === "true"
           const url = urlSetting?.value_ar || urlSetting?.value
 
-          console.log(`[v0] ${platform.key}: visible=${isVisible}, url=${url}`)
-
           if (isVisible && url) {
             links.push({
               platform: platform.key,
@@ -94,7 +84,6 @@ export function SocialMediaLinks() {
           }
         })
 
-        console.log("[v0] Processed social links:", links)
         setSocialLinks(links)
       } catch (error) {
         console.error("[v0] Error fetching social media settings:", error)

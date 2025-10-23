@@ -431,7 +431,6 @@ export default function HomePage() {
                       <Card
                         className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
                         onClick={() => {
-                          console.log("[v0] Navigating to service:", service.id)
                           window.location.href = `/services/${service.id}`
                         }}
                       >
@@ -601,7 +600,6 @@ export default function HomePage() {
                         <Card
                           className="text-center h-full hover:shadow-lg transition-all hover:scale-105 flex flex-col cursor-pointer"
                           onClick={() => {
-                            console.log("[v0] Navigating to doctor:", doctor.id)
                             router.push(`/doctors/${doctor.id}`)
                           }}
                         >
@@ -823,7 +821,6 @@ export default function HomePage() {
                         <Card
                           className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
                           onClick={() => {
-                            console.log("[v0] Navigating to article:", article.id)
                             window.location.href = `/articles/${article.id}`
                           }}
                         >
