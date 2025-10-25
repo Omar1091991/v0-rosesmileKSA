@@ -14,7 +14,6 @@ import { useEffect, useState, useRef } from "react"
 import { WhatsAppButton } from "@/components/whatsapp-button"
 import { useLanguage } from "@/components/language-switcher"
 import { HeroSlideshow } from "@/components/hero-slideshow"
-import { AutoScrollCarousel } from "@/components/auto-scroll-carousel"
 import { AnimatedBackground } from "@/components/animated-background"
 import { SocialMediaLinks } from "@/components/social-media-links"
 import { useRouter } from "next/navigation" // Import useRouter
@@ -34,6 +33,14 @@ export default function HomePage() {
   const doctorsScrollRef = useRef<HTMLDivElement>(null)
   const offersScrollRef = useRef<HTMLDivElement>(null)
   const articlesScrollRef = useRef<HTMLDivElement>(null) // Added for articles scroll
+
+  const [isServicesAutoScrollPaused, setIsServicesAutoScrollPaused] = useState(false)
+  const [isDoctorsAutoScrollPaused, setIsDoctorsAutoScrollPaused] = useState(false)
+  const [isArticlesAutoScrollPaused, setIsArticlesAutoScrollPaused] = useState(false)
+
+  const [servicesScrollDirection, setServicesScrollDirection] = useState<"forward" | "backward">("forward")
+  const [doctorsScrollDirection, setDoctorsScrollDirection] = useState<"forward" | "backward">("forward")
+  const [articlesScrollDirection, setArticlesScrollDirection] = useState<"forward" | "backward">("forward")
 
   useEffect(() => {
     async function fetchData() {
@@ -88,6 +95,99 @@ export default function HomePage() {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    if (!servicesScrollRef.current || services.length === 0 || isServicesAutoScrollPaused) return
+
+    const interval = setInterval(() => {
+      if (servicesScrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = servicesScrollRef.current
+        const isRTL = document.dir === "rtl" || document.documentElement.dir === "rtl"
+
+        // In RTL, scrollLeft is negative and becomes more negative as you scroll left
+        // We want "forward" to scroll from right to left (reading direction)
+        if (servicesScrollDirection === "forward") {
+          // Check if reached the end (most negative value)
+          if (Math.abs(scrollLeft) + clientWidth >= scrollWidth - 10) {
+            setServicesScrollDirection("backward")
+            servicesScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
+          } else {
+            // Scroll forward (more negative in RTL, positive in LTR)
+            servicesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
+          }
+        } else {
+          // Scrolling backward
+          if (scrollLeft >= -10) {
+            setServicesScrollDirection("forward")
+            servicesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
+          } else {
+            // Scroll backward (less negative in RTL, negative in LTR)
+            servicesScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
+          }
+        }
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [services, isServicesAutoScrollPaused, servicesScrollDirection])
+
+  useEffect(() => {
+    if (!doctorsScrollRef.current || doctors.length === 0 || isDoctorsAutoScrollPaused) return
+
+    const interval = setInterval(() => {
+      if (doctorsScrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = doctorsScrollRef.current
+        const isRTL = document.dir === "rtl" || document.documentElement.dir === "rtl"
+
+        if (doctorsScrollDirection === "forward") {
+          if (Math.abs(scrollLeft) + clientWidth >= scrollWidth - 10) {
+            setDoctorsScrollDirection("backward")
+            doctorsScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
+          } else {
+            doctorsScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
+          }
+        } else {
+          if (scrollLeft >= -10) {
+            setDoctorsScrollDirection("forward")
+            doctorsScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
+          } else {
+            doctorsScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
+          }
+        }
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [doctors, isDoctorsAutoScrollPaused, doctorsScrollDirection])
+
+  useEffect(() => {
+    if (!articlesScrollRef.current || articles.length === 0 || isArticlesAutoScrollPaused) return
+
+    const interval = setInterval(() => {
+      if (articlesScrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = articlesScrollRef.current
+        const isRTL = document.dir === "rtl" || document.documentElement.dir === "rtl"
+
+        if (articlesScrollDirection === "forward") {
+          if (Math.abs(scrollLeft) + clientWidth >= scrollWidth - 10) {
+            setArticlesScrollDirection("backward")
+            articlesScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
+          } else {
+            articlesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
+          }
+        } else {
+          if (scrollLeft >= -10) {
+            setArticlesScrollDirection("forward")
+            articlesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
+          } else {
+            articlesScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
+          }
+        }
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [articles, isArticlesAutoScrollPaused, articlesScrollDirection])
+
   const scroll = (ref: React.RefObject<HTMLDivElement>, direction: "left" | "right") => {
     if (ref.current) {
       const scrollAmount = 400
@@ -96,6 +196,12 @@ export default function HomePage() {
         behavior: "smooth",
       })
     }
+  }
+
+  const handleUserScroll = (setPausedState: React.Dispatch<React.SetStateAction<boolean>>) => {
+    setPausedState(true)
+    // Resume auto-scroll after 5 seconds of no interaction
+    setTimeout(() => setPausedState(false), 5000)
   }
 
   const fadeInUp = {
@@ -399,7 +505,10 @@ export default function HomePage() {
                 variant="outline"
                 size="icon"
                 className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
-                onClick={() => scroll(servicesScrollRef, "left")}
+                onClick={() => {
+                  scroll(servicesScrollRef, "left")
+                  handleUserScroll(setIsServicesAutoScrollPaused)
+                }}
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -409,24 +518,30 @@ export default function HomePage() {
                 variant="outline"
                 size="icon"
                 className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
-                onClick={() => scroll(servicesScrollRef, "right")}
+                onClick={() => {
+                  scroll(servicesScrollRef, "right")
+                  handleUserScroll(setIsServicesAutoScrollPaused)
+                }}
               >
                 <ArrowLeft className="h-5 w-5 rotate-180" />
               </Button>
 
-              <div ref={servicesScrollRef} className="overflow-x-auto pb-4 scroll-smooth">
-                <AutoScrollCarousel
-                  itemsPerView={getServicesCarouselSettings().itemsPerView}
-                  scrollDuration={getServicesCarouselSettings().scrollDuration}
-                  direction={getServicesCarouselSettings().direction}
-                  autoScroll={getServicesCarouselSettings().autoScroll}
-                >
+              <div
+                ref={servicesScrollRef}
+                className="overflow-x-auto pb-4 scroll-smooth scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40"
+                onMouseEnter={() => setIsServicesAutoScrollPaused(true)}
+                onMouseLeave={() => setIsServicesAutoScrollPaused(false)}
+                onTouchStart={() => handleUserScroll(setIsServicesAutoScrollPaused)}
+                onWheel={() => handleUserScroll(setIsServicesAutoScrollPaused)}
+              >
+                <div className="flex gap-6" style={{ width: "max-content" }}>
                   {services?.map((service) => (
                     <motion.div
                       key={service.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
+                      className="w-[300px] sm:w-[350px]"
                     >
                       <Card
                         className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
@@ -504,7 +619,7 @@ export default function HomePage() {
                       </Card>
                     </motion.div>
                   ))}
-                </AutoScrollCarousel>
+                </div>
               </div>
             </div>
 
@@ -572,7 +687,10 @@ export default function HomePage() {
                   variant="outline"
                   size="icon"
                   className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
-                  onClick={() => scroll(doctorsScrollRef, "left")}
+                  onClick={() => {
+                    scroll(doctorsScrollRef, "left")
+                    handleUserScroll(setIsDoctorsAutoScrollPaused)
+                  }}
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
@@ -582,12 +700,22 @@ export default function HomePage() {
                   variant="outline"
                   size="icon"
                   className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
-                  onClick={() => scroll(doctorsScrollRef, "right")}
+                  onClick={() => {
+                    scroll(doctorsScrollRef, "right")
+                    handleUserScroll(setIsDoctorsAutoScrollPaused)
+                  }}
                 >
                   <ArrowLeft className="h-5 w-5 rotate-180" />
                 </Button>
 
-                <div ref={doctorsScrollRef} className="overflow-x-auto pb-4 scroll-smooth">
+                <div
+                  ref={doctorsScrollRef}
+                  className="overflow-x-auto pb-4 scroll-smooth scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40"
+                  onMouseEnter={() => setIsDoctorsAutoScrollPaused(true)}
+                  onMouseLeave={() => setIsDoctorsAutoScrollPaused(false)}
+                  onTouchStart={() => handleUserScroll(setIsDoctorsAutoScrollPaused)}
+                  onWheel={() => handleUserScroll(setIsDoctorsAutoScrollPaused)}
+                >
                   <div className="flex gap-6" style={{ width: "max-content" }}>
                     {doctors.map((doctor) => (
                       <motion.div
@@ -793,7 +921,10 @@ export default function HomePage() {
                   variant="outline"
                   size="icon"
                   className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
-                  onClick={() => scroll(articlesScrollRef, "left")}
+                  onClick={() => {
+                    scroll(articlesScrollRef, "left")
+                    handleUserScroll(setIsArticlesAutoScrollPaused)
+                  }}
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
@@ -803,12 +934,22 @@ export default function HomePage() {
                   variant="outline"
                   size="icon"
                   className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
-                  onClick={() => scroll(articlesScrollRef, "right")}
+                  onClick={() => {
+                    scroll(articlesScrollRef, "right")
+                    handleUserScroll(setIsArticlesAutoScrollPaused)
+                  }}
                 >
                   <ArrowLeft className="h-5 w-5 rotate-180" />
                 </Button>
 
-                <div ref={articlesScrollRef} className="overflow-x-auto pb-4 scroll-smooth">
+                <div
+                  ref={articlesScrollRef}
+                  className="overflow-x-auto pb-4 scroll-smooth scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40"
+                  onMouseEnter={() => setIsArticlesAutoScrollPaused(true)}
+                  onMouseLeave={() => setIsArticlesAutoScrollPaused(false)}
+                  onTouchStart={() => handleUserScroll(setIsArticlesAutoScrollPaused)}
+                  onWheel={() => handleUserScroll(setIsArticlesAutoScrollPaused)}
+                >
                   <div className="flex gap-6" style={{ width: "max-content" }}>
                     {articles.map((article) => (
                       <motion.div

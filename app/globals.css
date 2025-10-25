@@ -123,3 +123,36 @@
 [dir="rtl"] {
   direction: rtl;
 }
+
+/* إضافة تنسيق شريط التمرير الشفاف */
+/* Custom scrollbar styling for horizontal scroll sections */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-primary\/20 {
+  scrollbar-color: hsl(var(--primary) / 0.2) transparent;
+}
+
+.scrollbar-track-transparent {
+  scrollbar-color: transparent transparent;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+}
+
+.scrollbar-thumb-primary\/20::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--primary) / 0.2);
+  border-radius: 4px;
+}
+
+.scrollbar-thumb-primary\/20:hover::-webkit-scrollbar-thumb,
+.hover\:scrollbar-thumb-primary\/40:hover::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--primary) / 0.4);
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background-color: transparent;
+}
