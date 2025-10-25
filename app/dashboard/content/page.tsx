@@ -106,6 +106,12 @@ const CONTENT_SECTIONS = [
         type: "textarea",
         defaultValue: "احجز موعدك الآن واحصل على استشارة طبية مجانية",
       },
+      {
+        key: "cta_phone_number",
+        label: "رقم الهاتف لزر الاتصال (مع رمز الدولة)",
+        type: "text",
+        defaultValue: "+966123456789",
+      },
     ],
   },
   {

@@ -103,10 +103,8 @@ export default function HomePage() {
         const { scrollLeft, scrollWidth, clientWidth } = servicesScrollRef.current
         const isRTL = document.dir === "rtl" || document.documentElement.dir === "rtl"
 
-        // In RTL, scrollLeft is negative and becomes more negative as you scroll left
-        // We want "forward" to scroll from right to left (reading direction)
         if (servicesScrollDirection === "forward") {
-          // Check if reached the end (most negative value)
+          // Check if reached the end (most negative value in RTL, or rightmost in LTR)
           if (Math.abs(scrollLeft) + clientWidth >= scrollWidth - 10) {
             setServicesScrollDirection("backward")
             servicesScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
@@ -115,8 +113,8 @@ export default function HomePage() {
             servicesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           }
         } else {
-          // Scrolling backward
-          if (scrollLeft >= -10) {
+          // Scrolling backward - check if at the beginning
+          if (Math.abs(scrollLeft) <= 10) {
             setServicesScrollDirection("forward")
             servicesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           } else {
@@ -146,7 +144,8 @@ export default function HomePage() {
             doctorsScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           }
         } else {
-          if (scrollLeft >= -10) {
+          // Scrolling backward - check if at the beginning
+          if (Math.abs(scrollLeft) <= 10) {
             setDoctorsScrollDirection("forward")
             doctorsScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           } else {
@@ -175,7 +174,8 @@ export default function HomePage() {
             articlesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           }
         } else {
-          if (scrollLeft >= -10) {
+          // Scrolling backward - check if at the beginning
+          if (Math.abs(scrollLeft) <= 10) {
             setArticlesScrollDirection("forward")
             articlesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           } else {
@@ -1232,7 +1232,7 @@ export default function HomePage() {
                   </Button>
                 </motion.div>
                 <Button variant="outline" size="lg" asChild>
-                  <Link href="tel:+966123456789">
+                  <Link href={`tel:${getText("cta_phone_number") || "+966123456789"}`}>
                     <Phone className="ml-2 h-5 w-5" />
                     {language === "ar" ? "اتصل بنا الآن" : "Contact Us Now"}
                   </Link>
