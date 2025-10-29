@@ -35,35 +35,35 @@ export default function GoogleSheetsSetupPage() {
     navigator.clipboard.writeText(text)
   }
 
-  const serviceAccountEmail = "v0-rosesmile-vercel@v0-rosesmile-vercel.iam.gserviceaccount.com"
+  const serviceAccountEmail = "v0-rosesmile2@v0-rosesmile2.iam.gserviceaccount.com"
   const sheetId = "1aULNHz7f3WC33mWYWMCzt8BL2Mc0O3NR00tpFRaIFBU"
   const privateKey = `-----BEGIN PRIVATE KEY-----
-MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCvzwRUgI1+meh1
-VdEz6JrFe/DhADWmW6JmQKy42pcMXPE16g0/1T46vrKp6g3+BZg2062ZAInCIJ9h
-KN25nxZsiAAO5T1E1qswoStTfdm2xFxNReozdZZdBwLvdFnz7h0DfD8g4FRwt4aw
-bdd/b59zJCavh3iu38WwekpsPmYjeiqD41SkBmMG/w/5TWYpEDrBb0czuusjFyIF
-GrS/HmLLaeaD9LmMQMoLU/+M5crbDBOn8feV7W2aFRlKVIc7h+EHGYTkVZitWUK2
-SfRCu5M7ECtwY7xbWKVLxLcj+GI1Jtceq7mzsAg8GePwov+A9+Cy7aB2qxbbm/6d
-/6Yuffl1AgMBAAECggEABOuoHR5Y93diym/rskZ7GHZi1EVPexe6+J4sR2M00Y+D
-X8UseEIlYvsF4JwQprCs5THw/KSHdoO3uj4s0H5rn/+BculHGPdiJLMKFaTi1Er0
-I2SGzMhofDOPSTjqMJnUPY37bVXh/yKf1i3I14P+BDi5jXWe8tQIAiu2DAgGD02W
-5Wv3sJxltjZzaLujeLbSFBaM3wFx2VpkL7CVknvwHemdaV8bzKdDlMpiJthrBU+X
-90si8XeoKFxkHT1qd3vLCMRO7m8OHOP4TBgUOkRYKWRAVsmu1hIBim+2dhEb72+8
-B1veMPm/oW771Ehp4M3cIFc3/TGFQX/6otahQbBmYQKBgQDUk5QlC/bpgu9urec0
-bTuLdMV4Mpjoiz5Wt35TtJPrCCzjxxacsBF015TI1Is9QjC8BHCWTPl2/9UpFSH/
-zZ9/tfUfxZm/CWJEzvBfP9iW327q9zOa9X9ol6qL57z4NBeRXDX6HIG5KrXvK9me
-BKVOkqPxGdSnp6YIJgii6fdv4QKBgQDTuLYH6UapwXKZxGWSlB5D6mzku+774yT1
-BbJBJAKny17hUD9DGYP7axcLSHJMUVkNnUfGmIbf4raA64lzPbiTe5emOp01cq+u
-lgjnECKsSJdYZ1IHH70Hd4ejZeIFeZYrH889DEAxhjEVE3fi5ztyhWzqGPjYOVYR
-/RvzI1tMFQKBgQCGv9HtterbVMN/rj7cDc3r9aZjLfedmP54K7KpTtNg7fq+nGnq
-AvXd0fYfZBOrTjTkShAwRjTwSPWPKDU4GNjdNLNgY3q1DTa8lUzro+YgpRuDWBXf
-SXVtEI7sRoaT8zlpTEFu/PkCLl/Lb0lwEFPVPcEsSQpzCCOIEMvysUrHIQKBgHJ2
-Tvsx88D8058sHZnEOCSRjXOP4uEM6UMKZFdxR3o9qbr4LmtxVPhM6jVwYlK+O/3v
-RQmqFmjd4bsLG9FQ0gPx8oes8qcdrLsfZAq/n28zA5eIrEEruH9b8Nm20B4ToMsJ
-tHmVsPLVUJ3LW6oxRuNgHQTmoUoMnWq2QzEMsWQNAoGAIyjGEVguE+2QWOy9b7Sv
-63A4npwOluZ1+9DWr6ecKMlnDeCjL2abczGkWyC49pGp0zZVQd/CY9te7pLHz2NF
-JSGcR4H6y4y3RiwWGB1zRvnWfPp/O9OTau9zLVdL776DkIWwNIQ3szrA4RbxW90P
-JmrPms64gLMlsO/pAPeDrwI=
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDrgbTWhJKzX9sj
+xvzamgSfG/NVIoBQkbkelP6f16DxiKcGd7kXfX5pFcyH2C+TyxRnlH7vrqt8U+Xn
+gq+mkuwQ1AYiARqakAsvlu/PHcR/JA+CySpzC0RsOB93Zfczt1NjZD1hGnd/frAQ
+vN8MSAjNfKoa04rq3SmAblo/scr4ten7qwF4T/9yrmIx5/BoyoFO2Vs1CzmXD1H/
+/6OHNA+uekZmoqAx0dYvMV5s6XvK2rLeObHuD1RySjo59Mqja5AMGpNWPWvph+Ej
+0lGwVhjvwLwx4Qy+wSwxi8m4fVFaER0Y2TexDcLg1J/jsrPmICNx32HouAgTmjsF
+Qb3+5oFZAgMBAAECggEABXOKKREGiEpmuyxG/BRmmPw/pK/YwoStAU03m6GVIyIj
+o52v1iBchbgwdNCHQWeJAGDKk2e6pnUWtEYtJLDv7+/IeI8H+53r9F0NDgFFZCAE
+j+VyKxmOquadq9jbYQIUVw+h8BZ5v6TCFJEapKEiOwdwtJBC/e7CoCttwV2vMhSQ
+h5y/k2kAQ3Vxnj9AF0wc2UPWfbAvj7L/Qy9UMpJTHC0D8qJqukR/hI5l2JCW/5Ol
+daenPzpqYK+uuxhAEmnq7UmZCXszQ3bWE4yMf4xSb2yIepWuVZfrwLPXrmbW9YyV
+F9yWfVJIvDmdzwyXYRhKBZ23vVrs2Fp4b1n9U0ESpQKBgQD9Eaxfan9ETOxNm8ui
+Wi0johL9ZSpBQuu7IGgxZCOBEqZxIY9uyYeWsAecRzv1I+SIxf/rrdV7byKxzMka
+gdFAKmhSQXbNiA9jl26s9yqcBneT4FPxNvktV1BRJESjnGs9SocrWWSFd7sk2Hrp
+optbP+3Ay26l0CoMnsSEWobcPwKBgQDuO/ZVE0lx/9Z8l1Bkk+VmN7ZgQSrXnBpQ
+eOOofhqROWwyey758MYmV9uOrvhbl38ElJQTDdNPzEyWo65xv7omKiwKOQSYMYcU
+r+QOrz5kJbSAY2mDmvnjaLqlmFozKOJZO+VPsM0syWYW3DyclZbRqUwFgsOyX+eG
+sFTyjjMcZwKBgQCqGAPkif8KWC2HqEyBTd0DEz9yQ1nYTXOF7a06bVUTvwZSCb2P
+ODNDDAPBfXuGM966M2Lk9I0Fjtgh60PL5i9P0nEVwFxqnqXBSZog9WwVPJ+IrAGf
+olRurj4Um6zqzwqhQoOBlm7i6mvFwx8yA5IqDdjueY1gM37fxqLNVs9IHwKBgQCL
+o535s/pi1cDU+qRmr8HQrms59Di2dIuAC7v1cSUFZpEi7c1VN2oN44WQFsMAfMY4
+2xYILRxlM6zYx0xi5CyqXiG+RDmLM8yntYmJifKaJPeuIZchSt+aCjMNCUYlops6
+Dr+UfF9nFw297I2igpQKhJ9Iw6MNlOVSr1y7Z9pRlQKBgHEf+jrdGQvm7BwEmrwy
+GAV4Ne6hrVX9DzzkX9VDH5AuhkRmI0rcs1VDfeT05T/sTfDvDaQJS59EUiC5B4f2
+vcV6CRqnntsLtfoKL3J+8Kik+Azh9IOjQDPKK33rpYkjNr99xiUevy3zMy9o6N4s
+TPehuVjQfxC9HOTF5LYOeHJz
 -----END PRIVATE KEY-----`
 
   return (
@@ -144,7 +144,6 @@ JmrPms64gLMlsO/pAPeDrwI=
                             </ol>
                           </div>
                         )}
-                        {/* </CHANGE> */}
                       </div>
                     )}
                   </AlertDescription>
@@ -226,7 +225,6 @@ JmrPms64gLMlsO/pAPeDrwI=
               </p>
             </AlertDescription>
           </Alert>
-          {/* </CHANGE> */}
 
           <div className="space-y-3">
             <div className="flex gap-3">
