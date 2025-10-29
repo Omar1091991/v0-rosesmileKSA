@@ -81,11 +81,6 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
         service_id: "",
         notes: "",
       })
-
-      // Redirect to home after 5 seconds
-      setTimeout(() => {
-        router.push("/")
-      }, 5000)
     } catch (error: any) {
       console.error("[v0] Error submitting booking:", error)
 
