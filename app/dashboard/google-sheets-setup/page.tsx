@@ -115,7 +115,37 @@ JmrPms64gLMlsO/pAPeDrwI=
                       </div>
                     )}
                     {testResult.error && (
-                      <p className="text-sm text-red-600 mt-2 font-mono bg-red-50 p-2 rounded">{testResult.error}</p>
+                      <div className="mt-3">
+                        <p className="text-sm text-red-600 font-mono bg-red-50 p-2 rounded">{testResult.error}</p>
+                        {testResult.error.includes("invalid_grant") && (
+                          <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                            <p className="font-semibold text-yellow-800 mb-2">⚠️ حساب الخدمة غير موجود</p>
+                            <p className="text-yellow-700 mb-2">
+                              الخطأ "invalid_grant" يعني أن حساب الخدمة (Service Account) غير موجود في Google Cloud أو
+                              تم حذفه.
+                            </p>
+                            <p className="font-semibold text-yellow-800 mb-1">الحل:</p>
+                            <ol className="list-decimal list-inside space-y-1 text-yellow-700 mr-2">
+                              <li>
+                                اذهب إلى{" "}
+                                <a
+                                  href="https://console.cloud.google.com/iam-admin/serviceaccounts"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline font-semibold"
+                                >
+                                  Google Cloud Console - Service Accounts
+                                </a>
+                              </li>
+                              <li>أنشئ Service Account جديد</li>
+                              <li>أنشئ مفتاح JSON جديد</li>
+                              <li>حدّث المتغيرات البيئية في Vercel بالقيم الجديدة</li>
+                              <li>أعد نشر المشروع</li>
+                            </ol>
+                          </div>
+                        )}
+                        {/* </CHANGE> */}
+                      </div>
                     )}
                   </AlertDescription>
                 </div>
@@ -178,6 +208,26 @@ JmrPms64gLMlsO/pAPeDrwI=
           <CardTitle>خطوات الإعداد</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <Alert className="bg-blue-50 border-blue-200">
+            <AlertDescription>
+              <p className="font-semibold text-blue-800 mb-2">📝 ملاحظة مهمة</p>
+              <p className="text-sm text-blue-700">
+                إذا كان حساب الخدمة (Service Account) غير موجود أو حصلت على خطأ "invalid_grant"، يجب عليك إنشاء Service
+                Account جديد أولاً من{" "}
+                <a
+                  href="https://console.cloud.google.com/iam-admin/serviceaccounts"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-semibold"
+                >
+                  Google Cloud Console
+                </a>
+                .
+              </p>
+            </AlertDescription>
+          </Alert>
+          {/* </CHANGE> */}
+
           <div className="space-y-3">
             <div className="flex gap-3">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
