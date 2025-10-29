@@ -210,21 +210,56 @@ export async function POST(request: Request) {
 
     console.log("[v0] Created booking:", booking)
 
+    let bookingFormName = ""
+    let serviceName = booking.service_name || booking.service || ""
+
     try {
+      if (booking.booking_form_id) {
+        const formResult = await db.query("SELECT name_ar, name_en FROM booking_forms WHERE id = $1", [
+          booking.booking_form_id,
+        ])
+        if (formResult.rows.length > 0) {
+          bookingFormName = formResult.rows[0].name_ar || formResult.rows[0].name_en || ""
+        }
+      }
+
+      if (booking.service_id && !serviceName) {
+        const serviceResult = await db.query("SELECT title_ar, title_en FROM services WHERE id = $1", [
+          booking.service_id,
+        ])
+        if (serviceResult.rows.length > 0) {
+          serviceName = serviceResult.rows[0].title_ar || serviceResult.rows[0].title_en || ""
+        }
+      }
+    } catch (lookupError: any) {
+      console.log("[v0] ⚠️ Could not fetch form/service names:", lookupError.message)
+    }
+
+    try {
+      console.log("[v0] 📤 Sending booking to Google Sheets...")
       const sheetsResult = await appendToGoogleSheet({
-        ...body,
+        full_name: booking.patient_name,
+        patient_name: booking.patient_name,
+        phone: booking.phone,
+        email: booking.email,
+        service: serviceName,
+        service_name: serviceName,
+        booking_form_name: bookingFormName,
+        notes: booking.notes || "",
         id: booking.id,
         created_at: booking.created_at,
       })
 
       if (sheetsResult.success) {
-        console.log("[v0] ✅ Booking synced to Google Sheets")
+        console.log("[v0] ✅ Booking synced to Google Sheets successfully!")
       } else {
-        console.log("[v0] ⚠️ Google Sheets sync skipped:", sheetsResult.message)
+        console.log("[v0] ⚠️ Google Sheets sync failed:", sheetsResult.message)
+        console.log("[v0] Error details:", sheetsResult.error)
       }
     } catch (sheetsError: any) {
       // Don't fail the booking if Google Sheets fails
-      console.error("[v0] ⚠️ Google Sheets error (non-critical):", sheetsError.message)
+      console.error("[v0] ❌ Google Sheets error (non-critical):", sheetsError.message)
+      console.error("[v0] Full error:", sheetsError)
     }
 
     return NextResponse.json({ booking })
