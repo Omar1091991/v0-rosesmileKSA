@@ -4,6 +4,30 @@ export async function sendBookingToGoogleSheets(bookingData: any) {
   return appendToGoogleSheet(bookingData)
 }
 
+function cleanPrivateKey(key: string): string {
+  // Remove any extra whitespace and normalize newlines
+  let cleaned = key.trim()
+
+  // If the key has literal \n strings, replace them with actual newlines
+  if (cleaned.includes("\\n")) {
+    cleaned = cleaned.replace(/\\n/g, "\n")
+  }
+
+  // Remove any extra spaces or tabs
+  cleaned = cleaned.replace(/\s+$/gm, "")
+
+  // Ensure proper format: should start with BEGIN and end with END
+  if (!cleaned.startsWith("-----BEGIN PRIVATE KEY-----")) {
+    throw new Error("Private key must start with -----BEGIN PRIVATE KEY-----")
+  }
+
+  if (!cleaned.endsWith("-----END PRIVATE KEY-----")) {
+    throw new Error("Private key must end with -----END PRIVATE KEY-----")
+  }
+
+  return cleaned
+}
+
 // Initialize Google Sheets API
 export async function appendToGoogleSheet(bookingData: any) {
   try {
@@ -29,10 +53,11 @@ export async function appendToGoogleSheet(bookingData: any) {
     console.log("[v0] Service Account Email:", process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL)
     console.log("[v0] Sheet ID:", process.env.GOOGLE_SHEET_ID)
 
-    // Parse the private key (handle escaped newlines)
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n")
-    console.log("[v0] Private key length:", privateKey.length)
+    console.log("[v0] Raw private key length:", process.env.GOOGLE_PRIVATE_KEY.length)
+    const privateKey = cleanPrivateKey(process.env.GOOGLE_PRIVATE_KEY)
+    console.log("[v0] Cleaned private key length:", privateKey.length)
     console.log("[v0] Private key starts with:", privateKey.substring(0, 50))
+    console.log("[v0] Private key ends with:", privateKey.substring(privateKey.length - 50))
 
     // Create auth client
     console.log("[v0] Creating Google Auth client...")

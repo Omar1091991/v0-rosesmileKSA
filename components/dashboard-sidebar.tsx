@@ -17,6 +17,7 @@ import {
   Newspaper,
   UserCircle,
   Database,
+  Sheet,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
@@ -62,6 +63,13 @@ const menuItems = [
   },
   { title: "المستخدمين", href: "/dashboard/users", icon: Users, roles: ["admin"], color: "text-rose-500" },
   { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText, roles: ["admin"], color: "text-lime-500" },
+  {
+    title: "ربط Google Sheets",
+    href: "/dashboard/google-sheets-setup",
+    icon: Sheet,
+    roles: ["admin"],
+    color: "text-emerald-500",
+  },
   {
     title: "نقل قاعدة البيانات",
     href: "/dashboard/migration",
