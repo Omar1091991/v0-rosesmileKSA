@@ -73,6 +73,15 @@ export async function appendToGoogleSheet(bookingData: any) {
     const sheets = google.sheets({ version: "v4", auth })
     const spreadsheetId = process.env.GOOGLE_SHEET_ID
 
+    console.log("[v0] Getting spreadsheet metadata...")
+    const spreadsheet = await sheets.spreadsheets.get({
+      spreadsheetId,
+    })
+
+    const firstSheet = spreadsheet.data.sheets?.[0]
+    const sheetName = firstSheet?.properties?.title || "Sheet1"
+    console.log("[v0] First sheet name:", sheetName)
+
     const now = new Date()
     const dateStr = now.toLocaleDateString("ar-EG", {
       timeZone: "Africa/Cairo",
@@ -99,11 +108,12 @@ export async function appendToGoogleSheet(bookingData: any) {
 
     console.log("[v0] Row data to append:", row)
 
-    // Append to sheet
-    console.log("[v0] Appending to Google Sheet...")
+    const range = `${sheetName}!A:G`
+    console.log("[v0] Appending to range:", range)
+
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: "Sheet1!A:G", // 7 columns: A to G
+      range,
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [row],
