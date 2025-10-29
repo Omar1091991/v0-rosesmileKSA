@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Settings } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { LanguageSwitcher } from "@/components/language-switcher"
@@ -86,13 +86,6 @@ export function SiteHeader() {
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
 
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboard">
-                <Settings className="ml-2 h-4 w-4" />
-                لوحة التحكم
-              </Link>
-            </Button>
-
             <Button size="sm" asChild>
               <Link href={bookingLink}>احجز موعد</Link>
             </Button>
@@ -151,12 +144,6 @@ export function SiteHeader() {
               <div className="flex flex-col gap-2 pt-2">
                 <LanguageSwitcher />
 
-                <Button variant="outline" size="sm" asChild onClick={() => setIsMenuOpen(false)}>
-                  <Link href="/dashboard">
-                    <Settings className="ml-2 h-4 w-4" />
-                    لوحة التحكم
-                  </Link>
-                </Button>
                 <Button size="sm" asChild onClick={() => setIsMenuOpen(false)}>
                   <Link href={bookingLink}>احجز موعد</Link>
                 </Button>
