@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { appendToGoogleSheet } from "@/lib/google-sheets"
 
 export async function GET() {
   try {
@@ -208,6 +209,23 @@ export async function POST(request: Request) {
     const booking = result.rows[0]
 
     console.log("[v0] Created booking:", booking)
+
+    try {
+      const sheetsResult = await appendToGoogleSheet({
+        ...body,
+        id: booking.id,
+        created_at: booking.created_at,
+      })
+
+      if (sheetsResult.success) {
+        console.log("[v0] ✅ Booking synced to Google Sheets")
+      } else {
+        console.log("[v0] ⚠️ Google Sheets sync skipped:", sheetsResult.message)
+      }
+    } catch (sheetsError: any) {
+      // Don't fail the booking if Google Sheets fails
+      console.error("[v0] ⚠️ Google Sheets error (non-critical):", sheetsError.message)
+    }
 
     return NextResponse.json({ booking })
   } catch (error: any) {

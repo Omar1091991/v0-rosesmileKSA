@@ -45,6 +45,12 @@ export async function POST(request: Request) {
     const result = await query(
       `INSERT INTO site_settings (setting_key, setting_value, setting_type, category)
        VALUES ($1, $2, $3, $4)
+       ON CONFLICT (setting_key) 
+       DO UPDATE SET 
+         setting_value = EXCLUDED.setting_value,
+         setting_type = EXCLUDED.setting_type,
+         category = EXCLUDED.category,
+         updated_at = NOW()
        RETURNING *`,
       [settingKey, settingValue, settingType, category],
     )

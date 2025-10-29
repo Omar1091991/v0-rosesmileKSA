@@ -16,7 +16,7 @@ import { useLanguage } from "@/components/language-switcher"
 import { HeroSlideshow } from "@/components/hero-slideshow"
 import { AnimatedBackground } from "@/components/animated-background"
 import { SocialMediaLinks } from "@/components/social-media-links"
-import { useRouter } from "next/navigation" // Import useRouter
+import { useRouter } from "next/navigation"
 
 export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
@@ -27,12 +27,12 @@ export default function HomePage() {
   const [siteSettings, setSiteSettings] = useState<Record<string, string>>({})
   const [mainBookingFormId, setMainBookingFormId] = useState<string>("")
   const language = useLanguage()
-  const router = useRouter() // Initialize useRouter
+  const router = useRouter()
 
   const servicesScrollRef = useRef<HTMLDivElement>(null)
   const doctorsScrollRef = useRef<HTMLDivElement>(null)
   const offersScrollRef = useRef<HTMLDivElement>(null)
-  const articlesScrollRef = useRef<HTMLDivElement>(null) // Added for articles scroll
+  const articlesScrollRef = useRef<HTMLDivElement>(null)
 
   const [isServicesAutoScrollPaused, setIsServicesAutoScrollPaused] = useState(false)
   const [isDoctorsAutoScrollPaused, setIsDoctorsAutoScrollPaused] = useState(false)
@@ -321,6 +321,8 @@ export default function HomePage() {
       <SiteHeader user={user} />
 
       <main className="flex-1 relative z-10">
+        {/* CHANGE: Removed temporary migration banner - migration completed successfully */}
+
         {/* Hero Section */}
         <section
           className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-8 sm:py-12 md:py-16 lg:py-24 overflow-hidden"
@@ -437,7 +439,7 @@ export default function HomePage() {
               ].map((feature, index) => (
                 <motion.div key={index} variants={scaleIn}>
                   <Card className={`border-none shadow-none bg-gradient-to-br ${feature.gradient} h-full`}>
-                    <CardContent className="pt-6 space-y-3 sm:space-y-4">
+                    <CardContent className="pt-6 space-y-3 sm:space-4">
                       <h3
                         className="text-lg sm:text-xl font-semibold"
                         style={{ color: getText("features_title_color") || undefined }}
@@ -549,7 +551,7 @@ export default function HomePage() {
                           window.location.href = `/services/${service.id}`
                         }}
                       >
-                        <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
+                        <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-4 flex flex-col flex-1 p-4 sm:p-6">
                           {service.image_url ? (
                             <div className="w-full aspect-square relative rounded-lg overflow-hidden">
                               <Image
@@ -731,7 +733,7 @@ export default function HomePage() {
                             router.push(`/doctors/${doctor.id}`)
                           }}
                         >
-                          <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
+                          <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-4 flex flex-col flex-1 p-4 sm:p-6">
                             <div className="w-full aspect-square relative bg-muted flex items-center justify-center text-4xl sm:text-6xl overflow-hidden rounded-lg mx-auto max-w-xs">
                               {doctor.image_url ? (
                                 <Image

@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         formData.description_ar,
         formData.description_en,
         formData.image_url || null,
-        service_ids || [],
+        JSON.stringify(service_ids || []),
         JSON.stringify(fields),
         formData.is_main || false,
         formData.is_active !== false,
@@ -153,7 +153,7 @@ export async function PATCH(request: Request) {
 
     if (service_ids !== undefined) {
       dbFields.push("services")
-      dbValues.push(service_ids)
+      dbValues.push(JSON.stringify(service_ids))
     }
 
     if (custom_services !== undefined) {

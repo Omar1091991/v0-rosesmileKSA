@@ -27,6 +27,7 @@ interface BookingFormClientProps {
 
 export function BookingFormClient({ formId, services }: BookingFormClientProps) {
   const [loading, setLoading] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [formData, setFormData] = useState({
     full_name: "",
     phone: "",
@@ -59,10 +60,10 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
         body: JSON.stringify({
           full_name: formData.full_name,
           phone: formData.phone,
-          service_id: selectedService?.isCustom ? null : formData.service_id,
+          service_id: selectedService?.isCustom ? null : Number(formData.service_id),
           service_name: selectedService?.title_ar || "",
           notes: formData.notes,
-          booking_form_id: formId,
+          booking_form_id: Number(formId),
           status: "pending",
         }),
       })
@@ -72,22 +73,62 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
         throw new Error(errorData.error || "فشل في إنشاء الحجز")
       }
 
-      toast({
-        title: "نجح",
-        description: "تم إرسال طلب الحجز بنجاح",
+      setShowSuccess(true)
+
+      setFormData({
+        full_name: "",
+        phone: "",
+        service_id: "",
+        notes: "",
       })
 
-      router.push("/booking-success")
+      // Redirect to home after 5 seconds
+      setTimeout(() => {
+        router.push("/")
+      }, 5000)
     } catch (error: any) {
       console.error("[v0] Error submitting booking:", error)
+
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في إرسال طلب الحجز",
+        title: "❌ خطأ في الإرسال",
+        description:
+          error.message === 'duplicate key value violates unique constraint "bookings_pkey"'
+            ? "حدث خطأ في النظام. يرجى المحاولة مرة أخرى"
+            : error.message || "فشل في إرسال طلب الحجز. يرجى المحاولة مرة أخرى",
         variant: "destructive",
+        duration: 5000,
       })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (showSuccess) {
+    return (
+      <Card className="border-green-200 bg-green-50">
+        <CardContent className="pt-6 text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="rounded-full bg-green-100 p-6">
+              <svg className="h-16 w-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="text-2xl font-bold text-green-800">تم إرسال طلبك بنجاح!</h2>
+            <p className="text-lg text-green-700">شكراً لك على التواصل معنا</p>
+            <p className="text-green-600">سيتم التواصل معك في أسرع وقت ممكن</p>
+          </div>
+
+          <div className="pt-4">
+            <Button onClick={() => router.push("/")} className="bg-green-600 hover:bg-green-700">
+              العودة للصفحة الرئيسية
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
