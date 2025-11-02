@@ -138,10 +138,12 @@ export async function createGoogleSheet(
     console.log("[v0] 📄 Creating new Google Sheet:", sheetName)
 
     if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
+      console.error("[v0] Missing Google credentials")
       return { success: false, error: "Google credentials not configured" }
     }
 
     const privateKey = cleanPrivateKey(process.env.GOOGLE_PRIVATE_KEY)
+
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -151,27 +153,50 @@ export async function createGoogleSheet(
     })
 
     const sheets = google.sheets({ version: "v4", auth })
+    const drive = google.drive({ version: "v3", auth })
 
-    // Create new spreadsheet
     console.log("[v0] Creating spreadsheet...")
+
     const spreadsheet = await sheets.spreadsheets.create({
       requestBody: {
         properties: {
           title: sheetName,
+          locale: "ar_EG",
+          timeZone: "Africa/Cairo",
         },
-        sheets: [
-          {
-            properties: {
-              sheetId: 0,
-              title: "الحجوزات",
-            },
-          },
-        ],
       },
     })
 
     const spreadsheetId = spreadsheet.data.spreadsheetId
+    if (!spreadsheetId) {
+      throw new Error("Failed to get spreadsheet ID from response")
+    }
+
     console.log("[v0] ✅ Spreadsheet created:", spreadsheetId)
+
+    const sheets_data = spreadsheet.data.sheets || []
+    if (sheets_data.length > 0) {
+      const defaultSheetId = sheets_data[0].properties?.sheetId
+
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              updateSheetProperties: {
+                properties: {
+                  sheetId: defaultSheetId,
+                  title: "الحجوزات",
+                },
+                fields: "title",
+              },
+            },
+          ],
+        },
+      })
+
+      console.log("[v0] ✅ Sheet renamed to 'الحجوزات'")
+    }
 
     // Add header row
     console.log("[v0] Adding header row...")
@@ -222,6 +247,16 @@ export async function createGoogleSheet(
               fields: "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)",
             },
           },
+          {
+            autoResizeDimensions: {
+              dimensions: {
+                sheetId: 0,
+                dimension: "COLUMNS",
+                startIndex: 0,
+                endIndex: 7,
+              },
+            },
+          },
         ],
       },
     })
@@ -237,6 +272,7 @@ export async function createGoogleSheet(
     }
   } catch (error: any) {
     console.error("[v0] ❌ Error creating Google Sheet:", error.message)
+    console.error("[v0] Error details:", error)
     return { success: false, error: error.message }
   }
 }
