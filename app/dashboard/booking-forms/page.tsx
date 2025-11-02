@@ -40,6 +40,8 @@ interface BookingForm {
   is_active: boolean
   is_main: boolean
   order_index: number
+  google_sheet_id?: string
+  google_sheet_url?: string
   custom_services?: CustomService[]
   booking_form_services?: Array<{
     service_id: string
@@ -664,6 +666,33 @@ export default function BookingFormsPage() {
                   <p className="text-xs text-blue-600">({form.custom_services.length} خدمة مخصصة)</p>
                 )}
               </div>
+
+              {form.google_sheet_url && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 space-y-2">
+                  <p className="text-xs font-semibold text-blue-900">Google Sheet المرتبط:</p>
+                  <div className="flex gap-2 items-center">
+                    <a
+                      href={form.google_sheet_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 hover:text-blue-800 underline truncate flex-1"
+                      title={form.google_sheet_url}
+                    >
+                      فتح الجدول
+                    </a>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(form.google_sheet_url, "رابط الجدول")}
+                      className="h-6 px-2 text-xs"
+                    >
+                      نسخ
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col gap-2">
                 {!form.is_main && (
                   <Button

@@ -172,7 +172,6 @@ export async function POST(request: Request) {
       )
       console.log("[v0] ✅ Created booking with new schema")
     } catch (error: any) {
-      // If new columns don't exist, use old schema
       if (error.message?.includes("does not exist") || error.code === "42703") {
         console.log("[v0] ⚠️ New columns not found, using old schema for insert")
         result = await db.query(
@@ -212,14 +211,17 @@ export async function POST(request: Request) {
 
     let bookingFormName = ""
     let serviceName = booking.service_name || booking.service || ""
+    let googleSheetUrl = null
 
     try {
       if (booking.booking_form_id) {
-        const formResult = await db.query("SELECT name_ar, name_en FROM booking_forms WHERE id = $1", [
-          booking.booking_form_id,
-        ])
+        const formResult = await db.query(
+          "SELECT name_ar, name_en, google_sheet_url FROM booking_forms WHERE id = $1",
+          [booking.booking_form_id],
+        )
         if (formResult.rows.length > 0) {
           bookingFormName = formResult.rows[0].name_ar || formResult.rows[0].name_en || ""
+          googleSheetUrl = formResult.rows[0].google_sheet_url
         }
       }
 
@@ -257,9 +259,7 @@ export async function POST(request: Request) {
         console.log("[v0] Error details:", sheetsResult.error)
       }
     } catch (sheetsError: any) {
-      // Don't fail the booking if Google Sheets fails
       console.error("[v0] ❌ Google Sheets error (non-critical):", sheetsError.message)
-      console.error("[v0] Full error:", sheetsError)
     }
 
     return NextResponse.json({ booking })

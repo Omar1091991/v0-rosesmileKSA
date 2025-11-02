@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { createGoogleSheet } from "@/lib/google-sheets"
 
 export async function GET(request: Request) {
   try {
@@ -86,10 +87,17 @@ export async function POST(request: Request) {
       custom_services: custom_services || [],
     }
 
+    console.log("[v0] Creating Google Sheet for new booking form...")
+    const sheetResult = await createGoogleSheet(formData.name_ar || "نموذج حجز جديد")
+
+    if (!sheetResult.success) {
+      console.warn("[v0] ⚠️ Could not create Google Sheet, continuing without it")
+    }
+
     const result = await db.query(
       `
-      INSERT INTO booking_forms (name_ar, name_en, title_ar, title_en, description_ar, description_en, image_url, services, fields, is_main, is_active, order_index)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO booking_forms (name_ar, name_en, title_ar, title_en, description_ar, description_en, image_url, services, fields, is_main, is_active, order_index, google_sheet_id, google_sheet_url)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *
     `,
       [
@@ -105,8 +113,15 @@ export async function POST(request: Request) {
         formData.is_main || false,
         formData.is_active !== false,
         formData.order_index || 0,
+        sheetResult.spreadsheetId || null,
+        sheetResult.spreadsheetUrl || null,
       ],
     )
+
+    console.log("[v0] ✅ Booking form created with Google Sheet:", {
+      formId: result.rows[0].id,
+      googleSheetUrl: result.rows[0].google_sheet_url,
+    })
 
     return NextResponse.json(result.rows[0])
   } catch (error: any) {

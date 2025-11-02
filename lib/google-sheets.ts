@@ -130,3 +130,113 @@ export async function appendToGoogleSheet(bookingData: any) {
     return { success: false, error: error.message }
   }
 }
+
+export async function createGoogleSheet(
+  sheetName: string,
+): Promise<{ success: boolean; sheetId?: string; spreadsheetId?: string; spreadsheetUrl?: string; error?: string }> {
+  try {
+    console.log("[v0] 📄 Creating new Google Sheet:", sheetName)
+
+    if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
+      return { success: false, error: "Google credentials not configured" }
+    }
+
+    const privateKey = cleanPrivateKey(process.env.GOOGLE_PRIVATE_KEY)
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: privateKey,
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"],
+    })
+
+    const sheets = google.sheets({ version: "v4", auth })
+
+    // Create new spreadsheet
+    console.log("[v0] Creating spreadsheet...")
+    const spreadsheet = await sheets.spreadsheets.create({
+      requestBody: {
+        properties: {
+          title: sheetName,
+        },
+        sheets: [
+          {
+            properties: {
+              sheetId: 0,
+              title: "الحجوزات",
+            },
+          },
+        ],
+      },
+    })
+
+    const spreadsheetId = spreadsheet.data.spreadsheetId
+    console.log("[v0] ✅ Spreadsheet created:", spreadsheetId)
+
+    // Add header row
+    console.log("[v0] Adding header row...")
+    const headers = ["التاريخ", "الوقت", "الاسم", "رقم الجوال", "الخدمة", "النموذج", "التفاصيل"]
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: "الحجوزات!A1:G1",
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: [headers],
+      },
+    })
+
+    console.log("[v0] ✅ Headers added")
+
+    // Format header row
+    console.log("[v0] Formatting header row...")
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            repeatCell: {
+              range: {
+                sheetId: 0,
+                startRowIndex: 0,
+                endRowIndex: 1,
+              },
+              cell: {
+                userEnteredFormat: {
+                  backgroundColor: {
+                    red: 0.2,
+                    green: 0.6,
+                    blue: 0.8,
+                  },
+                  textFormat: {
+                    foregroundColor: {
+                      red: 1,
+                      green: 1,
+                      blue: 1,
+                    },
+                    bold: true,
+                  },
+                  horizontalAlignment: "CENTER",
+                },
+              },
+              fields: "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)",
+            },
+          },
+        ],
+      },
+    })
+
+    const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
+    console.log("[v0] ✅ New Sheet created successfully:", spreadsheetUrl)
+
+    return {
+      success: true,
+      sheetId: 0,
+      spreadsheetId,
+      spreadsheetUrl,
+    }
+  } catch (error: any) {
+    console.error("[v0] ❌ Error creating Google Sheet:", error.message)
+    return { success: false, error: error.message }
+  }
+}
