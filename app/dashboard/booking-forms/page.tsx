@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Pencil, Trash2, FileText, Star, X, Link2, Sheet } from "lucide-react"
+import { Plus, FileText, Star, X } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import { ImagePicker } from "@/components/image-picker"
 import { TextFormatter } from "@/components/text-formatter"
 import { toast } from "@/hooks/use-toast"
+import { BookingFormActions } from "@/components/booking-form-actions"
 
 interface Service {
   id: string
@@ -667,90 +668,25 @@ export default function BookingFormsPage() {
                 )}
               </div>
 
-              {form.google_sheet_url && (
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 space-y-2">
-                  <p className="text-xs font-semibold text-blue-900">Google Sheet المرتبط:</p>
-                  <div className="flex gap-2 items-center">
-                    <a
-                      href={form.google_sheet_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:text-blue-800 underline truncate flex-1"
-                      title={form.google_sheet_url}
-                    >
-                      فتح الجدول
-                    </a>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(form.google_sheet_url, "رابط الجدول")}
-                      className="h-6 px-2 text-xs"
-                    >
-                      نسخ
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <BookingFormActions
+                formId={form.id}
+                googleSheetUrl={form.google_sheet_url}
+                onEdit={() => handleEdit(form)}
+                onDelete={() => handleDelete(form.id)}
+                onSheetCreated={() => fetchForms()}
+              />
 
-              <div className="flex flex-col gap-2">
-                {!form.is_main && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setAsMainForm(form.id)}
-                    className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                  >
-                    <Star className="ml-2 h-4 w-4" />
-                    تعيين كنموذج رئيسي
-                  </Button>
-                )}
-                <div className="flex gap-2">
-                  {form.google_sheet_url ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyToClipboard(form.google_sheet_url, "رابط جدول Google Sheet")}
-                      className="flex-1"
-                      title="نسخ رابط Google Sheet"
-                    >
-                      <Sheet className="ml-2 h-4 w-4" />
-                      نسخ الجدول
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled
-                      className="flex-1 opacity-50 cursor-not-allowed bg-transparent"
-                      title="لم يتم ربط جدول Google Sheet حتى الآن"
-                    >
-                      <Sheet className="ml-2 h-4 w-4" />
-                      لا يوجد جدول
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const bookingUrl = `${window.location.origin}/booking/${form.id}`
-                      copyToClipboard(bookingUrl, "رابط النموذج")
-                    }}
-                    className="flex-1"
-                    title="نسخ رابط النموذج"
-                  >
-                    <Link2 className="ml-2 h-4 w-4" />
-                    نسخ الرابط
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(form)} className="flex-1">
-                    <Pencil className="ml-2 h-4 w-4" />
-                    تعديل
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(form.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              {!form.is_main && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAsMainForm(form.id)}
+                  className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                >
+                  <Star className="ml-2 h-4 w-4" />
+                  تعيين كنموذج رئيسي
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
