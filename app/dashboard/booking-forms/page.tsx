@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Pencil, Trash2, FileText, Star, X, Link2 } from "lucide-react"
+import { Plus, Pencil, Trash2, FileText, Star, X, Link2, Sheet } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import { ImagePicker } from "@/components/image-picker"
@@ -706,6 +706,29 @@ export default function BookingFormsPage() {
                   </Button>
                 )}
                 <div className="flex gap-2">
+                  {form.google_sheet_url ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(form.google_sheet_url, "رابط جدول Google Sheet")}
+                      className="flex-1"
+                      title="نسخ رابط Google Sheet"
+                    >
+                      <Sheet className="ml-2 h-4 w-4" />
+                      نسخ الجدول
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled
+                      className="flex-1 opacity-50 cursor-not-allowed bg-transparent"
+                      title="لم يتم ربط جدول Google Sheet حتى الآن"
+                    >
+                      <Sheet className="ml-2 h-4 w-4" />
+                      لا يوجد جدول
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
