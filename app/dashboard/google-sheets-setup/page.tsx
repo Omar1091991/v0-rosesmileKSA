@@ -6,11 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CheckCircle2, XCircle, Loader2, Copy, ExternalLink } from "lucide-react"
+import { CheckCircle2, XCircle, Loader2, Copy, ExternalLink, RotateCcw } from "lucide-react"
 
 export default function GoogleSheetsSetupPage() {
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<any>(null)
+  const [resetting, setResetting] = useState(false)
 
   const handleTest = async () => {
     setTesting(true)
@@ -19,6 +20,11 @@ export default function GoogleSheetsSetupPage() {
     try {
       const response = await fetch("/api/diagnose-sheets")
       const data = await response.json()
+
+      if (!data.success) {
+        console.log("[v0] فشل التشخيص:", data)
+      }
+
       setTestResult(data)
     } catch (error) {
       setTestResult({
@@ -28,6 +34,36 @@ export default function GoogleSheetsSetupPage() {
       })
     } finally {
       setTesting(false)
+    }
+  }
+
+  const handleResetCredentials = async () => {
+    if (
+      !confirm(
+        "هل أنت متأكد من رغبتك في إعادة تعيين بيانات اعتماد Google؟\nسيتعين عليك تحديث المتغيرات البيئية يدويًا في Vercel.",
+      )
+    ) {
+      return
+    }
+
+    setResetting(true)
+    try {
+      const response = await fetch("/api/google-sheets/reset-credentials", { method: "POST" })
+      const data = await response.json()
+
+      if (data.success) {
+        alert(
+          `✅ إعادة التعيين مكتملة!\n\nخطوات المتابعة:\n${Object.entries(data.instructions)
+            .map(([, v]: any) => `• ${v}`)
+            .join("\n")}`,
+        )
+      } else {
+        alert("❌ فشل: " + data.message)
+      }
+    } catch (error) {
+      alert("❌ خطأ: " + (error instanceof Error ? error.message : "خطأ غير معروف"))
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -79,20 +115,40 @@ TPehuVjQfxC9HOTF5LYOeHJz
           <CardTitle>اختبار الاتصال</CardTitle>
           <CardDescription>تحقق من أن جميع الإعدادات صحيحة والاتصال يعمل</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button onClick={handleTest} disabled={testing} className="w-full">
-            {testing ? (
-              <>
-                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                جاري الاختبار...
-              </>
-            ) : (
-              "اختبار الاتصال"
-            )}
-          </Button>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <Button onClick={handleTest} disabled={testing} className="flex-1">
+              {testing ? (
+                <>
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  جاري الاختبار...
+                </>
+              ) : (
+                "اختبار الاتصال"
+              )}
+            </Button>
+            <Button
+              onClick={handleResetCredentials}
+              disabled={resetting}
+              variant="outline"
+              className="gap-2 bg-transparent"
+            >
+              {resetting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  جاري...
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="h-4 w-4" />
+                  إعادة مصادقة
+                </>
+              )}
+            </Button>
+          </div>
 
           {testResult && (
-            <Alert className={`mt-4 ${testResult.success ? "border-green-500" : "border-red-500"}`}>
+            <Alert className={`${testResult.success ? "border-green-500" : "border-red-500"}`}>
               <div className="flex items-start gap-2">
                 {testResult.success ? (
                   <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
@@ -127,7 +183,10 @@ TPehuVjQfxC9HOTF5LYOeHJz
                             <p className="font-semibold text-yellow-800 mb-1">الحل:</p>
                             <ol className="list-decimal list-inside space-y-1 text-yellow-700 mr-2">
                               <li>
-                                اذهب إلى{" "}
+                                اضغط على زر <strong>"إعادة مصادقة"</strong> أعلاه للحصول على التعليمات
+                              </li>
+                              <li>
+                                أو اذهب إلى{" "}
                                 <a
                                   href="https://console.cloud.google.com/iam-admin/serviceaccounts"
                                   target="_blank"
@@ -140,7 +199,6 @@ TPehuVjQfxC9HOTF5LYOeHJz
                               <li>أنشئ Service Account جديد</li>
                               <li>أنشئ مفتاح JSON جديد</li>
                               <li>حدّث المتغيرات البيئية في Vercel بالقيم الجديدة</li>
-                              <li>أعد نشر المشروع</li>
                             </ol>
                           </div>
                         )}

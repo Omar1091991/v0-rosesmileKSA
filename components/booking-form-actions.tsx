@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Link2, Sheet, Pencil, Trash2, Loader2 } from "lucide-react"
+import { Link2, Sheet, Pencil, Trash2, Loader2, AlertCircle } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface BookingFormActionsProps {
   formId: string
@@ -24,6 +25,7 @@ export function BookingFormActions({
   const [creatingSheet, setCreatingSheet] = useState(false)
   const [hasSheet, setHasSheet] = useState(!!googleSheetUrl)
   const [retryCount, setRetryCount] = useState(0)
+  const [sheetError, setSheetError] = useState<string | null>(null)
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
@@ -40,14 +42,14 @@ export function BookingFormActions({
         if (response.ok) {
           const form = await response.json()
           if (form.google_sheet_url) {
-            console.log("[v0] ✅ Sheet verified successfully")
+            console.log("[v0] ✅ تم التحقق من الجدول بنجاح")
             return true
           }
         }
-        console.log(`[v0] Sheet not ready yet, retrying... (${i + 1}/${maxRetries})`)
+        console.log(`[v0] الجدول ليس جاهز بعد، إعادة المحاولة... (${i + 1}/${maxRetries})`)
         await new Promise((resolve) => setTimeout(resolve, 1000))
       } catch (error) {
-        console.warn("[v0] Verification check failed:", error)
+        console.warn("[v0] فشل فحص التحقق:", error)
       }
     }
     return false
@@ -56,25 +58,27 @@ export function BookingFormActions({
   const createNewSheet = async () => {
     setCreatingSheet(true)
     setRetryCount(0)
+    setSheetError(null)
     const maxRetries = 3
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`[v0] Creating Google Sheet (Attempt ${attempt}/${maxRetries})...`)
+        console.log(`[v0] إنشاء جدول Google Sheet (محاولة ${attempt}/${maxRetries})...`)
 
         const response = await fetch(`/api/booking-forms/${formId}/create-sheet`, {
           method: "POST",
         })
 
-        if (response.ok) {
-          const data = await response.json()
+        const data = await response.json()
 
-          console.log("[v0] Sheet endpoint returned success, verifying...")
+        if (response.ok) {
+          console.log("[v0] تم الرد من الخادم بنجاح، جاري التحقق...")
           const verified = await verifySheetCreation()
 
           if (verified || data.googleSheetUrl) {
             setHasSheet(true)
             setRetryCount(0)
+            setSheetError(null)
             toast({
               title: "✅ تم إنشاء الجدول بنجاح",
               description: "تم إنشاء جدول Google Sheet جديد وربطه بالنموذج",
@@ -83,24 +87,25 @@ export function BookingFormActions({
             setCreatingSheet(false)
             return
           } else {
-            throw new Error("Sheet verification failed")
+            throw new Error("فشل التحقق من الجدول")
           }
         } else {
-          const errorData = await response.json()
-          throw new Error(errorData.error || "Unknown error from server")
+          const errorMessage = data.error || "خطأ غير معروف من الخادم"
+          throw new Error(errorMessage)
         }
       } catch (error: any) {
-        console.error(`[v0] Attempt ${attempt} failed:`, error.message)
+        console.error(`[v0] فشلت المحاولة ${attempt}:`, error.message)
         setRetryCount(attempt)
+        setSheetError(error.message)
 
         if (attempt < maxRetries) {
-          console.log(`[v0] Retrying in 2 seconds...`)
+          console.log(`[v0] إعادة المحاولة بعد ثانيتين...`)
           await new Promise((resolve) => setTimeout(resolve, 2000))
         } else {
-          console.error("[v0] All retry attempts failed")
+          console.error("[v0] فشلت جميع محاولات إعادة المحاولة")
           toast({
             title: "❌ فشل في إنشاء الجدول",
-            description: `${error.message} (بعد ${maxRetries} محاولات). الرجاء التحقق من إعدادات Google Cloud.`,
+            description: `${error.message}\n\nالرجاء التحقق من إعدادات Google Sheets في لوحة التحكم.`,
             variant: "destructive",
           })
         }
@@ -112,6 +117,13 @@ export function BookingFormActions({
 
   return (
     <div className="flex flex-col gap-2 w-full">
+      {sheetError && !creatingSheet && (
+        <Alert className="border-red-200 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-700 text-xs">{sheetError}</AlertDescription>
+        </Alert>
+      )}
+
       {/* الزر الأول: Google Sheet */}
       <TooltipProvider>
         <Tooltip>
