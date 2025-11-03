@@ -19,6 +19,9 @@ export async function GET() {
           success: false,
           message: result.message,
           details: result.details,
+          // Include error details for better debugging
+          errorCode: result.details?.errorCode,
+          solution: result.details?.solution,
         },
         { status: 400 },
       )
@@ -30,6 +33,7 @@ export async function GET() {
         success: false,
         message: "خطأ في التشخيص",
         error: error.message,
+        errorStack: process.env.NODE_ENV === "development" ? error.stack : undefined,
       },
       { status: 500 },
     )

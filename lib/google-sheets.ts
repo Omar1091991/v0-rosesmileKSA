@@ -158,82 +158,158 @@ export async function testGoogleSheetsConnection(): Promise<{
       return {
         success: false,
         message: `متغيرات البيئة المفقودة: ${missingVars.join(", ")}`,
+        details: {
+          missingVars,
+          solution: "أضف المتغيرات المفقودة في إعدادات Vercel ثم أعد نشر المشروع",
+        },
       }
     }
 
-    const privateKey = cleanPrivateKey(process.env.GOOGLE_PRIVATE_KEY!)
+    console.log("[v0] ✅ جميع المتغيرات موجودة")
+    console.log("[v0] طول GOOGLE_PRIVATE_KEY:", process.env.GOOGLE_PRIVATE_KEY!.length)
+    console.log("[v0] GOOGLE_SERVICE_ACCOUNT_EMAIL:", process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL)
 
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: privateKey,
-      },
-      scopes: [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
-        "https://www.googleapis.com/auth/drive.file",
-      ],
-    })
+    let privateKey: string
+    try {
+      privateKey = cleanPrivateKey(process.env.GOOGLE_PRIVATE_KEY!)
+      console.log("[v0] ✅ تم تنظيف Private Key بنجاح")
+    } catch (error: any) {
+      console.error("[v0] ❌ خطأ في تنظيف Private Key:", error.message)
+      return {
+        success: false,
+        message: "خطأ في تنسيق Private Key",
+        details: {
+          error: error.message,
+          solution: "تأكد من نسخ Private Key بالكامل من ملف JSON، بما في ذلك السطور BEGIN و END",
+          hint: "في Vercel، يمكنك لصق المفتاح مباشرة مع الأسطر الجديدة، أو استبدال \\n بأسطر جديدة فعلية",
+        },
+      }
+    }
+
+    let auth: any
+    try {
+      auth = new google.auth.GoogleAuth({
+        credentials: {
+          client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+          private_key: privateKey,
+        },
+        scopes: [
+          "https://www.googleapis.com/auth/spreadsheets",
+          "https://www.googleapis.com/auth/drive",
+          "https://www.googleapis.com/auth/drive.file",
+        ],
+      })
+      console.log("[v0] ✅ تم إنشاء Google Auth بنجاح")
+    } catch (error: any) {
+      console.error("[v0] ❌ خطأ في إنشاء Google Auth:", error.message)
+      return {
+        success: false,
+        message: "خطأ في إنشاء Google Auth",
+        details: {
+          error: error.message,
+          solution: "تحقق من صحة Service Account Email و Private Key",
+        },
+      }
+    }
 
     const sheets = google.sheets({ version: "v4", auth })
     const drive = google.drive({ version: "v3", auth })
 
     console.log("[v0] اختبار إنشاء جدول تجريبي...")
-    const testSheet = await sheets.spreadsheets.create({
-      requestBody: {
-        properties: {
-          title: `Test Sheet - ${Date.now()}`,
+
+    let testSheet: any
+    try {
+      testSheet = await sheets.spreadsheets.create({
+        requestBody: {
+          properties: {
+            title: `Test Sheet - ${Date.now()}`,
+          },
         },
-      },
-    })
+      })
+      console.log("[v0] ✅ تم إنشاء جدول تجريبي بنجاح")
+    } catch (error: any) {
+      console.error("[v0] ❌ خطأ في إنشاء جدول تجريبي:", error.message)
+      console.error("[v0] تفاصيل الخطأ:", JSON.stringify(error, null, 2))
+
+      let errorMessage = "فشل في إنشاء جدول تجريبي"
+      let solution = "تحقق من الصلاحيات والإعدادات"
+
+      if (error.code === 403) {
+        errorMessage = "لا توجد صلاحيات كافية"
+        solution =
+          "تأكد من تفعيل Google Sheets API و Google Drive API في Google Cloud Console:\n" +
+          "1. اذهب إلى https://console.cloud.google.com/apis/library\n" +
+          "2. ابحث عن 'Google Sheets API' وفعّله\n" +
+          "3. ابحث عن 'Google Drive API' وفعّله"
+      } else if (error.code === 401 || error.message.includes("invalid_grant")) {
+        errorMessage = "بيانات الاعتماد غير صالحة"
+        solution =
+          "قم بإنشاء Service Account جديد:\n" +
+          "1. اذهب إلى Google Cloud Console\n" +
+          "2. IAM & Admin > Service Accounts\n" +
+          "3. أنشئ Service Account جديد وحمّل مفتاح JSON\n" +
+          "4. حدّث المتغيرات في Vercel"
+      } else if (error.code === 429) {
+        errorMessage = "تم تجاوز حد الطلبات"
+        solution = "انتظر دقيقة ثم حاول مرة أخرى"
+      }
+
+      return {
+        success: false,
+        message: errorMessage,
+        details: {
+          error: error.message,
+          errorCode: error.code,
+          solution,
+        },
+      }
+    }
 
     const testSheetId = testSheet.data.spreadsheetId
 
     if (!testSheetId) {
-      throw new Error("Failed to create test sheet")
+      return {
+        success: false,
+        message: "فشل في الحصول على معرف الجدول",
+        details: {
+          error: "لم يتم إرجاع spreadsheetId من Google API",
+        },
+      }
     }
-
-    console.log("[v0] ✅ تم إنشاء جدول تجريبي بنجاح")
 
     try {
       await drive.files.delete({
         fileId: testSheetId,
       })
       console.log("[v0] ✅ تم حذف الجدول التجريبي")
-    } catch (error) {
-      console.warn("[v0] ⚠️ لم يتمكن من حذف الجدول التجريبي")
+    } catch (error: any) {
+      console.warn("[v0] ⚠️ لم يتمكن من حذف الجدول التجريبي:", error.message)
+      // This is not critical, so we don't fail the test
     }
 
     return {
       success: true,
-      message: "الاتصال بـ Google Sheets يعمل بشكل صحيح",
+      message: "✅ الاتصال بـ Google Sheets يعمل بشكل صحيح!",
       details: {
         serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
         privateKeyLength: privateKey.length,
         canCreateSheets: true,
+        canDeleteSheets: true,
+        testSheetId,
       },
     }
   } catch (error: any) {
-    console.error("[v0] ❌ خطأ في اختبار الاتصال:", error.message)
-
-    let errorMessage = "فشل الاتصال بـ Google Sheets"
-    const errorDetails: any = { error: error.message }
-
-    if (error.message.includes("invalid_grant")) {
-      errorMessage = "بيانات الاعتماد غير صالحة. يرجى إعادة إنشاء Service Account"
-      errorDetails.solution = "قم بإنشاء Service Account جديد من Google Cloud Console"
-    } else if (error.message.includes("403")) {
-      errorMessage = "لا توجد صلاحيات كافية. تأكد من تفعيل Google Drive API"
-      errorDetails.solution = "قم بتفعيل Google Drive API و Google Sheets API في Google Cloud Console"
-    } else if (error.message.includes("Private key")) {
-      errorMessage = "مفتاح Private Key غير صحيح"
-      errorDetails.solution = "تأكد من نسخ Private Key بشكل صحيح من ملف JSON"
-    }
+    console.error("[v0] ❌ خطأ غير متوقع في اختبار الاتصال:", error.message)
+    console.error("[v0] Stack trace:", error.stack)
 
     return {
       success: false,
-      message: errorMessage,
-      details: errorDetails,
+      message: "خطأ غير متوقع في اختبار الاتصال",
+      details: {
+        error: error.message,
+        errorCode: error.code,
+        solution: "تحقق من السجلات (logs) للحصول على مزيد من التفاصيل",
+      },
     }
   }
 }
