@@ -340,6 +340,66 @@ const BACKGROUND_COLOR_SECTIONS = [
       { key: "cta_text_color", label: "لون نص دعوة للعمل", type: "color", defaultValue: "#ffffff" },
     ],
   },
+  {
+    section: "additional_text_colors",
+    title: "ألوان نصوص الأقسام الإضافية",
+    fields: [
+      {
+        key: "social_media_section_title_color",
+        label: "لون عنوان قسم وسائل التواصل",
+        type: "color",
+        defaultValue: "#1f2937",
+      },
+      {
+        key: "social_media_section_text_color",
+        label: "لون نص قسم وسائل التواصل",
+        type: "color",
+        defaultValue: "#6b7280",
+      },
+      {
+        key: "why_choose_us_item_color",
+        label: "لون عناصر لماذا تختارنا",
+        type: "color",
+        defaultValue: "#1f2937",
+      },
+      {
+        key: "location_section_title_color",
+        label: "لون عنوان قسم الموقع",
+        type: "color",
+        defaultValue: "#1f2937",
+      },
+      {
+        key: "location_section_subtitle_color",
+        label: "لون العنوان الفرعي لقسم الموقع",
+        type: "color",
+        defaultValue: "#ec4899",
+      },
+      {
+        key: "location_section_text_color",
+        label: "لون نص قسم الموقع",
+        type: "color",
+        defaultValue: "#6b7280",
+      },
+      {
+        key: "view_all_button_text_color",
+        label: "لون نص أزرار عرض الكل",
+        type: "color",
+        defaultValue: "#1f2937",
+      },
+      {
+        key: "articles_title_color",
+        label: "لون عنوان قسم المقالات",
+        type: "color",
+        defaultValue: "#1f2937",
+      },
+      {
+        key: "articles_text_color",
+        label: "لون نص قسم المقالات",
+        type: "color",
+        defaultValue: "#6b7280",
+      },
+    ],
+  },
 ]
 
 const ANIMATION_SECTIONS = [
@@ -1202,6 +1262,67 @@ export default function ContentManagementPage() {
                 },
                 { key: "cta_title_color", label: "لون عنوان دعوة للعمل", type: "color", defaultValue: "#ffffff" },
                 { key: "cta_text_color", label: "لون نص دعوة للعمل", type: "color", defaultValue: "#ffffff" },
+              ],
+            },
+            // ADDED: new section for additional text colors
+            {
+              section: "additional_text_colors",
+              title: "ألوان نصوص الأقسام الإضافية",
+              fields: [
+                {
+                  key: "social_media_section_title_color",
+                  label: "لون عنوان قسم وسائل التواصل",
+                  type: "color",
+                  defaultValue: "#1f2937",
+                },
+                {
+                  key: "social_media_section_text_color",
+                  label: "لون نص قسم وسائل التواصل",
+                  type: "color",
+                  defaultValue: "#6b7280",
+                },
+                {
+                  key: "why_choose_us_item_color",
+                  label: "لون عناصر لماذا تختارنا",
+                  type: "color",
+                  defaultValue: "#1f2937",
+                },
+                {
+                  key: "location_section_title_color",
+                  label: "لون عنوان قسم الموقع",
+                  type: "color",
+                  defaultValue: "#1f2937",
+                },
+                {
+                  key: "location_section_subtitle_color",
+                  label: "لون العنوان الفرعي لقسم الموقع",
+                  type: "color",
+                  defaultValue: "#ec4899",
+                },
+                {
+                  key: "location_section_text_color",
+                  label: "لون نص قسم الموقع",
+                  type: "color",
+                  defaultValue: "#6b7280",
+                },
+                {
+                  key: "view_all_button_text_color",
+                  label: "لون نص أزرار عرض الكل",
+                  type: "color",
+                  defaultValue: "#1f2937",
+                },
+                {
+                  key: "articles_title_color",
+                  label: "لون عنوان قسم المقالات",
+                  type: "color",
+                  defaultValue: "#1f2937",
+                },
+                {
+                  key: "articles_text_color",
+                  label: "لون نص قسم المقالات",
+                  type: "color",
+                  defaultValue: "#6b7280",
+                },
               ],
             },
           ].map((section, sectionIndex) => {

@@ -907,13 +907,19 @@ export default function HomePage() {
                 variants={fadeInUp}
               >
                 <Link href="/articles" className="inline-block hover:opacity-80 transition-opacity">
-                  <h2 className="text-3xl md:text-4xl font-bold cursor-pointer">
+                  <h2
+                    className="text-3xl md:text-4xl font-bold cursor-pointer"
+                    style={{ color: getColor("articles_title_color", "#1f2937") }}
+                  >
                     {renderFormattedText(
                       getText("articles_title") || (language === "ar" ? "مقالاتنا الطبية" : "Our Medical Articles"),
                     )}
                   </h2>
                 </Link>
-                <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
+                <p
+                  className="text-lg max-w-2xl mx-auto leading-relaxed"
+                  style={{ color: getColor("articles_text_color", "#6b7280") }}
+                >
                   {renderFormattedText(
                     getText("articles_description") ||
                       (language === "ar"
@@ -1022,7 +1028,12 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 variants={fadeIn}
               >
-                <Button variant="outline" size="lg" asChild>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  asChild
+                  style={{ color: getColor("view_all_button_text_color", "#1f2937") }}
+                >
                   <Link href="/articles">
                     {language === "ar" ? "عرض جميع المقالات" : "View All Articles"}
                     <ArrowLeft className="mr-2 h-5 w-5" />
@@ -1043,10 +1054,16 @@ export default function HomePage() {
               viewport={{ once: true }}
               variants={fadeInUp}
             >
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+              <h2
+                className="text-2xl sm:text-3xl md:text-4xl font-bold"
+                style={{ color: getColor("social_media_section_title_color", "#1f2937") }}
+              >
                 {language === "ar" ? "تابعنا على وسائل التواصل الاجتماعي" : "Follow Us on Social Media"}
               </h2>
-              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p
+                className="text-base sm:text-lg max-w-2xl mx-auto"
+                style={{ color: getColor("social_media_section_text_color", "#6b7280") }}
+              >
                 {language === "ar"
                   ? "ابقَ على اطلاع بآخر الأخبار والعروض والنصائح الطبية"
                   : "Stay updated with the latest news, offers, and medical tips"}
@@ -1093,7 +1110,9 @@ export default function HomePage() {
               ].map((item, index) => (
                 <motion.div key={index} className="flex items-center gap-3" variants={fadeInUp}>
                   <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
-                  <span className="text-lg">{item}</span>
+                  <span className="text-lg" style={{ color: getColor("why_choose_us_item_color", "#1f2937") }}>
+                    {item}
+                  </span>
                 </motion.div>
               ))}
             </motion.div>
@@ -1112,14 +1131,23 @@ export default function HomePage() {
             >
               {/* Title */}
               <motion.div className="text-center space-y-3 sm:space-y-4 mb-8 sm:mb-12" variants={fadeInUp}>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+                <h2
+                  className="text-2xl sm:text-3xl md:text-4xl font-bold"
+                  style={{ color: getColor("location_section_title_color", "#1f2937") }}
+                >
                   {language === "ar" ? "موقعنا" : "Our Location"}
                 </h2>
                 <div className="space-y-2">
-                  <h3 className="text-xl sm:text-2xl font-semibold text-primary">
+                  <h3
+                    className="text-xl sm:text-2xl font-semibold"
+                    style={{ color: getColor("location_section_subtitle_color", "#ec4899") }}
+                  >
                     {language === "ar" ? "ابتسامة الورود لطب الأسنان" : "Rose Smile Dental Clinic"}
                   </h3>
-                  <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                  <p
+                    className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
+                    style={{ color: getColor("location_section_text_color", "#6b7280") }}
+                  >
                     {language === "ar"
                       ? "مكة المكرمة - حي العوالي - شارع ابراهيم الجفالي - أعلى صيدلية الدواء"
                       : "Makkah - Al-Awali District - Ibrahim Al-Jafali Street - Above Al-Dawa Pharmacy"}
