@@ -242,6 +242,11 @@ export default function HomePage() {
     return value
   }
 
+  const getColor = (key: string, fallback?: string) => {
+    const color = getText(key)
+    return color || fallback || undefined
+  }
+
   const getHeroImages = (): string[] => {
     try {
       const imagesJson = getText("hero_images")
@@ -327,7 +332,7 @@ export default function HomePage() {
         <section
           className="relative bg-gradient-to-br from-secondary/10 via-background to-primary/5 py-8 sm:py-12 md:py-16 lg:py-24 overflow-hidden"
           style={{
-            backgroundColor: getText("hero_background_color") || undefined,
+            backgroundColor: getColor("hero_background_color"),
             backgroundImage: getText("hero_background_color")
               ? "none"
               : "linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--background)), hsl(var(--primary) / 0.05))",
@@ -344,6 +349,7 @@ export default function HomePage() {
                 <motion.h1
                   className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-balance leading-tight"
                   variants={fadeInUp}
+                  style={{ color: getColor("hero_title_color", "#1f2937") }}
                 >
                   {renderFormattedText(
                     getText("hero_title") ||
@@ -351,8 +357,9 @@ export default function HomePage() {
                   )}
                 </motion.h1>
                 <motion.p
-                  className="text-base sm:text-lg md:text-xl text-muted-foreground text-balance leading-relaxed"
+                  className="text-base sm:text-lg md:text-xl text-balance leading-relaxed"
                   variants={fadeInUp}
+                  style={{ color: getColor("hero_description_color", "#4b5563") }}
                 >
                   {renderFormattedText(
                     getText("hero_description") ||
@@ -397,7 +404,7 @@ export default function HomePage() {
         <section
           className="py-12 sm:py-16 md:py-20 lg:py-24"
           style={{
-            backgroundColor: getText("features_background_color") || undefined,
+            backgroundColor: getColor("features_background_color"),
           }}
         >
           <div className="container px-4 sm:px-6 lg:px-8">
@@ -442,13 +449,13 @@ export default function HomePage() {
                     <CardContent className="pt-6 space-y-3 sm:space-4">
                       <h3
                         className="text-lg sm:text-xl font-semibold"
-                        style={{ color: getText("features_title_color") || undefined }}
+                        style={{ color: getColor("features_title_color", "#1f2937") }}
                       >
                         {renderFormattedText(feature.title.replace(/^\d+[\s.:-]*/, ""))}
                       </h3>
                       <p
                         className="text-sm sm:text-base leading-relaxed"
-                        style={{ color: getText("features_text_color") || undefined }}
+                        style={{ color: getColor("features_text_color", "#4b5563") }}
                       >
                         {renderFormattedText(feature.description)}
                       </p>
@@ -464,7 +471,7 @@ export default function HomePage() {
         <section
           className="py-12 sm:py-16 md:py-20 lg:py-24"
           style={{
-            backgroundColor: getText("services_background_color") || undefined,
+            backgroundColor: getColor("services_background_color"),
             backgroundImage: getText("services_background_color")
               ? "none"
               : "linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--primary) / 0.05))",
@@ -481,7 +488,7 @@ export default function HomePage() {
               <Link href="/services" className="inline-block hover:opacity-80 transition-opacity">
                 <h2
                   className="text-2xl sm:text-3xl md:text-4xl font-bold cursor-pointer"
-                  style={{ color: getText("services_title_color") || undefined }}
+                  style={{ color: getColor("services_title_color", "#1f2937") }}
                 >
                   {renderFormattedText(
                     getText("services_title") || (language === "ar" ? "خدماتنا الطبية" : "Our Medical Services"),
@@ -490,7 +497,7 @@ export default function HomePage() {
               </Link>
               <p
                 className="text-base sm:text-lg max-w-2xl mx-auto px-4"
-                style={{ color: getText("services_text_color") || undefined }}
+                style={{ color: getColor("services_text_color", "#4b5563") }}
               >
                 {renderFormattedText(
                   getText("services_description") ||
@@ -647,7 +654,7 @@ export default function HomePage() {
           <section
             className="py-12 sm:py-16 md:py-20 lg:py-24"
             style={{
-              backgroundColor: getText("doctors_background_color") || undefined,
+              backgroundColor: getColor("doctors_background_color"),
             }}
           >
             <div className="container px-4 sm:px-6 lg:px-8">
@@ -661,7 +668,7 @@ export default function HomePage() {
                 <Link href="/doctors" className="inline-block hover:opacity-80 transition-opacity">
                   <h2
                     className="text-2xl sm:text-3xl md:text-4xl font-bold cursor-pointer"
-                    style={{ color: getText("doctors_title_color") || undefined }}
+                    style={{ color: getColor("doctors_title_color", "#1f2937") }}
                   >
                     {renderFormattedText(
                       getText("doctors_title") ||
@@ -671,7 +678,7 @@ export default function HomePage() {
                 </Link>
                 <p
                   className="text-base sm:text-lg max-w-2xl mx-auto px-4"
-                  style={{ color: getText("doctors_text_color") || undefined }}
+                  style={{ color: getColor("doctors_text_color", "#4b5563") }}
                 >
                   {renderFormattedText(
                     getText("doctors_description") ||
@@ -1174,12 +1181,9 @@ export default function HomePage() {
 
         {/* CTA Section */}
         <section
-          className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-secondary/10 to-primary/5"
+          className="py-16 md:py-24"
           style={{
-            backgroundColor: getText("cta_background_color") || undefined,
-            backgroundImage: getText("cta_background_color")
-              ? "none"
-              : "linear-gradient(to bottom right, hsl(var(--primary) / 0.05), hsl(var(--secondary) / 0.1), hsl(var(--primary) / 0.05))",
+            backgroundColor: getColor("cta_background_color"),
           }}
         >
           <div className="container">
@@ -1193,7 +1197,7 @@ export default function HomePage() {
               <motion.h2
                 className="text-3xl md:text-4xl font-bold text-balance"
                 variants={fadeInUp}
-                style={{ color: getText("cta_title_color") || undefined }}
+                style={{ color: getColor("cta_title_color", "#ffffff") }}
               >
                 {renderFormattedText(
                   getText("cta_title") ||
@@ -1205,7 +1209,7 @@ export default function HomePage() {
               <motion.p
                 className="text-lg text-balance"
                 variants={fadeInUp}
-                style={{ color: getText("cta_text_color") || undefined }}
+                style={{ color: getColor("cta_text_color", "#ffffff") }}
               >
                 {renderFormattedText(
                   getText("cta_description") ||
