@@ -244,21 +244,17 @@ export async function createGoogleSheet(
   try {
     console.log("[v0] 📄 إنشاء جدول Google Sheet جديد:", sheetName)
 
-    const connectionTest = await testGoogleSheetsConnection()
-    if (!connectionTest.success) {
-      console.error("[v0] ❌ فشل اختبار الاتصال:", connectionTest.message)
+    // التحقق المباشر من المتغيرات البيئية فقط
+    if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
+      console.error("[v0] ❌ بيانات اعتماد Google غير موجودة")
       return {
         success: false,
-        error: `${connectionTest.message}. ${connectionTest.details?.solution || ""}`,
+        error:
+          "بيانات اعتماد Google غير موجودة. يرجى إضافة GOOGLE_PRIVATE_KEY و GOOGLE_SERVICE_ACCOUNT_EMAIL في إعدادات Vercel",
       }
     }
 
-    console.log("[v0] ✅ اختبار الاتصال نجح، جاري إنشاء الجدول...")
-
-    if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
-      console.error("[v0] ❌ بيانات اعتماد Google غير موجودة")
-      return { success: false, error: "Google credentials not configured" }
-    }
+    console.log("[v0] ✅ بيانات الاعتماد موجودة، جاري إنشاء الجدول...")
 
     const privateKey = cleanPrivateKey(process.env.GOOGLE_PRIVATE_KEY)
 
@@ -279,7 +275,7 @@ export async function createGoogleSheet(
     console.log("[v0] إنشاء جدول بنظام إعادة المحاولة...")
 
     const spreadsheet = await retryWithBackoff(async () => {
-      return await sheets.spreadsheets.create({
+      const result = await sheets.spreadsheets.create({
         requestBody: {
           properties: {
             title: sheetName,
@@ -288,6 +284,9 @@ export async function createGoogleSheet(
           },
         },
       })
+
+      console.log("[v0] ✅ استجابة Google API:", JSON.stringify(result.data, null, 2))
+      return result
     })
 
     const spreadsheetId = spreadsheet.data.spreadsheetId
@@ -381,13 +380,19 @@ export async function createGoogleSheet(
     }
   } catch (error: any) {
     console.error("[v0] ❌ خطأ في إنشاء جدول Google Sheet:", error.message)
-    console.error("[v0] تفاصيل الخطأ:", error)
+    console.error("[v0] تفاصيل الخطأ الكاملة:", JSON.stringify(error, null, 2))
 
     let userMessage = error.message
-    if (error.message.includes("403")) {
-      userMessage = "لا توجد صلاحيات كافية. تأكد من تفعيل Google Drive API في Google Cloud Console"
-    } else if (error.message.includes("invalid_grant")) {
-      userMessage = "بيانات الاعتماد منتهية الصلاحية. يرجى إعادة إنشاء Service Account"
+    if (error.message.includes("403") || error.code === 403) {
+      userMessage =
+        "لا توجد صلاحيات كافية. تأكد من:\n1. تفعيل Google Drive API في Google Cloud Console\n2. تفعيل Google Sheets API\n3. إضافة الصلاحيات الصحيحة للـ Service Account"
+    } else if (error.message.includes("invalid_grant") || error.code === 401) {
+      userMessage =
+        "بيانات الاعتماد منتهية الصلاحية أو غير صحيحة. يرجى:\n1. إعادة إنشاء Service Account من Google Cloud Console\n2. تحديث المتغيرات البيئية في Vercel"
+    } else if (error.message.includes("429") || error.code === 429) {
+      userMessage = "تم تجاوز حد الطلبات. يرجى الانتظار قليلاً ثم المحاولة مرة أخرى"
+    } else if (error.message.includes("Private key")) {
+      userMessage = "مفتاح Private Key غير صحيح. تأكد من نسخ المفتاح بالكامل من ملف JSON"
     }
 
     return { success: false, error: userMessage }
