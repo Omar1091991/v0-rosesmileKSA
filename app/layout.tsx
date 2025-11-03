@@ -8,6 +8,7 @@ import "./globals.css"
 import { Suspense } from "react"
 import { Toaster } from "@/components/ui/toaster"
 import { WhatsAppButton } from "@/components/whatsapp-button"
+import { DynamicColors } from "@/components/dynamic-colors"
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body className={`font-sans ${cairo.variable} ${GeistMono.variable}`}>
+        <DynamicColors />
         <Suspense fallback={<div>Loading...</div>}>
           {children}
           <Analytics />

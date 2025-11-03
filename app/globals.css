@@ -118,6 +118,98 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Apply custom colors from site settings */
+  /* Hero Section Colors */
+  .hero-section {
+    background-color: var(--hero-background-color, #ffffff);
+  }
+
+  .hero-title {
+    color: var(--hero-title-color, #1f2937);
+  }
+
+  .hero-description {
+    color: var(--hero-description-color, #4b5563);
+  }
+
+  /* Features Section Colors */
+  .features-section {
+    background-color: var(--features-background-color, #f9fafb);
+  }
+
+  .features-title {
+    color: var(--features-title-color, #1f2937);
+  }
+
+  .features-text {
+    color: var(--features-text-color, #4b5563);
+  }
+
+  /* Services Section Colors */
+  .services-section {
+    background-color: var(--services-background-color, #ffffff);
+  }
+
+  .services-title {
+    color: var(--services-title-color, #1f2937);
+  }
+
+  .services-text {
+    color: var(--services-text-color, #4b5563);
+  }
+
+  /* Doctors Section Colors */
+  .doctors-section {
+    background-color: var(--doctors-background-color, #f9fafb);
+  }
+
+  .doctors-title {
+    color: var(--doctors-title-color, #1f2937);
+  }
+
+  .doctors-text {
+    color: var(--doctors-text-color, #4b5563);
+  }
+
+  /* CTA Section Colors */
+  .cta-section {
+    background-color: var(--cta-background-color, #ec4899);
+  }
+
+  .cta-title {
+    color: var(--cta-title-color, #ffffff);
+  }
+
+  .cta-text {
+    color: var(--cta-text-color, #ffffff);
+  }
+
+  /* Working Hours Section Colors */
+  .working-hours-section {
+    background-color: var(--working-hours-background-color, #f9fafb);
+  }
+
+  .working-hours-title {
+    color: var(--working-hours-title-color, #1f2937);
+  }
+
+  .working-hours-text {
+    color: var(--working-hours-text-color, #4b5563);
+  }
+
+  /* Global Colors */
+  body {
+    background-color: var(--site-background-color, #ffe1f3);
+  }
+
+  header {
+    background-color: var(--header-background-color, #ffffff);
+  }
+
+  footer {
+    background-color: var(--footer-background-color, #1f2937);
+  }
 }
 
 [dir="rtl"] {
