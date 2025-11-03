@@ -158,6 +158,72 @@ TPehuVjQfxC9HOTF5LYOeHJz
                 <div className="flex-1">
                   <AlertDescription>
                     <p className="font-semibold mb-2">{testResult.message}</p>
+
+                    {!testResult.success && testResult.details && (
+                      <div className="mt-3 space-y-3">
+                        {testResult.details.errorCode && (
+                          <div className="text-sm">
+                            <span className="font-semibold">رمز الخطأ:</span>{" "}
+                            <code className="bg-red-100 px-2 py-1 rounded">{testResult.details.errorCode}</code>
+                          </div>
+                        )}
+
+                        {testResult.details.error && (
+                          <div className="text-sm bg-red-50 p-3 rounded border border-red-200">
+                            <p className="font-semibold text-red-800 mb-1">تفاصيل الخطأ:</p>
+                            <p className="text-red-700 font-mono text-xs">{testResult.details.error}</p>
+                          </div>
+                        )}
+
+                        {testResult.details.solution && (
+                          <div className="text-sm bg-yellow-50 p-3 rounded border border-yellow-200">
+                            <p className="font-semibold text-yellow-800 mb-2">الحل المقترح:</p>
+                            <div className="text-yellow-700 whitespace-pre-line">{testResult.details.solution}</div>
+                          </div>
+                        )}
+
+                        {(testResult.details.errorCode === 403 || testResult.message.includes("صلاحيات")) && (
+                          <div className="text-sm bg-blue-50 p-3 rounded border border-blue-200">
+                            <p className="font-semibold text-blue-800 mb-2">خطوات إضافية:</p>
+                            <ol className="list-decimal list-inside space-y-1 text-blue-700 mr-2">
+                              <li>تأكد من تفعيل Google Sheets API و Google Drive API</li>
+                              <li>تحقق من أن المتغيرات البيئية تم إضافتها بشكل صحيح في Vercel</li>
+                              <li>أعد نشر المشروع في Vercel بعد إضافة المتغيرات</li>
+                              <li>انتظر 2-3 دقائق حتى تصبح التغييرات نافذة</li>
+                            </ol>
+                            <div className="mt-3 flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  window.open(
+                                    "https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=v0-rosesmile2",
+                                    "_blank",
+                                  )
+                                }
+                              >
+                                <ExternalLink className="ml-1 h-3 w-3" />
+                                تفعيل Sheets API
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  window.open(
+                                    "https://console.cloud.google.com/apis/library/drive.googleapis.com?project=v0-rosesmile2",
+                                    "_blank",
+                                  )
+                                }
+                              >
+                                <ExternalLink className="ml-1 h-3 w-3" />
+                                تفعيل Drive API
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {testResult.diagnostics && (
                       <div className="text-sm space-y-1 mt-2">
                         <p>✓ Sheet ID: {testResult.diagnostics.hasSheetId ? "موجود" : "غير موجود"}</p>
@@ -170,6 +236,7 @@ TPehuVjQfxC9HOTF5LYOeHJz
                         )}
                       </div>
                     )}
+
                     {testResult.error && (
                       <div className="mt-3">
                         <p className="text-sm text-red-600 font-mono bg-red-50 p-2 rounded">{testResult.error}</p>
