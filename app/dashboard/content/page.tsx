@@ -276,6 +276,53 @@ const BACKGROUND_COLOR_SECTIONS = [
     ],
   },
   {
+    section: "header_footer_text_colors",
+    title: "ألوان نصوص الهيدر والفوتر",
+    fields: [
+      { key: "header_logo_text_color", label: "لون نص شعار الهيدر", type: "color", defaultValue: "#ec4899" },
+      { key: "header_nav_text_color", label: "لون نصوص روابط القائمة", type: "color", defaultValue: "#1f2937" },
+      {
+        key: "header_nav_hover_color",
+        label: "لون نصوص روابط القائمة عند التمرير",
+        type: "color",
+        defaultValue: "#ec4899",
+      },
+      { key: "footer_heading_color", label: "لون عناوين الفوتر", type: "color", defaultValue: "#ffffff" },
+      { key: "footer_text_color", label: "لون نصوص الفوتر", type: "color", defaultValue: "#d1d5db" },
+      { key: "footer_link_color", label: "لون روابط الفوتر", type: "color", defaultValue: "#d1d5db" },
+      { key: "footer_link_hover_color", label: "لون روابط الفوتر عند التمرير", type: "color", defaultValue: "#ec4899" },
+      { key: "footer_copyright_color", label: "لون نص حقوق النشر", type: "color", defaultValue: "#9ca3af" },
+    ],
+  },
+  {
+    section: "button_colors",
+    title: "ألوان الأزرار",
+    fields: [
+      { key: "primary_button_bg_color", label: "لون خلفية الزر الأساسي", type: "color", defaultValue: "#ec4899" },
+      { key: "primary_button_text_color", label: "لون نص الزر الأساسي", type: "color", defaultValue: "#ffffff" },
+      {
+        key: "primary_button_hover_bg_color",
+        label: "لون خلفية الزر الأساسي عند التمرير",
+        type: "color",
+        defaultValue: "#db2777",
+      },
+      { key: "secondary_button_bg_color", label: "لون خلفية الزر الثانوي", type: "color", defaultValue: "#ffffff" },
+      { key: "secondary_button_text_color", label: "لون نص الزر الثانوي", type: "color", defaultValue: "#1f2937" },
+      { key: "secondary_button_border_color", label: "لون حدود الزر الثانوي", type: "color", defaultValue: "#e5e7eb" },
+    ],
+  },
+  {
+    section: "card_colors",
+    title: "ألوان البطاقات (الخدمات، الأطباء، المقالات)",
+    fields: [
+      { key: "card_background_color", label: "لون خلفية البطاقة", type: "color", defaultValue: "#ffffff" },
+      { key: "card_title_color", label: "لون عنوان البطاقة", type: "color", defaultValue: "#1f2937" },
+      { key: "card_text_color", label: "لون نص البطاقة", type: "color", defaultValue: "#4b5563" },
+      { key: "card_border_color", label: "لون حدود البطاقة", type: "color", defaultValue: "#e5e7eb" },
+      { key: "card_hover_border_color", label: "لون حدود البطاقة عند التمرير", type: "color", defaultValue: "#ec4899" },
+    ],
+  },
+  {
     section: "text_colors",
     title: "ألوان النصوص حسب القسم",
     fields: [
@@ -1030,7 +1077,134 @@ export default function ContentManagementPage() {
         </TabsContent>
 
         <TabsContent value="colors" className="space-y-6 mt-6">
-          {BACKGROUND_COLOR_SECTIONS.map((section, sectionIndex) => {
+          {[
+            ...BACKGROUND_COLOR_SECTIONS,
+            {
+              section: "header_footer_text_colors",
+              title: "ألوان نصوص الهيدر والفوتر",
+              fields: [
+                { key: "header_logo_text_color", label: "لون نص شعار الهيدر", type: "color", defaultValue: "#ec4899" },
+                {
+                  key: "header_nav_text_color",
+                  label: "لون نصوص روابط القائمة",
+                  type: "color",
+                  defaultValue: "#1f2937",
+                },
+                {
+                  key: "header_nav_hover_color",
+                  label: "لون نصوص روابط القائمة عند التمرير",
+                  type: "color",
+                  defaultValue: "#ec4899",
+                },
+                { key: "footer_heading_color", label: "لون عناوين الفوتر", type: "color", defaultValue: "#ffffff" },
+                { key: "footer_text_color", label: "لون نصوص الفوتر", type: "color", defaultValue: "#d1d5db" },
+                { key: "footer_link_color", label: "لون روابط الفوتر", type: "color", defaultValue: "#d1d5db" },
+                {
+                  key: "footer_link_hover_color",
+                  label: "لون روابط الفوتر عند التمرير",
+                  type: "color",
+                  defaultValue: "#ec4899",
+                },
+                { key: "footer_copyright_color", label: "لون نص حقوق النشر", type: "color", defaultValue: "#9ca3af" },
+              ],
+            },
+            {
+              section: "button_colors",
+              title: "ألوان الأزرار",
+              fields: [
+                {
+                  key: "primary_button_bg_color",
+                  label: "لون خلفية الزر الأساسي",
+                  type: "color",
+                  defaultValue: "#ec4899",
+                },
+                {
+                  key: "primary_button_text_color",
+                  label: "لون نص الزر الأساسي",
+                  type: "color",
+                  defaultValue: "#ffffff",
+                },
+                {
+                  key: "primary_button_hover_bg_color",
+                  label: "لون خلفية الزر الأساسي عند التمرير",
+                  type: "color",
+                  defaultValue: "#db2777",
+                },
+                {
+                  key: "secondary_button_bg_color",
+                  label: "لون خلفية الزر الثانوي",
+                  type: "color",
+                  defaultValue: "#ffffff",
+                },
+                {
+                  key: "secondary_button_text_color",
+                  label: "لون نص الزر الثانوي",
+                  type: "color",
+                  defaultValue: "#1f2937",
+                },
+                {
+                  key: "secondary_button_border_color",
+                  label: "لون حدود الزر الثانوي",
+                  type: "color",
+                  defaultValue: "#e5e7eb",
+                },
+              ],
+            },
+            {
+              section: "card_colors",
+              title: "ألوان البطاقات (الخدمات، الأطباء، المقالات)",
+              fields: [
+                { key: "card_background_color", label: "لون خلفية البطاقة", type: "color", defaultValue: "#ffffff" },
+                { key: "card_title_color", label: "لون عنوان البطاقة", type: "color", defaultValue: "#1f2937" },
+                { key: "card_text_color", label: "لون نص البطاقة", type: "color", defaultValue: "#4b5563" },
+                { key: "card_border_color", label: "لون حدود البطاقة", type: "color", defaultValue: "#e5e7eb" },
+                {
+                  key: "card_hover_border_color",
+                  label: "لون حدود البطاقة عند التمرير",
+                  type: "color",
+                  defaultValue: "#ec4899",
+                },
+              ],
+            },
+            {
+              section: "text_colors",
+              title: "ألوان النصوص حسب القسم",
+              fields: [
+                { key: "hero_title_color", label: "لون عنوان القسم الرئيسي", type: "color", defaultValue: "#1f2937" },
+                {
+                  key: "hero_description_color",
+                  label: "لون وصف القسم الرئيسي",
+                  type: "color",
+                  defaultValue: "#4b5563",
+                },
+                {
+                  key: "features_title_color",
+                  label: "لون عنوان قسم المميزات",
+                  type: "color",
+                  defaultValue: "#1f2937",
+                },
+                { key: "features_text_color", label: "لون نص قسم المميزات", type: "color", defaultValue: "#4b5563" },
+                { key: "services_title_color", label: "لون عنوان قسم الخدمات", type: "color", defaultValue: "#1f2937" },
+                { key: "services_text_color", label: "لون نص قسم الخدمات", type: "color", defaultValue: "#4b5563" },
+                { key: "doctors_title_color", label: "لون عنوان قسم الأطباء", type: "color", defaultValue: "#1f2937" },
+                { key: "doctors_text_color", label: "لون نص قسم الأطباء", type: "color", defaultValue: "#4b5563" },
+                {
+                  key: "working_hours_title_color",
+                  label: "لون عنوان ساعات العمل",
+                  type: "color",
+                  defaultValue: "#1f2937",
+                },
+                {
+                  key: "working_hours_text_color",
+                  label: "لون نص ساعات العمل",
+                  type: "color",
+                  defaultValue: "#4b5563",
+                },
+                { key: "cta_title_color", label: "لون عنوان دعوة للعمل", type: "color", defaultValue: "#ffffff" },
+                { key: "cta_text_color", label: "لون نص دعوة للعمل", type: "color", defaultValue: "#ffffff" },
+              ],
+            },
+          ].map((section, sectionIndex) => {
             const sectionFieldKeys = section.fields.map((f) => f.key)
             const isSavingThisSection = savingSection && sectionFieldKeys.includes(savingSection)
 

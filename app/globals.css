@@ -210,6 +210,43 @@
   footer {
     background-color: var(--footer-background-color, #1f2937);
   }
+
+  /* Adding button color classes */
+  /* Primary Button Colors */
+  .btn-primary {
+    background-color: var(--primary-button-bg-color, #ec4899);
+    color: var(--primary-button-text-color, #ffffff);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-button-hover-bg-color, #db2777);
+  }
+
+  /* Secondary Button Colors */
+  .btn-secondary {
+    background-color: var(--secondary-button-bg-color, #ffffff);
+    color: var(--secondary-button-text-color, #1f2937);
+    border-color: var(--secondary-button-border-color, #e5e7eb);
+  }
+
+  /* Adding card color classes */
+  /* Card Colors */
+  .custom-card {
+    background-color: var(--card-background-color, #ffffff);
+    border-color: var(--card-border-color, #e5e7eb);
+  }
+
+  .custom-card:hover {
+    border-color: var(--card-hover-border-color, #ec4899);
+  }
+
+  .custom-card-title {
+    color: var(--card-title-color, #1f2937);
+  }
+
+  .custom-card-text {
+    color: var(--card-text-color, #4b5563);
+  }
 }
 
 [dir="rtl"] {

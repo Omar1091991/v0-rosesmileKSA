@@ -16,13 +16,18 @@ export function DynamicColors() {
 
         const colorSettings: Record<string, string> = {}
         settings.forEach((setting: any) => {
-          // Only process color-related settings
           if (
             setting.key.includes("color") ||
             setting.key.includes("background") ||
             setting.key.includes("_title_color") ||
             setting.key.includes("_text_color") ||
-            setting.key.includes("_description_color")
+            setting.key.includes("_description_color") ||
+            setting.key.includes("header_") ||
+            setting.key.includes("footer_") ||
+            setting.key.includes("button_") ||
+            setting.key.includes("card_") ||
+            setting.key.includes("_hover_") ||
+            setting.key.includes("_border_")
           ) {
             colorSettings[setting.key] = setting.value_ar || ""
           }

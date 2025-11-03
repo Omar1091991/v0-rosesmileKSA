@@ -11,6 +11,9 @@ export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mainBookingFormId, setMainBookingFormId] = useState<string>("")
   const [headerBgColor, setHeaderBgColor] = useState<string>("")
+  const [headerLogoTextColor, setHeaderLogoTextColor] = useState<string>("")
+  const [headerNavTextColor, setHeaderNavTextColor] = useState<string>("")
+  const [headerNavHoverColor, setHeaderNavHoverColor] = useState<string>("")
 
   useEffect(() => {
     async function fetchData() {
@@ -28,9 +31,25 @@ export function SiteHeader() {
 
         const settingsData = await settingsResponse.json()
         const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
+
         const headerColorSetting = settings.find((s: any) => s.key === "header_background_color")
         if (headerColorSetting?.value_ar) {
           setHeaderBgColor(headerColorSetting.value_ar)
+        }
+
+        const logoTextColorSetting = settings.find((s: any) => s.key === "header_logo_text_color")
+        if (logoTextColorSetting?.value_ar) {
+          setHeaderLogoTextColor(logoTextColorSetting.value_ar)
+        }
+
+        const navTextColorSetting = settings.find((s: any) => s.key === "header_nav_text_color")
+        if (navTextColorSetting?.value_ar) {
+          setHeaderNavTextColor(navTextColorSetting.value_ar)
+        }
+
+        const navHoverColorSetting = settings.find((s: any) => s.key === "header_nav_hover_color")
+        if (navHoverColorSetting?.value_ar) {
+          setHeaderNavHoverColor(navHoverColorSetting.value_ar)
         }
       } catch (error) {
         console.error("Error fetching data:", error)
@@ -43,6 +62,18 @@ export function SiteHeader() {
 
   return (
     <>
+      <style jsx>{`
+        .header-logo-text {
+          color: ${headerLogoTextColor || "hsl(var(--primary))"};
+        }
+        .header-nav-link {
+          color: ${headerNavTextColor || "hsl(var(--foreground))"};
+        }
+        .header-nav-link:hover {
+          color: ${headerNavHoverColor || "hsl(var(--primary))"};
+        }
+      `}</style>
+
       <header
         className="sticky top-0 z-50 w-full border-b border-border/40 backdrop-blur supports-[backdrop-filter]:bg-background/60"
         style={{
@@ -59,26 +90,26 @@ export function SiteHeader() {
               className="h-12 w-auto"
               priority
             />
-            <div className="text-xl font-bold text-primary hidden sm:block">ابتسامة الورود</div>
+            <div className="text-xl font-bold header-logo-text hidden sm:block">ابتسامة الورود</div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/" className="text-sm font-medium header-nav-link transition-colors">
               الرئيسية
             </Link>
-            <Link href="/services" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/services" className="text-sm font-medium header-nav-link transition-colors">
               الخدمات
             </Link>
-            <Link href="/doctors" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/doctors" className="text-sm font-medium header-nav-link transition-colors">
               الأطباء
             </Link>
-            <Link href="/departments" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/departments" className="text-sm font-medium header-nav-link transition-colors">
               الأقسام
             </Link>
-            <Link href="/offers" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/offers" className="text-sm font-medium header-nav-link transition-colors">
               العروض
             </Link>
-            <Link href="/articles" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/articles" className="text-sm font-medium header-nav-link transition-colors">
               المقالات
             </Link>
           </nav>
@@ -101,42 +132,42 @@ export function SiteHeader() {
             <nav className="container flex flex-col gap-4 py-4 px-6">
               <Link
                 href="/"
-                className="text-sm font-medium hover:text-primary transition-colors"
+                className="text-sm font-medium header-nav-link transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 الرئيسية
               </Link>
               <Link
                 href="/services"
-                className="text-sm font-medium hover:text-primary transition-colors"
+                className="text-sm font-medium header-nav-link transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 الخدمات
               </Link>
               <Link
                 href="/doctors"
-                className="text-sm font-medium hover:text-primary transition-colors"
+                className="text-sm font-medium header-nav-link transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 الأطباء
               </Link>
               <Link
                 href="/departments"
-                className="text-sm font-medium hover:text-primary transition-colors"
+                className="text-sm font-medium header-nav-link transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 الأقسام
               </Link>
               <Link
                 href="/offers"
-                className="text-sm font-medium hover:text-primary transition-colors"
+                className="text-sm font-medium header-nav-link transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 العروض
               </Link>
               <Link
                 href="/articles"
-                className="text-sm font-medium hover:text-primary transition-colors"
+                className="text-sm font-medium header-nav-link transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 المقالات
