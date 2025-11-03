@@ -87,11 +87,19 @@ export async function POST(request: Request) {
       custom_services: custom_services || [],
     }
 
-    console.log("[v0] Creating Google Sheet for new booking form...")
+    console.log("[v0] 📊 محاولة إنشاء Google Sheet تلقائياً...")
     const sheetResult = await createGoogleSheet(formData.name_ar || "نموذج حجز جديد")
 
-    if (!sheetResult.success) {
-      console.warn("[v0] ⚠️ Could not create Google Sheet, continuing without it")
+    let googleSheetId = null
+    let googleSheetUrl = null
+
+    if (sheetResult.success) {
+      console.log("[v0] ✅ تم إنشاء Google Sheet بنجاح!")
+      googleSheetId = sheetResult.spreadsheetId
+      googleSheetUrl = sheetResult.spreadsheetUrl
+    } else {
+      console.error("[v0] ❌ فشل إنشاء Google Sheet:", sheetResult.error)
+      console.warn("[v0] ⚠️ سيتم إنشاء النموذج بدون Google Sheet. يمكنك إنشاء الجدول لاحقاً من زر 'إنشاء جدول جديد'")
     }
 
     const result = await db.query(
@@ -113,17 +121,23 @@ export async function POST(request: Request) {
         formData.is_main || false,
         formData.is_active !== false,
         formData.order_index || 0,
-        sheetResult.spreadsheetId || null,
-        sheetResult.spreadsheetUrl || null,
+        googleSheetId,
+        googleSheetUrl,
       ],
     )
 
-    console.log("[v0] ✅ Booking form created with Google Sheet:", {
+    const responseData = {
+      ...result.rows[0],
+      sheetCreationStatus: sheetResult.success ? "success" : "failed",
+      sheetCreationError: sheetResult.error || null,
+    }
+
+    console.log("[v0] ✅ تم إنشاء نموذج الحجز:", {
       formId: result.rows[0].id,
-      googleSheetUrl: result.rows[0].google_sheet_url,
+      googleSheetUrl: result.rows[0].google_sheet_url || "لم يتم الإنشاء",
     })
 
-    return NextResponse.json(result.rows[0])
+    return NextResponse.json(responseData)
   } catch (error: any) {
     console.error("[v0] Error creating booking form:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

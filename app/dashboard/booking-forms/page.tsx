@@ -145,10 +145,26 @@ export default function BookingFormsPage() {
         const bookingUrl = `${baseUrl}/booking/${savedForm.id || editingForm?.id}`
         setFormUrl(bookingUrl)
 
-        toast({
-          title: "نجح ✓",
-          description: editingForm ? "تم تحديث النموذج بنجاح" : "تم إضافة النموذج بنجاح",
-        })
+        if (!editingForm) {
+          // For new forms, check if Google Sheet was created
+          if (savedForm.sheetCreationStatus === "failed") {
+            toast({
+              title: "⚠️ تم إنشاء النموذج بدون Google Sheet",
+              description: `النموذج تم إنشاؤه بنجاح، لكن فشل إنشاء Google Sheet: ${savedForm.sheetCreationError || "خطأ غير معروف"}. يمكنك إنشاء الجدول لاحقاً من زر 'إنشاء جدول جديد'.`,
+              variant: "default",
+            })
+          } else {
+            toast({
+              title: "✅ تم إنشاء النموذج بنجاح",
+              description: "تم إنشاء النموذج وGoogle Sheet المرتبط به تلقائياً",
+            })
+          }
+        } else {
+          toast({
+            title: "نجح ✓",
+            description: "تم تحديث النموذج بنجاح",
+          })
+        }
 
         fetchForms()
 

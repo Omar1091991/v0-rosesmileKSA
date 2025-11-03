@@ -137,11 +137,123 @@ export async function appendToGoogleSheet(bookingData: any) {
   }
 }
 
+export async function testGoogleSheetsConnection(): Promise<{
+  success: boolean
+  message: string
+  details?: any
+}> {
+  try {
+    console.log("[v0] 🔍 اختبار اتصال Google Sheets...")
+
+    const requiredVars = {
+      GOOGLE_PRIVATE_KEY: process.env.GOOGLE_PRIVATE_KEY,
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    }
+
+    const missingVars = Object.entries(requiredVars)
+      .filter(([_, value]) => !value)
+      .map(([key]) => key)
+
+    if (missingVars.length > 0) {
+      return {
+        success: false,
+        message: `متغيرات البيئة المفقودة: ${missingVars.join(", ")}`,
+      }
+    }
+
+    const privateKey = cleanPrivateKey(process.env.GOOGLE_PRIVATE_KEY!)
+
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: privateKey,
+      },
+      scopes: [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/drive.file",
+      ],
+    })
+
+    const sheets = google.sheets({ version: "v4", auth })
+    const drive = google.drive({ version: "v3", auth })
+
+    console.log("[v0] اختبار إنشاء جدول تجريبي...")
+    const testSheet = await sheets.spreadsheets.create({
+      requestBody: {
+        properties: {
+          title: `Test Sheet - ${Date.now()}`,
+        },
+      },
+    })
+
+    const testSheetId = testSheet.data.spreadsheetId
+
+    if (!testSheetId) {
+      throw new Error("Failed to create test sheet")
+    }
+
+    console.log("[v0] ✅ تم إنشاء جدول تجريبي بنجاح")
+
+    try {
+      await drive.files.delete({
+        fileId: testSheetId,
+      })
+      console.log("[v0] ✅ تم حذف الجدول التجريبي")
+    } catch (error) {
+      console.warn("[v0] ⚠️ لم يتمكن من حذف الجدول التجريبي")
+    }
+
+    return {
+      success: true,
+      message: "الاتصال بـ Google Sheets يعمل بشكل صحيح",
+      details: {
+        serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        privateKeyLength: privateKey.length,
+        canCreateSheets: true,
+      },
+    }
+  } catch (error: any) {
+    console.error("[v0] ❌ خطأ في اختبار الاتصال:", error.message)
+
+    let errorMessage = "فشل الاتصال بـ Google Sheets"
+    const errorDetails: any = { error: error.message }
+
+    if (error.message.includes("invalid_grant")) {
+      errorMessage = "بيانات الاعتماد غير صالحة. يرجى إعادة إنشاء Service Account"
+      errorDetails.solution = "قم بإنشاء Service Account جديد من Google Cloud Console"
+    } else if (error.message.includes("403")) {
+      errorMessage = "لا توجد صلاحيات كافية. تأكد من تفعيل Google Drive API"
+      errorDetails.solution = "قم بتفعيل Google Drive API و Google Sheets API في Google Cloud Console"
+    } else if (error.message.includes("Private key")) {
+      errorMessage = "مفتاح Private Key غير صحيح"
+      errorDetails.solution = "تأكد من نسخ Private Key بشكل صحيح من ملف JSON"
+    }
+
+    return {
+      success: false,
+      message: errorMessage,
+      details: errorDetails,
+    }
+  }
+}
+
 export async function createGoogleSheet(
   sheetName: string,
 ): Promise<{ success: boolean; sheetId?: string; spreadsheetId?: string; spreadsheetUrl?: string; error?: string }> {
   try {
     console.log("[v0] 📄 إنشاء جدول Google Sheet جديد:", sheetName)
+
+    const connectionTest = await testGoogleSheetsConnection()
+    if (!connectionTest.success) {
+      console.error("[v0] ❌ فشل اختبار الاتصال:", connectionTest.message)
+      return {
+        success: false,
+        error: `${connectionTest.message}. ${connectionTest.details?.solution || ""}`,
+      }
+    }
+
+    console.log("[v0] ✅ اختبار الاتصال نجح، جاري إنشاء الجدول...")
 
     if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
       console.error("[v0] ❌ بيانات اعتماد Google غير موجودة")
@@ -155,7 +267,11 @@ export async function createGoogleSheet(
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
         private_key: privateKey,
       },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"],
+      scopes: [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/drive.file",
+      ],
     })
 
     const sheets = google.sheets({ version: "v4", auth })
@@ -182,37 +298,10 @@ export async function createGoogleSheet(
     console.log("[v0] ✅ تم إنشاء الجدول:", spreadsheetId)
 
     const sheetsData = spreadsheet.data.sheets || []
-    if (sheetsData.length > 0) {
-      const defaultSheetId = sheetsData[0].properties?.sheetId
-
-      try {
-        await sheets.spreadsheets.batchUpdate({
-          spreadsheetId,
-          requestBody: {
-            requests: [
-              {
-                updateSheetProperties: {
-                  properties: {
-                    sheetId: defaultSheetId,
-                    title: "الحجوزات",
-                  },
-                  fields: "title",
-                },
-              },
-            ],
-          },
-        })
-
-        console.log("[v0] ✅ تم تعديل اسم الورقة إلى 'الحجوزات'")
-      } catch (error: any) {
-        console.warn("[v0] ⚠️ لم يتمكن من تعديل اسم الورقة، جاري المتابعة:", error.message)
-      }
-    }
+    const sheetTitle = sheetsData.length > 0 ? sheetsData[0].properties?.title || "Sheet1" : "Sheet1"
 
     console.log("[v0] جاري إضافة رأس الجدول...")
     const headers = ["التاريخ", "الوقت", "الاسم", "رقم الجوال", "الخدمة", "النموذج", "التفاصيل"]
-
-    const sheetTitle = sheetsData.length > 0 ? sheetsData[0].properties?.title : "Sheet1"
 
     await retryWithBackoff(async () => {
       return await sheets.spreadsheets.values.update({
@@ -276,6 +365,7 @@ export async function createGoogleSheet(
           },
         })
       })
+      console.log("[v0] ✅ تم تنسيق رأس الجدول")
     } catch (error: any) {
       console.warn("[v0] ⚠️ لم يتمكن من تنسيق رأس الجدول، جاري المتابعة:", error.message)
     }
@@ -292,6 +382,14 @@ export async function createGoogleSheet(
   } catch (error: any) {
     console.error("[v0] ❌ خطأ في إنشاء جدول Google Sheet:", error.message)
     console.error("[v0] تفاصيل الخطأ:", error)
-    return { success: false, error: error.message }
+
+    let userMessage = error.message
+    if (error.message.includes("403")) {
+      userMessage = "لا توجد صلاحيات كافية. تأكد من تفعيل Google Drive API في Google Cloud Console"
+    } else if (error.message.includes("invalid_grant")) {
+      userMessage = "بيانات الاعتماد منتهية الصلاحية. يرجى إعادة إنشاء Service Account"
+    }
+
+    return { success: false, error: userMessage }
   }
 }
