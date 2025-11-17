@@ -29,15 +29,12 @@ export async function sendBookingToGoogleSheets(bookingData: any) {
 function cleanPrivateKey(key: string): string {
   let cleaned = key.trim()
 
-  // استبدال \n النصية بأسطر جديدة فعلية
   if (cleaned.includes("\\n")) {
     cleaned = cleaned.replace(/\\n/g, "\n")
   }
 
-  // إزالة المسافات الزائدة في نهاية الأسطر
   cleaned = cleaned.replace(/\s+$/gm, "")
 
-  // التحقق من وجود رأس وتذييل المفتاح
   if (!cleaned.startsWith("-----BEGIN PRIVATE KEY-----")) {
     throw new Error("Private key must start with -----BEGIN PRIVATE KEY-----")
   }
@@ -49,7 +46,7 @@ function cleanPrivateKey(key: string): string {
   return cleaned
 }
 
-export async function appendToGoogleSheet(bookingData: any, customSpreadsheetId?: string) {
+export async function appendToGoogleSheet(bookingData: any) {
   try {
     console.log("[v0] 🔍 بدء مزامنة Google Sheets...")
     console.log("[v0] بيانات الحجز:", JSON.stringify(bookingData, null, 2))
@@ -64,15 +61,12 @@ export async function appendToGoogleSheet(bookingData: any, customSpreadsheetId?
       throw new Error("GOOGLE_SERVICE_ACCOUNT_EMAIL not configured")
     }
 
-    const spreadsheetId = customSpreadsheetId || process.env.GOOGLE_SHEET_ID
-    
-    if (!spreadsheetId) {
-      console.log("[v0] ❌ لا يوجد معرف جدول (لا GOOGLE_SHEET_ID ولا customSpreadsheetId)")
-      throw new Error("No spreadsheet ID provided")
+    if (!process.env.GOOGLE_SHEET_ID) {
+      console.log("[v0] ❌ GOOGLE_SHEET_ID غير موجود")
+      throw new Error("GOOGLE_SHEET_ID not configured")
     }
 
     console.log("[v0] ✅ جميع متغيرات البيئة موجودة")
-    console.log("[v0] 📊 معرف الجدول:", spreadsheetId)
 
     const privateKey = cleanPrivateKey(process.env.GOOGLE_PRIVATE_KEY)
 
@@ -81,15 +75,12 @@ export async function appendToGoogleSheet(bookingData: any, customSpreadsheetId?
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
         private_key: privateKey,
       },
-      scopes: [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
-        "https://www.googleapis.com/auth/drive.file",
-      ],
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     })
 
     console.log("[v0] إنشاء عميل Google Sheets...")
     const sheets = google.sheets({ version: "v4", auth })
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID
 
     console.log("[v0] جاري الحصول على بيانات الجدول...")
     const spreadsheet = await sheets.spreadsheets.get({
@@ -169,7 +160,7 @@ export async function testGoogleSheetsConnection(): Promise<{
         message: `متغيرات البيئة المفقودة: ${missingVars.join(", ")}`,
         details: {
           missingVars,
-          solution: "أضف المتغيرات المفقودة في إعدادات Vercel ثم أعد نشر المشروع. تأكد من استخدام بيانات اعتماد مشروع rosesmile-booking",
+          solution: "أضف المتغيرات المفقودة في إعدادات Vercel ثم أعد نشر المشروع",
         },
       }
     }
@@ -247,24 +238,17 @@ export async function testGoogleSheetsConnection(): Promise<{
         errorMessage = "لا توجد صلاحيات كافية"
         solution =
           "تأكد من تفعيل Google Sheets API و Google Drive API في Google Cloud Console:\n" +
-          "1. اذهب إلى https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=rosesmile-booking\n" +
-          "2. اضغط 'Enable' لتفعيل Google Sheets API\n" +
-          "3. اذهب إلى https://console.cloud.google.com/apis/library/drive.googleapis.com?project=rosesmile-booking\n" +
-          "4. اضغط 'Enable' لتفعيل Google Drive API\n" +
-          "5. انتظر دقيقة واحدة ثم حاول مرة أخرى"
+          "1. اذهب إلى https://console.cloud.google.com/apis/library\n" +
+          "2. ابحث عن 'Google Sheets API' وفعّله\n" +
+          "3. ابحث عن 'Google Drive API' وفعّله"
       } else if (error.code === 401 || error.message.includes("invalid_grant")) {
-        errorMessage = "بيانات الاعتماد غير صالحة أو منتهية"
+        errorMessage = "بيانات الاعتماد غير صالحة"
         solution =
           "قم بإنشاء Service Account جديد:\n" +
-          "1. اذهب إلى https://console.cloud.google.com/iam-admin/serviceaccounts?project=rosesmile-booking\n" +
-          "2. اضغط 'Create Service Account'\n" +
-          "3. أدخل اسم: rosesmile-svc\n" +
-          "4. اضغط 'Done'\n" +
-          "5. اضغط على Service Account الجديد\n" +
-          "6. اذهب إلى تبويب 'Keys'\n" +
-          "7. اضغط 'Add Key' > 'Create new key' > 'JSON'\n" +
-          "8. حدّث المتغيرات البيئية في Vercel بالقيم الجديدة من ملف JSON\n" +
-          "9. أعد نشر المشروع"
+          "1. اذهب إلى Google Cloud Console\n" +
+          "2. IAM & Admin > Service Accounts\n" +
+          "3. أنشئ Service Account جديد وحمّل مفتاح JSON\n" +
+          "4. حدّث المتغيرات في Vercel"
       } else if (error.code === 429) {
         errorMessage = "تم تجاوز حد الطلبات"
         solution = "انتظر دقيقة ثم حاول مرة أخرى"
@@ -300,6 +284,7 @@ export async function testGoogleSheetsConnection(): Promise<{
       console.log("[v0] ✅ تم حذف الجدول التجريبي")
     } catch (error: any) {
       console.warn("[v0] ⚠️ لم يتمكن من حذف الجدول التجريبي:", error.message)
+      // This is not critical, so we don't fail the test
     }
 
     return {
@@ -311,7 +296,6 @@ export async function testGoogleSheetsConnection(): Promise<{
         canCreateSheets: true,
         canDeleteSheets: true,
         testSheetId,
-        project: "rosesmile-booking"
       },
     }
   } catch (error: any) {
@@ -336,6 +320,7 @@ export async function createGoogleSheet(
   try {
     console.log("[v0] 📄 إنشاء جدول Google Sheet جديد:", sheetName)
 
+    // التحقق المباشر من المتغيرات البيئية فقط
     if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
       console.error("[v0] ❌ بيانات اعتماد Google غير موجودة")
       return {
@@ -362,7 +347,6 @@ export async function createGoogleSheet(
     })
 
     const sheets = google.sheets({ version: "v4", auth })
-    const drive = google.drive({ version: "v3", auth })
 
     console.log("[v0] إنشاء جدول بنظام إعادة المحاولة...")
 
@@ -387,32 +371,6 @@ export async function createGoogleSheet(
     }
 
     console.log("[v0] ✅ تم إنشاء الجدول:", spreadsheetId)
-
-    if (process.env.GOOGLE_FOLDER_ID) {
-      try {
-        console.log("[v0] 📁 نقل الجدول إلى المجلد:", process.env.GOOGLE_FOLDER_ID)
-        
-        await retryWithBackoff(async () => {
-          return await drive.files.update({
-            fileId: spreadsheetId,
-            addParents: process.env.GOOGLE_FOLDER_ID,
-            removeParents: 'root',
-            fields: 'id, parents',
-          })
-        })
-        
-        console.log("[v0] ✅ تم نقل الجدول إلى المجلد بنجاح")
-      } catch (error: any) {
-        console.error("[v0] ⚠️ لم يتمكن من نقل الجدول إلى المجلد:", error.message)
-        
-        if (error.code === 403) {
-          console.error("[v0] تأكد من أن Service Account لديه صلاحية 'Editor' على المجلد")
-          console.error("[v0] شارك المجلد مع:", process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL)
-        }
-      }
-    } else {
-      console.log("[v0] ℹ️ لم يتم تحديد GOOGLE_FOLDER_ID، سيبقى الجدول في المجلد الجذر")
-    }
 
     const sheetsData = spreadsheet.data.sheets || []
     const sheetTitle = sheetsData.length > 0 ? sheetsData[0].properties?.title || "Sheet1" : "Sheet1"
@@ -503,14 +461,14 @@ export async function createGoogleSheet(
     let userMessage = error.message
     if (error.message.includes("403") || error.code === 403) {
       userMessage =
-        "لا توجد صلاحيات كافية. تأكد من:\n1. تفعيل Google Drive API في https://console.cloud.google.com/apis/library/drive.googleapis.com?project=rosesmile-booking\n2. تفعيل Google Sheets API في https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=rosesmile-booking\n3. انتظر دقيقة واحدة ثم حاول مرة أخرى"
+        "لا توجد صلاحيات كافية. تأكد من:\n1. تفعيل Google Drive API في Google Cloud Console\n2. تفعيل Google Sheets API\n3. إضافة الصلاحيات الصحيحة للـ Service Account"
     } else if (error.message.includes("invalid_grant") || error.code === 401) {
       userMessage =
-        "بيانات الاعتماد منتهية الصلاحية أو غير صحيحة. يرجى:\n1. الذهاب إلى https://console.cloud.google.com/iam-admin/serviceaccounts?project=rosesmile-booking\n2. إنشاء Service Account جديد أو إنشاء مفتاح JSON جديد للحساب الحالي\n3. تحديث المتغيرات البيئية في Vercel\n4. إعادة نشر المشروع"
+        "بيانات الاعتماد منتهية الصلاحية أو غير صحيحة. يرجى:\n1. إعادة إنشاء Service Account من Google Cloud Console\n2. تحديث المتغيرات البيئية في Vercel"
     } else if (error.message.includes("429") || error.code === 429) {
       userMessage = "تم تجاوز حد الطلبات. يرجى الانتظار قليلاً ثم المحاولة مرة أخرى"
     } else if (error.message.includes("Private key")) {
-      userMessage = "مفتاح Private Key غير صحيح. تأكد من نسخ المفتاح بالكامل من ملف JSON بما في ذلك السطور BEGIN و END"
+      userMessage = "مفتاح Private Key غير صحيح. تأكد من نسخ المفتاح بالكامل من ملف JSON"
     }
 
     return { success: false, error: userMessage }

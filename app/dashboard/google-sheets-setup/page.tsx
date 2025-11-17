@@ -5,23 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { CheckCircle2, XCircle, Loader2, Copy, ExternalLink, RotateCcw, Database, FileText, Info } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { useToast } from "@/hooks/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { CheckCircle2, XCircle, Loader2, Copy, ExternalLink, RotateCcw } from "lucide-react"
 
 export default function GoogleSheetsSetupPage() {
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<any>(null)
   const [resetting, setResetting] = useState(false)
-  const [showSqlScript, setShowSqlScript] = useState(false)
-  const { toast } = useToast()
 
   const handleTest = async () => {
     setTesting(true)
@@ -81,149 +71,35 @@ export default function GoogleSheetsSetupPage() {
     navigator.clipboard.writeText(text)
   }
 
-  const handleCopySqlScript = () => {
-    const sqlScript = `-- ============================================
--- سكريبت الإعداد الكامل لـ Google Sheets
--- ============================================
--- قم بنسخ هذا السكريبت كاملاً وتشغيله في Supabase SQL Editor
--- https://supabase.com/dashboard/project/ynspnyjdpjjdeqggmac/sql
--- ============================================
-
--- الخطوة 1: إضافة أعمدة Google Sheet إلى جدول booking_forms
-ALTER TABLE booking_forms 
-ADD COLUMN IF NOT EXISTS google_sheet_id TEXT,
-ADD COLUMN IF NOT EXISTS google_sheet_url TEXT;
-
--- إنشاء فهرس للبحث السريع (إذا لم يكن موجوداً)
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_indexes 
-    WHERE indexname = 'idx_booking_forms_google_sheet_id'
-  ) THEN
-    CREATE INDEX idx_booking_forms_google_sheet_id ON booking_forms(google_sheet_id);
-  END IF;
-END $$;
-
--- الخطوة 2: عرض جميع النماذج الحالية مع حالة Google Sheet
-SELECT 
-  id,
-  name_ar AS "اسم النموذج",
-  name_en AS "Form Name",
-  is_active AS "نشط",
-  is_main AS "رئيسي",
-  CASE 
-    WHEN google_sheet_id IS NULL OR google_sheet_id = '' THEN '❌ غير مربوط'
-    ELSE '✅ مربوط'
-  END AS "حالة الربط",
-  google_sheet_id AS "معرف Google Sheet",
-  (SELECT COUNT(*) FROM bookings WHERE booking_form_id = booking_forms.id) AS "عدد الحجوزات",
-  created_at AS "تاريخ الإنشاء"
-FROM booking_forms
-ORDER BY id DESC;
-
--- ============================================
--- رسالة نجاح
--- ============================================
-SELECT '✅ تم الإعداد بنجاح! الآن يمكنك إنشاء نماذج حجز والعمل بشكل طبيعي.' AS "الحالة";
-
--- ============================================
--- خيارات إضافية (اختر ما تحتاجه وأزل -- من أوله)
--- ============================================
-
--- الخيار 1: إزالة ربط Google Sheet من جميع النماذج
--- UPDATE booking_forms 
--- SET google_sheet_id = NULL, 
---     google_sheet_url = NULL,
---     updated_at = NOW()
--- WHERE google_sheet_id IS NOT NULL;
-
--- الخيار 2: إزالة ربط Google Sheet من نموذج محدد
--- استبدل 1 بمعرف النموذج المطلوب
--- UPDATE booking_forms 
--- SET google_sheet_id = NULL, 
---     google_sheet_url = NULL,
---     updated_at = NOW()
--- WHERE id = 1;
-
--- الخيار 3: ربط نموذج موجود بـ Google Sheet يدوياً
--- استبدل 1 بمعرف النموذج و 'YOUR_SHEET_ID' بمعرف الجدول
--- UPDATE booking_forms 
--- SET google_sheet_id = 'YOUR_SHEET_ID',
---     google_sheet_url = 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit',
---     updated_at = NOW()
--- WHERE id = 1;
-
--- الخيار 4: عرض آخر 20 حجز مع معلومات النموذج
--- SELECT 
---   b.id AS "رقم الحجز",
---   b.patient_name AS "اسم المريض",
---   b.phone AS "الهاتف",
---   b.service_name AS "الخدمة",
---   b.preferred_date AS "التاريخ المفضل",
---   b.status AS "الحالة",
---   bf.name_ar AS "نموذج الحجز",
---   b.created_at AS "تاريخ الإنشاء"
--- FROM bookings b
--- LEFT JOIN booking_forms bf ON b.booking_form_id = bf.id
--- ORDER BY b.created_at DESC
--- LIMIT 20;
-
--- الخيار 5: إنشاء نموذج تجريبي بدون Google Sheets
--- INSERT INTO booking_forms (
---   name_ar,
---   name_en,
---   description_ar,
---   description_en,
---   is_active,
---   is_main
--- ) VALUES (
---   'نموذج تجريبي - بدون Google Sheets',
---   'Test Form - Without Google Sheets',
---   'نموذج اختبار لا يتطلب Google Sheets',
---   'Test form that does not require Google Sheets',
---   true,
---   false
--- )
--- RETURNING id, name_ar, name_en, 'تم إنشاء النموذج بنجاح!' AS message;`
-    
-    navigator.clipboard.writeText(sqlScript)
-    toast({
-      title: "تم النسخ",
-      description: "تم نسخ السكريبت الكامل إلى الحافظة",
-    })
-  }
-
-  const serviceAccountEmail = "rosesmile-svc@rosesmile-booking.iam.gserviceaccount.com"
+  const serviceAccountEmail = "v0-rosesmile2@v0-rosesmile2.iam.gserviceaccount.com"
   const sheetId = "1aULNHz7f3WC33mWYWMCzt8BL2Mc0O3NR00tpFRaIFBU"
-  const folderId = "1CB4LrRziHAjoHFj6b_sEaj2HtWXcBZyN"
   const privateKey = `-----BEGIN PRIVATE KEY-----
-MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCjQWjDQs1LNPwd
-TwHlirG2WRzY20fcMeQdREYAJYIbFRnPnrVUkJEj8qHrvh/idYJs3pMNxaaLPxL1
-0I0ePk0F44D9E4SetL0LXdHdOpcD5sZcBZmcYz0qkWxu2k1TM07ve5ZavZUQ+HBV
-fyaf182HU9JVKqw/C9yiCydu8rn1tWO3MvEqIsy36vVtf+cUy1ZEejM/WJ5qDM0e
-Psk/nCHQ9STMQGxoicwEBLJ7rGAF7Z/xhvRYuqBBSWI4KkB+78RqwzGa0gBrvmjP
-qze3/uEcDdCSI9Et6jgltzRyk3GzU8/7ToYZQrJ3VtVqBYZ6lwfas9Kt4n0VaBJh
-Mm+aljHrAgMBAAECggEATzdndsv84r/gj/Ys5O1yQxmlikKI8XtSBbOBxgNtSOfp
-wNlxgomtq8RJtqLoRNIhSeOMdpPQNuQRtq6OMz0m0bMtfV/Rq9LmolPRiCgsbAu4
-d6GOApkS7otnErkh6TvN0x3kfL5eTUBH/ex3WPt1svNE7eeJcgQ2+HgyF7925Zbq
-ysKVj28YW0LV3i9xKOclKkFL7PTFBWpXUM9W6uS6+D/N2xflHtb7LNuuTWdwD0uH
-zg+emQi50cWLZZj6uEItS9wtF/XZClyCbGBC5hoIjFrKoK1VbxA7j78tXmDy0fOd
-PEFZEzz7/Ryy7x47t1tG+THDO4Yl6ArYBud2g2bm8QKBgQDROLXB9JukvqWWl3iS
-ay58QrhdvHHckMdX2feElJYmfdiY1c8E4Ty/bJwEvf6FKfjzTHCXMa67eMN7Ud4u
-/l3VExEQjNsLVbE7YNZVVzH67Zr+izUCPXYIKHlgZqe90ZTMWgITmgNKiMuT4+jQ
-s/04lQqhx9V/dQTvxYcfuCGbsQKBgQDHwbmkjGmRwiRJg9RnBroNl+CbwuMBilH5
-aMnsy1sSxV+pCWg+34jD7oZxZWMCMtc403ooIPQx8smihzitS6xQoPgGdrO+CIK6
-YW0xDsgWhALf6O4barkJIpm7eyCilCiyDv5sE4syWVccSQF/a5HAtqzzdyDPk/GU
-JFRKSWn6WwKBgB56X2foxT+jkiW03RifSn9JjOgCyqdx48g1dWw35QOoc4QYKXcx
-hJLyNGwwbUJi0eRHb2NnFmgy+G8fhvlbjrm6dFLv4fztt8rJmY+HCz3dnSWVi9xO
-rcIUe1ICwk7RmBaIyiKm3fHeqaFaoxC8F5hFhe35WW2e02BGax/AyAyRAoGBAKoW
-ZzcYJA/rajB6otHy5VsLtkGKqPY3y+L9eeo5oVuTWge5rdzTQ0XqBOnrNWm61o1Z
-bItcu/EH1O6iCv1sENY6qdX/Hr8xyfZfXLVH69FYKIZ1dME9lz6TCqmbhsdINnqe
-z75AyeZeMhEwjKjtdBbOtOc9yV9Wjn3gjTEP38A/AoGBAKMribERjf134k6JZkHr
-Eh7XK4z8Jb5hzMiADJOtgSYR6+/ed29D9uVaJMHeV7vzhdmK0bUik8T+qN+MxnSJ
-DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
-4vZD2u7y0D1WbvfekEyooR0t
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDrgbTWhJKzX9sj
+xvzamgSfG/NVIoBQkbkelP6f16DxiKcGd7kXfX5pFcyH2C+TyxRnlH7vrqt8U+Xn
+gq+mkuwQ1AYiARqakAsvlu/PHcR/JA+CySpzC0RsOB93Zfczt1NjZD1hGnd/frAQ
+vN8MSAjNfKoa04rq3SmAblo/scr4ten7qwF4T/9yrmIx5/BoyoFO2Vs1CzmXD1H/
+/6OHNA+uekZmoqAx0dYvMV5s6XvK2rLeObHuD1RySjo59Mqja5AMGpNWPWvph+Ej
+0lGwVhjvwLwx4Qy+wSwxi8m4fVFaER0Y2TexDcLg1J/jsrPmICNx32HouAgTmjsF
+Qb3+5oFZAgMBAAECggEABXOKKREGiEpmuyxG/BRmmPw/pK/YwoStAU03m6GVIyIj
+o52v1iBchbgwdNCHQWeJAGDKk2e6pnUWtEYtJLDv7+/IeI8H+53r9F0NDgFFZCAE
+j+VyKxmOquadq9jbYQIUVw+h8BZ5v6TCFJEapKEiOwdwtJBC/e7CoCttwV2vMhSQ
+h5y/k2kAQ3Vxnj9AF0wc2UPWfbAvj7L/Qy9UMpJTHC0D8qJqukR/hI5l2JCW/5Ol
+daenPzpqYK+uuxhAEmnq7UmZCXszQ3bWE4yMf4xSb2yIepWuVZfrwLPXrmbW9YyV
+F9yWfVJIvDmdzwyXYRhKBZ23vVrs2Fp4b1n9U0ESpQKBgQD9Eaxfan9ETOxNm8ui
+Wi0johL9ZSpBQuu7IGgxZCOBEqZxIY9uyYeWsAecRzv1I+SIxf/rrdV7byKxzMka
+gdFAKmhSQXbNiA9jl26s9yqcBneT4FPxNvktV1BRJESjnGs9SocrWWSFd7sk2Hrp
+optbP+3Ay26l0CoMnsSEWobcPwKBgQDuO/ZVE0lx/9Z8l1Bkk+VmN7ZgQSrXnBpQ
+eOOofhqROWwyey758MYmV9uOrvhbl38ElJQTDdNPzEyWo65xv7omKiwKOQSYMYcU
+r+QOrz5kJbSAY2mDmvnjaLqlmFozKOJZO+VPsM0syWYW3DyclZbRqUwFgsOyX+eG
+sFTyjjMcZwKBgQCqGAPkif8KWC2HqEyBTd0DEz9yQ1nYTXOF7a06bVUTvwZSCb2P
+ODNDDAPBfXuGM966M2Lk9I0Fjtgh60PL5i9P0nEVwFxqnqXBSZog9WwVPJ+IrAGf
+olRurj4Um6zqzwqhQoOBlm7i6mvFwx8yA5IqDdjueY1gM37fxqLNVs9IHwKBgQCL
+o535s/pi1cDU+qRmr8HQrms59Di2dIuAC7v1cSUFZpEi7c1VN2oN44WQFsMAfMY4
+2xYILRxlM6zYx0xi5CyqXiG+RDmLM8yntYmJifKaJPeuIZchSt+aCjMNCUYlops6
+Dr+UfF9nFw297I2igpQKhJ9Iw6MNlOVSr1y7Z9pRlQKBgHEf+jrdGQvm7BwEmrwy
+GAV4Ne6hrVX9DzzkX9VDH5AuhkRmI0rcs1VDfeT05T/sTfDvDaQJS59EUiC5B4f2
+vcV6CRqnntsLtfoKL3J+8Kik+Azh9IOjQDPKK33rpYkjNr99xiUevy3zMy9o6N4s
+TPehuVjQfxC9HOTF5LYOeHJz
 -----END PRIVATE KEY-----`
 
   return (
@@ -310,7 +186,7 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
                           <div className="text-sm bg-blue-50 p-3 rounded border border-blue-200">
                             <p className="font-semibold text-blue-800 mb-2">خطوات إضافية:</p>
                             <ol className="list-decimal list-inside space-y-1 text-blue-700 mr-2">
-                              <li>تأكد من تفعيل Google Sheets API و Google Drive API في مشروع rosesmile-booking</li>
+                              <li>تأكد من تفعيل Google Sheets API و Google Drive API</li>
                               <li>تحقق من أن المتغيرات البيئية تم إضافتها بشكل صحيح في Vercel</li>
                               <li>أعد نشر المشروع في Vercel بعد إضافة المتغيرات</li>
                               <li>انتظر 2-3 دقائق حتى تصبح التغييرات نافذة</li>
@@ -321,7 +197,7 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
                                 size="sm"
                                 onClick={() =>
                                   window.open(
-                                    "https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=rosesmile-booking",
+                                    "https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=v0-rosesmile2",
                                     "_blank",
                                   )
                                 }
@@ -334,7 +210,7 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
                                 size="sm"
                                 onClick={() =>
                                   window.open(
-                                    "https://console.cloud.google.com/apis/library/drive.googleapis.com?project=rosesmile-booking",
+                                    "https://console.cloud.google.com/apis/library/drive.googleapis.com?project=v0-rosesmile2",
                                     "_blank",
                                   )
                                 }
@@ -447,29 +323,6 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
             </div>
             <p className="text-xs text-muted-foreground">انسخ المفتاح كما هو بالضبط (مع الأسطر الجديدة)</p>
           </div>
-
-          {/* GOOGLE_FOLDER_ID */}
-          <div className="space-y-2">
-            <Label>GOOGLE_FOLDER_ID</Label>
-            <div className="flex gap-2">
-              <Input value={folderId} readOnly className="font-mono text-sm" />
-              <Button variant="outline" size="icon" onClick={() => copyToClipboard(folderId)}>
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              معرف المجلد لحفظ جميع جداول الحجوزات فيه. تأكد من مشاركة المجلد مع Service Account كمحرر.
-            </p>
-            <Button
-              variant="link"
-              size="sm"
-              className="p-0 h-auto text-xs"
-              onClick={() => window.open(`https://drive.google.com/drive/folders/${folderId}`, "_blank")}
-            >
-              <ExternalLink className="ml-1 h-3 w-3" />
-              فتح المجلد في Google Drive
-            </Button>
-          </div>
         </CardContent>
       </Card>
 
@@ -521,29 +374,15 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
               </div>
             </div>
 
-            {/* Share Folder with Service Account */}
             <div className="flex gap-3">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
                 2
               </div>
               <div>
-                <h3 className="font-semibold mb-1">شارك المجلد مع Service Account</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  افتح المجلد في Google Drive وشاركه مع البريد الإلكتروني التالي بصلاحية "محرر":
+                <h3 className="font-semibold mb-1">أضف المتغيرات البيئية في Vercel</h3>
+                <p className="text-sm text-muted-foreground">
+                  اذهب إلى إعدادات المشروع في Vercel → Environment Variables وأضف المتغيرات الثلاثة أعلاه
                 </p>
-                <code className="text-xs bg-muted p-2 rounded block break-all">{serviceAccountEmail}</code>
-                <p className="text-xs text-orange-600 mt-2">
-                  ⚠️ مهم: يجب مشاركة المجلد مع Service Account حتى يتمكن النظام من حفظ الجداول الجديدة فيه تلقائياً
-                </p>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="mt-2 p-0 h-auto"
-                  onClick={() => window.open(`https://drive.google.com/drive/folders/${folderId}`, "_blank")}
-                >
-                  <ExternalLink className="ml-1 h-3 w-3" />
-                  فتح المجلد في Google Drive
-                </Button>
               </div>
             </div>
 
@@ -552,9 +391,9 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
                 3
               </div>
               <div>
-                <h3 className="font-semibold mb-1">أضف المتغيرات البيئية في Vercel</h3>
+                <h3 className="font-semibold mb-1">أعد نشر المشروع</h3>
                 <p className="text-sm text-muted-foreground">
-                  اذهب إلى إعدادات المشروع في Vercel → Environment Variables وأضف المتغيرات الأربعة أعلاه (بما في ذلك GOOGLE_FOLDER_ID)
+                  بعد إضافة المتغيرات، أعد نشر المشروع من Vercel لتطبيق التغييرات
                 </p>
               </div>
             </div>
@@ -564,18 +403,6 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
                 4
               </div>
               <div>
-                <h3 className="font-semibold mb-1">أعد نشر المشروع</h3>
-                <p className="text-sm text-muted-foreground">
-                  بعد إضافة المتغيرات، تأكد من تفعيل Google Sheets API و Google Drive API في مشروع rosesmile-booking، ثم أعد نشر المشروع من Vercel
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                5
-              </div>
-              <div>
                 <h3 className="font-semibold mb-1">اختبر الاتصال</h3>
                 <p className="text-sm text-muted-foreground">
                   استخدم زر "اختبار الاتصال" أعلاه للتحقق من أن كل شيء يعمل بشكل صحيح
@@ -583,169 +410,8 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
               </div>
             </div>
           </div>
-          
-          <div className="border-t pt-6 mt-6">
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold">
-                <Database className="h-4 w-4" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold mb-1">سكريبت SQL للإعداد السريع</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  إذا كنت تواجه مشاكل في الربط، يمكنك استخدام هذا السكريبت لإدارة النماذج مباشرة من قاعدة البيانات
-                </p>
-                <Button
-                  onClick={() => setShowSqlScript(true)}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  عرض سكريبت SQL
-                </Button>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
-
-      <Dialog open={showSqlScript} onOpenChange={setShowSqlScript}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              سكريبت إعداد Google Sheets الكامل
-            </DialogTitle>
-            <DialogDescription>
-              انسخ هذا السكريبت وشغّله في Supabase SQL Editor لإضافة الأعمدة المطلوبة
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-auto">
-            <div className="bg-slate-950 rounded-lg p-4 overflow-x-auto">
-              <pre className="text-sm text-slate-50 font-mono whitespace-pre text-left" dir="ltr">
-{`-- ============================================
--- سكريبت الإعداد الكامل لـ Google Sheets
--- ============================================
-
--- الخطوة 1: إضافة أعمدة Google Sheet
-ALTER TABLE booking_forms 
-ADD COLUMN IF NOT EXISTS google_sheet_id TEXT,
-ADD COLUMN IF NOT EXISTS google_sheet_url TEXT;
-
--- إنشاء فهرس للبحث السريع
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_indexes 
-    WHERE indexname = 'idx_booking_forms_google_sheet_id'
-  ) THEN
-    CREATE INDEX idx_booking_forms_google_sheet_id 
-    ON booking_forms(google_sheet_id);
-  END IF;
-END $$;
-
--- الخطوة 2: عرض جميع النماذج مع حالة الربط
-SELECT 
-  id,
-  name_ar AS "اسم النموذج",
-  name_en AS "Form Name",
-  is_active AS "نشط",
-  is_main AS "رئيسي",
-  CASE 
-    WHEN google_sheet_id IS NULL OR google_sheet_id = '' 
-    THEN '❌ غير مربوط'
-    ELSE '✅ مربوط'
-  END AS "حالة الربط",
-  google_sheet_id AS "معرف Google Sheet",
-  (SELECT COUNT(*) FROM bookings 
-   WHERE booking_form_id = booking_forms.id) AS "عدد الحجوزات",
-  created_at AS "تاريخ الإنشاء"
-FROM booking_forms
-ORDER BY id DESC;
-
--- رسالة نجاح
-SELECT '✅ تم الإعداد بنجاح! الآن يمكنك إنشاء نماذج حجز والعمل بشكل طبيعي.' AS "الحالة";
-
--- ============================================
--- خيارات إضافية (أزل -- للتفعيل)
--- ============================================
-
--- إزالة ربط Google Sheet من جميع النماذج:
--- UPDATE booking_forms 
--- SET google_sheet_id = NULL, google_sheet_url = NULL,
---     updated_at = NOW()
--- WHERE google_sheet_id IS NOT NULL;
-
--- ربط نموذج موجود بـ Google Sheet يدوياً:
--- UPDATE booking_forms 
--- SET google_sheet_id = 'YOUR_SHEET_ID',
---     google_sheet_url = 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit',
---     updated_at = NOW()
--- WHERE id = YOUR_FORM_ID;
-
--- عرض آخر 20 حجز:
--- SELECT 
---   b.id AS "رقم الحجز",
---   b.patient_name AS "اسم المريض",
---   b.phone AS "الهاتف",
---   b.service_name AS "الخدمة",
---   bf.name_ar AS "نموذج الحجز",
---   b.created_at AS "تاريخ الإنشاء"
--- FROM bookings b
--- LEFT JOIN booking_forms bf ON b.booking_form_id = bf.id
--- ORDER BY b.created_at DESC
--- LIMIT 20;`}
-              </pre>
-            </div>
-          </div>
-
-          <div className="flex gap-3 justify-between border-t pt-4">
-            <div className="flex gap-2">
-              <Button
-                onClick={handleCopySqlScript}
-                variant="outline"
-                size="sm"
-              >
-                <Copy className="h-4 w-4 ml-2" />
-                نسخ السكريبت
-              </Button>
-              <Button
-                onClick={() => window.open('https://supabase.com/dashboard/project/ynspnyjdpjjdeqggmac/sql', '_blank')}
-                variant="outline"
-                size="sm"
-              >
-                <ExternalLink className="h-4 w-4 ml-2" />
-                فتح Supabase SQL Editor
-              </Button>
-            </div>
-            <Button
-              onClick={() => setShowSqlScript(false)}
-              variant="secondary"
-              size="sm"
-            >
-              إغلاق
-            </Button>
-          </div>
-
-          <Alert className="mt-4">
-            <Info className="h-4 w-4" />
-            <AlertTitle>كيفية الاستخدام</AlertTitle>
-            <AlertDescription className="text-sm space-y-2">
-              <ol className="list-decimal list-inside space-y-1">
-                <li>انسخ السكريبت باستخدام زر "نسخ السكريبت"</li>
-                <li>افتح Supabase SQL Editor من الرابط أعلاه</li>
-                <li>الصق السكريبت في المحرر</li>
-                <li>شغّل السكريبت بالضغط على زر "Run" (سيضيف الأعمدة المطلوبة ويعرض حالة النماذج)</li>
-                <li>إذا كان كل شيء يعمل بنجاح، يمكنك الآن إنشاء نماذج حجز جديدة من صفحة "المقالات"</li>
-              </ol>
-              <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                ملاحظة: السكريبت آمن ويستخدم ADD COLUMN IF NOT EXISTS، لذا لن يتسبب في أخطاء حتى لو كانت الأعمدة موجودة بالفعل.
-              </p>
-            </AlertDescription>
-          </Alert>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

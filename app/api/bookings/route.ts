@@ -211,18 +211,17 @@ export async function POST(request: Request) {
 
     let bookingFormName = ""
     let serviceName = booking.service_name || booking.service || ""
-    let googleSheetId = null
+    let googleSheetUrl = null
 
     try {
       if (booking.booking_form_id) {
         const formResult = await db.query(
-          "SELECT name_ar, name_en, google_sheet_id FROM booking_forms WHERE id = $1",
+          "SELECT name_ar, name_en, google_sheet_url FROM booking_forms WHERE id = $1",
           [booking.booking_form_id],
         )
         if (formResult.rows.length > 0) {
           bookingFormName = formResult.rows[0].name_ar || formResult.rows[0].name_en || ""
-          googleSheetId = formResult.rows[0].google_sheet_id
-          console.log("[v0] 📊 معرف جدول النموذج:", googleSheetId)
+          googleSheetUrl = formResult.rows[0].google_sheet_url
         }
       }
 
@@ -239,29 +238,28 @@ export async function POST(request: Request) {
     }
 
     try {
-      if (googleSheetId) {
-        console.log("[v0] 📤 إرسال الحجز إلى جدول النموذج المحدد...")
-        const sheetsResult = await appendToGoogleSheet({
-          full_name: booking.patient_name,
-          patient_name: booking.patient_name,
-          phone: booking.phone,
-          email: booking.email,
-          service: serviceName,
-          service_name: serviceName,
-          booking_form_name: bookingFormName,
-          notes: booking.notes || "",
-          id: booking.id,
-          created_at: booking.created_at,
-        }, googleSheetId)
+      console.log("[v0] 📤 Sending booking to Google Sheets...")
+      const sheetsResult = await appendToGoogleSheet({
+        full_name: booking.patient_name,
+        patient_name: booking.patient_name,
+        phone: booking.phone,
+        email: booking.email,
+        service: serviceName,
+        service_name: serviceName,
+        booking_form_name: bookingFormName,
+        notes: booking.notes || "",
+        id: booking.id,
+        created_at: booking.created_at,
+      })
 
-        if (sheetsResult.success) {
-          console.log("[v0] ✅ تمت مزامنة الحجز مع Google Sheet الخاص بالنموذج!")
-        }
+      if (sheetsResult.success) {
+        console.log("[v0] ✅ Booking synced to Google Sheets successfully!")
       } else {
-        console.log("[v0] ℹ️ لا يوجد Google Sheet محدد لهذا النموذج، تخطي المزامنة")
+        console.log("[v0] ⚠️ Google Sheets sync failed:", sheetsResult.message)
+        console.log("[v0] Error details:", sheetsResult.error)
       }
     } catch (sheetsError: any) {
-      console.error("[v0] ❌ خطأ في Google Sheets (غير حرج):", sheetsError.message)
+      console.error("[v0] ❌ Google Sheets error (non-critical):", sheetsError.message)
     }
 
     return NextResponse.json({ booking })
