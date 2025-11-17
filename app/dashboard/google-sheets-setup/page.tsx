@@ -5,13 +5,23 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CheckCircle2, XCircle, Loader2, Copy, ExternalLink, RotateCcw } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { CheckCircle2, XCircle, Loader2, Copy, ExternalLink, RotateCcw, Database, FileText, Info } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
 
 export default function GoogleSheetsSetupPage() {
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<any>(null)
   const [resetting, setResetting] = useState(false)
+  const [showSqlScript, setShowSqlScript] = useState(false)
+  const { toast } = useToast()
 
   const handleTest = async () => {
     setTesting(true)
@@ -69,6 +79,46 @@ export default function GoogleSheetsSetupPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
+  }
+
+  const handleCopySqlScript = () => {
+    const sqlScript = `-- سكريبت إعداد سريع لـ Google Sheets
+-- ═══════════════════════════════════════════════════════════
+-- الخيار 1: عرض جميع نماذج الحجز مع معلوماتها
+-- ═══════════════════════════════════════════════════════════
+SELECT 
+  id,
+  name_ar AS "اسم النموذج",
+  name_en AS "Form Name",
+  is_active AS "نشط؟",
+  is_main AS "رئيسي؟",
+  google_sheet_id AS "معرف Google Sheet",
+  CASE 
+    WHEN google_sheet_id IS NULL THEN 'لا يوجد'
+    ELSE 'موجود'
+  END AS "حالة الربط",
+  (SELECT COUNT(*) FROM bookings WHERE booking_form_id = booking_forms.id) AS "عدد الحجوزات",
+  created_at AS "تاريخ الإنشاء"
+FROM booking_forms
+ORDER BY id DESC;
+
+-- ═══════════════════════════════════════════════════════════
+-- الخيار 2: إزالة روابط Google Sheets من جميع النماذج
+-- ═══════════════════════════════════════════════════════════
+-- UPDATE booking_forms SET google_sheet_id = NULL, updated_at = NOW();
+
+-- ═══════════════════════════════════════════════════════════
+-- الخيار 3: ربط نموذج محدد بـ Google Sheet جديد
+-- ═══════════════════════════════════════════════════════════
+-- UPDATE booking_forms 
+-- SET google_sheet_id = 'YOUR_SHEET_ID', updated_at = NOW()
+-- WHERE id = YOUR_FORM_ID;`
+    
+    navigator.clipboard.writeText(sqlScript)
+    toast({
+      title: "تم النسخ",
+      description: "تم نسخ السكريبت إلى الحافظة",
+    })
   }
 
   const serviceAccountEmail = "rosesmile-svc@rosesmile-booking.iam.gserviceaccount.com"
@@ -460,8 +510,145 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
               </div>
             </div>
           </div>
+          
+          <div className="border-t pt-6 mt-6">
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold">
+                <Database className="h-4 w-4" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold mb-1">سكريبت SQL للإعداد السريع</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  إذا كنت تواجه مشاكل في الربط، يمكنك استخدام هذا السكريبت لإدارة النماذج مباشرة من قاعدة البيانات
+                </p>
+                <Button
+                  onClick={() => setShowSqlScript(true)}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  عرض سكريبت SQL
+                </Button>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showSqlScript} onOpenChange={setShowSqlScript}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              سكريبت إعداد Google Sheets السريع
+            </DialogTitle>
+            <DialogDescription>
+              انسخ هذا السكريبت وشغّله في Supabase SQL Editor
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto">
+            <div className="bg-slate-950 rounded-lg p-4 overflow-x-auto">
+              <pre className="text-sm text-slate-50 font-mono whitespace-pre text-right" dir="rtl">
+{`-- سكريبت إعداد سريع لـ Google Sheets
+
+-- ═══════════════════════════════════════════════════════════
+-- الخيار 1: عرض جميع نماذج الحجز مع معلوماتها
+-- ═══════════════════════════════════════════════════════════
+SELECT 
+  id,
+  name_ar AS "اسم النموذج",
+  name_en AS "Form Name",
+  is_active AS "نشط؟",
+  is_main AS "رئيسي؟",
+  google_sheet_id AS "معرف Google Sheet",
+  CASE 
+    WHEN google_sheet_id IS NULL THEN 'لا يوجد'
+    ELSE 'موجود'
+  END AS "حالة الربط",
+  (SELECT COUNT(*) FROM bookings WHERE booking_form_id = booking_forms.id) AS "عدد الحجوزات",
+  created_at AS "تاريخ الإنشاء"
+FROM booking_forms
+ORDER BY id DESC;
+
+-- ═══════════════════════════════════════════════════════════
+-- الخيار 2: إزالة روابط Google Sheets من جميع النماذج
+-- ═══════════════════════════════════════════════════════════
+-- أزل التعليق (--) من السطر التالي لتنفيذه:
+-- UPDATE booking_forms SET google_sheet_id = NULL, updated_at = NOW();
+
+-- ═══════════════════════════════════════════════════════════
+-- الخيار 3: ربط نموذج محدد بـ Google Sheet جديد  
+-- ═══════════════════════════════════════════════════════════
+-- استبدل YOUR_FORM_ID بمعرف النموذج و YOUR_SHEET_ID بمعرف الجدول:
+-- UPDATE booking_forms 
+-- SET google_sheet_id = 'YOUR_SHEET_ID', updated_at = NOW()
+-- WHERE id = YOUR_FORM_ID;
+
+-- ═══════════════════════════════════════════════════════════
+-- الخيار 4: عرض آخر 20 حجز مع معلومات النموذج
+-- ═══════════════════════════════════════════════════════════
+SELECT 
+  b.id AS "رقم الحجز",
+  b.patient_name AS "اسم المريض",
+  b.phone AS "الهاتف",
+  b.service_name AS "الخدمة",
+  b.preferred_date AS "التاريخ",
+  b.status AS "الحالة",
+  bf.name_ar AS "نموذج الحجز",
+  b.created_at AS "تاريخ الإنشاء"
+FROM bookings b
+LEFT JOIN booking_forms bf ON b.booking_form_id = bf.id
+ORDER BY b.created_at DESC
+LIMIT 20;`}
+              </pre>
+            </div>
+          </div>
+
+          <div className="flex gap-3 justify-between border-t pt-4">
+            <div className="flex gap-2">
+              <Button
+                onClick={handleCopySqlScript}
+                variant="outline"
+                size="sm"
+              >
+                <Copy className="h-4 w-4 ml-2" />
+                نسخ السكريبت
+              </Button>
+              <Button
+                onClick={() => window.open('https://supabase.com/dashboard/project/ynspnyjdpjjdeqggmac/sql', '_blank')}
+                variant="outline"
+                size="sm"
+              >
+                <ExternalLink className="h-4 w-4 ml-2" />
+                فتح Supabase SQL Editor
+              </Button>
+            </div>
+            <Button
+              onClick={() => setShowSqlScript(false)}
+              variant="secondary"
+              size="sm"
+            >
+              إغلاق
+            </Button>
+          </div>
+
+          <Alert className="mt-4">
+            <Info className="h-4 w-4" />
+            <AlertTitle>كيفية الاستخدام</AlertTitle>
+            <AlertDescription className="text-sm space-y-2">
+              <ol className="list-decimal list-inside space-y-1">
+                <li>انسخ السكريبت باستخدام زر "نسخ السكريبت"</li>
+                <li>افتح Supabase SQL Editor من الرابط أعلاه</li>
+                <li>الصق السكريبت في المحرر</li>
+                <li>اختر الخيار المناسب من السكريبت (الخيار 1 لعرض النماذج)</li>
+                <li>شغّل السكريبت بالضغط على زر "Run"</li>
+              </ol>
+            </AlertDescription>
+          </Alert>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
