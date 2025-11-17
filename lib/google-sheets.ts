@@ -321,7 +321,6 @@ export async function createGoogleSheet(
   try {
     console.log("[v0] 📄 إنشاء جدول Google Sheet جديد:", sheetName)
 
-    // التحقق المباشر من المتغيرات البيئية فقط
     if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
       console.error("[v0] ❌ بيانات اعتماد Google غير موجودة")
       return {
@@ -348,6 +347,7 @@ export async function createGoogleSheet(
     })
 
     const sheets = google.sheets({ version: "v4", auth })
+    const drive = google.drive({ version: "v3", auth })
 
     console.log("[v0] إنشاء جدول بنظام إعادة المحاولة...")
 
@@ -372,6 +372,29 @@ export async function createGoogleSheet(
     }
 
     console.log("[v0] ✅ تم إنشاء الجدول:", spreadsheetId)
+
+    if (process.env.GOOGLE_FOLDER_ID) {
+      try {
+        console.log("[v0] 📁 نقل الجدول إلى المجلد:", process.env.GOOGLE_FOLDER_ID)
+        
+        await retryWithBackoff(async () => {
+          return await drive.files.update({
+            fileId: spreadsheetId,
+            addParents: process.env.GOOGLE_FOLDER_ID,
+            removeParents: 'root',
+            fields: 'id, parents',
+          })
+        })
+        
+        console.log("[v0] ✅ تم نقل الجدول إلى المجلد بنجاح")
+      } catch (error: any) {
+        console.error("[v0] ⚠️ لم يتمكن من نقل الجدول إلى المجلد:", error.message)
+        console.error("[v0] تأكد من أن Service Account لديه صلاحية 'Editor' على المجلد")
+        // نستمر بالعملية حتى لو فشل النقل
+      }
+    } else {
+      console.log("[v0] ℹ️ لم يتم تحديد GOOGLE_FOLDER_ID، سيبقى الجدول في المجلد الجذر")
+    }
 
     const sheetsData = spreadsheet.data.sheets || []
     const sheetTitle = sheetsData.length > 0 ? sheetsData[0].properties?.title || "Sheet1" : "Sheet1"

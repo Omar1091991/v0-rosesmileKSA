@@ -73,6 +73,7 @@ export default function GoogleSheetsSetupPage() {
 
   const serviceAccountEmail = "rosesmile-svc@rosesmile-booking.iam.gserviceaccount.com"
   const sheetId = "1aULNHz7f3WC33mWYWMCzt8BL2Mc0O3NR00tpFRaIFBU"
+  const folderId = "1CB4LrRziHAjoHFj6b_sEaj2HtWXcBZyN"
   const privateKey = `-----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCjQWjDQs1LNPwd
 TwHlirG2WRzY20fcMeQdREYAJYIbFRnPnrVUkJEj8qHrvh/idYJs3pMNxaaLPxL1
@@ -323,6 +324,29 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
             </div>
             <p className="text-xs text-muted-foreground">انسخ المفتاح كما هو بالضبط (مع الأسطر الجديدة)</p>
           </div>
+
+          {/* GOOGLE_FOLDER_ID */}
+          <div className="space-y-2">
+            <Label>GOOGLE_FOLDER_ID</Label>
+            <div className="flex gap-2">
+              <Input value={folderId} readOnly className="font-mono text-sm" />
+              <Button variant="outline" size="icon" onClick={() => copyToClipboard(folderId)}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              معرف المجلد لحفظ جميع جداول الحجوزات فيه. تأكد من مشاركة المجلد مع Service Account كمحرر.
+            </p>
+            <Button
+              variant="link"
+              size="sm"
+              className="p-0 h-auto text-xs"
+              onClick={() => window.open(`https://drive.google.com/drive/folders/${folderId}`, "_blank")}
+            >
+              <ExternalLink className="ml-1 h-3 w-3" />
+              فتح المجلد في Google Drive
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -374,21 +398,47 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
               </div>
             </div>
 
+            {/* Share Folder with Service Account */}
             <div className="flex gap-3">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
                 2
               </div>
               <div>
-                <h3 className="font-semibold mb-1">أضف المتغيرات البيئية في Vercel</h3>
-                <p className="text-sm text-muted-foreground">
-                  اذهب إلى إعدادات المشروع في Vercel → Environment Variables وأضف المتغيرات الثلاثة أعلاه
+                <h3 className="font-semibold mb-1">شارك المجلد مع Service Account</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  افتح المجلد في Google Drive وشاركه مع البريد الإلكتروني التالي بصلاحية "محرر":
                 </p>
+                <code className="text-xs bg-muted p-2 rounded block break-all">{serviceAccountEmail}</code>
+                <p className="text-xs text-orange-600 mt-2">
+                  ⚠️ مهم: يجب مشاركة المجلد مع Service Account حتى يتمكن النظام من حفظ الجداول الجديدة فيه تلقائياً
+                </p>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="mt-2 p-0 h-auto"
+                  onClick={() => window.open(`https://drive.google.com/drive/folders/${folderId}`, "_blank")}
+                >
+                  <ExternalLink className="ml-1 h-3 w-3" />
+                  فتح المجلد في Google Drive
+                </Button>
               </div>
             </div>
 
             <div className="flex gap-3">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
                 3
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">أضف المتغيرات البيئية في Vercel</h3>
+                <p className="text-sm text-muted-foreground">
+                  اذهب إلى إعدادات المشروع في Vercel → Environment Variables وأضف المتغيرات الأربعة أعلاه (بما في ذلك GOOGLE_FOLDER_ID)
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                4
               </div>
               <div>
                 <h3 className="font-semibold mb-1">أعد نشر المشروع</h3>
@@ -400,7 +450,7 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
 
             <div className="flex gap-3">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                4
+                5
               </div>
               <div>
                 <h3 className="font-semibold mb-1">اختبر الاتصال</h3>
