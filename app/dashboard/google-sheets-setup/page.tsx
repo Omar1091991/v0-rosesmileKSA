@@ -82,42 +82,115 @@ export default function GoogleSheetsSetupPage() {
   }
 
   const handleCopySqlScript = () => {
-    const sqlScript = `-- سكريبت إعداد سريع لـ Google Sheets
--- ═══════════════════════════════════════════════════════════
--- الخيار 1: عرض جميع نماذج الحجز مع معلوماتها
--- ═══════════════════════════════════════════════════════════
+    const sqlScript = `-- ============================================
+-- سكريبت الإعداد الكامل لـ Google Sheets
+-- ============================================
+-- قم بنسخ هذا السكريبت كاملاً وتشغيله في Supabase SQL Editor
+-- https://supabase.com/dashboard/project/ynspnyjdpjjdeqggmac/sql
+-- ============================================
+
+-- الخطوة 1: إضافة أعمدة Google Sheet إلى جدول booking_forms
+ALTER TABLE booking_forms 
+ADD COLUMN IF NOT EXISTS google_sheet_id TEXT,
+ADD COLUMN IF NOT EXISTS google_sheet_url TEXT;
+
+-- إنشاء فهرس للبحث السريع (إذا لم يكن موجوداً)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes 
+    WHERE indexname = 'idx_booking_forms_google_sheet_id'
+  ) THEN
+    CREATE INDEX idx_booking_forms_google_sheet_id ON booking_forms(google_sheet_id);
+  END IF;
+END $$;
+
+-- الخطوة 2: عرض جميع النماذج الحالية مع حالة Google Sheet
 SELECT 
   id,
   name_ar AS "اسم النموذج",
   name_en AS "Form Name",
-  is_active AS "نشط؟",
-  is_main AS "رئيسي؟",
-  google_sheet_id AS "معرف Google Sheet",
+  is_active AS "نشط",
+  is_main AS "رئيسي",
   CASE 
-    WHEN google_sheet_id IS NULL THEN 'لا يوجد'
-    ELSE 'موجود'
+    WHEN google_sheet_id IS NULL OR google_sheet_id = '' THEN '❌ غير مربوط'
+    ELSE '✅ مربوط'
   END AS "حالة الربط",
+  google_sheet_id AS "معرف Google Sheet",
   (SELECT COUNT(*) FROM bookings WHERE booking_form_id = booking_forms.id) AS "عدد الحجوزات",
   created_at AS "تاريخ الإنشاء"
 FROM booking_forms
 ORDER BY id DESC;
 
--- ═══════════════════════════════════════════════════════════
--- الخيار 2: إزالة روابط Google Sheets من جميع النماذج
--- ═══════════════════════════════════════════════════════════
--- UPDATE booking_forms SET google_sheet_id = NULL, updated_at = NOW();
+-- ============================================
+-- رسالة نجاح
+-- ============================================
+SELECT '✅ تم الإعداد بنجاح! الآن يمكنك إنشاء نماذج حجز والعمل بشكل طبيعي.' AS "الحالة";
 
--- ═══════════════════════════════════════════════════════════
--- الخيار 3: ربط نموذج محدد بـ Google Sheet جديد
--- ═══════════════════════════════════════════════════════════
+-- ============================================
+-- خيارات إضافية (اختر ما تحتاجه وأزل -- من أوله)
+-- ============================================
+
+-- الخيار 1: إزالة ربط Google Sheet من جميع النماذج
 -- UPDATE booking_forms 
--- SET google_sheet_id = 'YOUR_SHEET_ID', updated_at = NOW()
--- WHERE id = YOUR_FORM_ID;`
+-- SET google_sheet_id = NULL, 
+--     google_sheet_url = NULL,
+--     updated_at = NOW()
+-- WHERE google_sheet_id IS NOT NULL;
+
+-- الخيار 2: إزالة ربط Google Sheet من نموذج محدد
+-- استبدل 1 بمعرف النموذج المطلوب
+-- UPDATE booking_forms 
+-- SET google_sheet_id = NULL, 
+--     google_sheet_url = NULL,
+--     updated_at = NOW()
+-- WHERE id = 1;
+
+-- الخيار 3: ربط نموذج موجود بـ Google Sheet يدوياً
+-- استبدل 1 بمعرف النموذج و 'YOUR_SHEET_ID' بمعرف الجدول
+-- UPDATE booking_forms 
+-- SET google_sheet_id = 'YOUR_SHEET_ID',
+--     google_sheet_url = 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit',
+--     updated_at = NOW()
+-- WHERE id = 1;
+
+-- الخيار 4: عرض آخر 20 حجز مع معلومات النموذج
+-- SELECT 
+--   b.id AS "رقم الحجز",
+--   b.patient_name AS "اسم المريض",
+--   b.phone AS "الهاتف",
+--   b.service_name AS "الخدمة",
+--   b.preferred_date AS "التاريخ المفضل",
+--   b.status AS "الحالة",
+--   bf.name_ar AS "نموذج الحجز",
+--   b.created_at AS "تاريخ الإنشاء"
+-- FROM bookings b
+-- LEFT JOIN booking_forms bf ON b.booking_form_id = bf.id
+-- ORDER BY b.created_at DESC
+-- LIMIT 20;
+
+-- الخيار 5: إنشاء نموذج تجريبي بدون Google Sheets
+-- INSERT INTO booking_forms (
+--   name_ar,
+--   name_en,
+--   description_ar,
+--   description_en,
+--   is_active,
+--   is_main
+-- ) VALUES (
+--   'نموذج تجريبي - بدون Google Sheets',
+--   'Test Form - Without Google Sheets',
+--   'نموذج اختبار لا يتطلب Google Sheets',
+--   'Test form that does not require Google Sheets',
+--   true,
+--   false
+-- )
+-- RETURNING id, name_ar, name_en, 'تم إنشاء النموذج بنجاح!' AS message;`
     
     navigator.clipboard.writeText(sqlScript)
     toast({
       title: "تم النسخ",
-      description: "تم نسخ السكريبت إلى الحافظة",
+      description: "تم نسخ السكريبت الكامل إلى الحافظة",
     })
   }
 
@@ -541,67 +614,88 @@ DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Database className="h-5 w-5" />
-              سكريبت إعداد Google Sheets السريع
+              سكريبت إعداد Google Sheets الكامل
             </DialogTitle>
             <DialogDescription>
-              انسخ هذا السكريبت وشغّله في Supabase SQL Editor
+              انسخ هذا السكريبت وشغّله في Supabase SQL Editor لإضافة الأعمدة المطلوبة
             </DialogDescription>
           </DialogHeader>
           
           <div className="flex-1 overflow-auto">
             <div className="bg-slate-950 rounded-lg p-4 overflow-x-auto">
-              <pre className="text-sm text-slate-50 font-mono whitespace-pre text-right" dir="rtl">
-{`-- سكريبت إعداد سريع لـ Google Sheets
+              <pre className="text-sm text-slate-50 font-mono whitespace-pre text-left" dir="ltr">
+{`-- ============================================
+-- سكريبت الإعداد الكامل لـ Google Sheets
+-- ============================================
 
--- ═══════════════════════════════════════════════════════════
--- الخيار 1: عرض جميع نماذج الحجز مع معلوماتها
--- ═══════════════════════════════════════════════════════════
+-- الخطوة 1: إضافة أعمدة Google Sheet
+ALTER TABLE booking_forms 
+ADD COLUMN IF NOT EXISTS google_sheet_id TEXT,
+ADD COLUMN IF NOT EXISTS google_sheet_url TEXT;
+
+-- إنشاء فهرس للبحث السريع
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes 
+    WHERE indexname = 'idx_booking_forms_google_sheet_id'
+  ) THEN
+    CREATE INDEX idx_booking_forms_google_sheet_id 
+    ON booking_forms(google_sheet_id);
+  END IF;
+END $$;
+
+-- الخطوة 2: عرض جميع النماذج مع حالة الربط
 SELECT 
   id,
   name_ar AS "اسم النموذج",
   name_en AS "Form Name",
-  is_active AS "نشط؟",
-  is_main AS "رئيسي؟",
-  google_sheet_id AS "معرف Google Sheet",
+  is_active AS "نشط",
+  is_main AS "رئيسي",
   CASE 
-    WHEN google_sheet_id IS NULL THEN 'لا يوجد'
-    ELSE 'موجود'
+    WHEN google_sheet_id IS NULL OR google_sheet_id = '' 
+    THEN '❌ غير مربوط'
+    ELSE '✅ مربوط'
   END AS "حالة الربط",
-  (SELECT COUNT(*) FROM bookings WHERE booking_form_id = booking_forms.id) AS "عدد الحجوزات",
+  google_sheet_id AS "معرف Google Sheet",
+  (SELECT COUNT(*) FROM bookings 
+   WHERE booking_form_id = booking_forms.id) AS "عدد الحجوزات",
   created_at AS "تاريخ الإنشاء"
 FROM booking_forms
 ORDER BY id DESC;
 
--- ═══════════════════════════════════════════════════════════
--- الخيار 2: إزالة روابط Google Sheets من جميع النماذج
--- ═══════════════════════════════════════════════════════════
--- أزل التعليق (--) من السطر التالي لتنفيذه:
--- UPDATE booking_forms SET google_sheet_id = NULL, updated_at = NOW();
+-- رسالة نجاح
+SELECT '✅ تم الإعداد بنجاح! الآن يمكنك إنشاء نماذج حجز والعمل بشكل طبيعي.' AS "الحالة";
 
--- ═══════════════════════════════════════════════════════════
--- الخيار 3: ربط نموذج محدد بـ Google Sheet جديد  
--- ═══════════════════════════════════════════════════════════
--- استبدل YOUR_FORM_ID بمعرف النموذج و YOUR_SHEET_ID بمعرف الجدول:
+-- ============================================
+-- خيارات إضافية (أزل -- للتفعيل)
+-- ============================================
+
+-- إزالة ربط Google Sheet من جميع النماذج:
 -- UPDATE booking_forms 
--- SET google_sheet_id = 'YOUR_SHEET_ID', updated_at = NOW()
+-- SET google_sheet_id = NULL, google_sheet_url = NULL,
+--     updated_at = NOW()
+-- WHERE google_sheet_id IS NOT NULL;
+
+-- ربط نموذج موجود بـ Google Sheet يدوياً:
+-- UPDATE booking_forms 
+-- SET google_sheet_id = 'YOUR_SHEET_ID',
+--     google_sheet_url = 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit',
+--     updated_at = NOW()
 -- WHERE id = YOUR_FORM_ID;
 
--- ═══════════════════════════════════════════════════════════
--- الخيار 4: عرض آخر 20 حجز مع معلومات النموذج
--- ═══════════════════════════════════════════════════════════
-SELECT 
-  b.id AS "رقم الحجز",
-  b.patient_name AS "اسم المريض",
-  b.phone AS "الهاتف",
-  b.service_name AS "الخدمة",
-  b.preferred_date AS "التاريخ",
-  b.status AS "الحالة",
-  bf.name_ar AS "نموذج الحجز",
-  b.created_at AS "تاريخ الإنشاء"
-FROM bookings b
-LEFT JOIN booking_forms bf ON b.booking_form_id = bf.id
-ORDER BY b.created_at DESC
-LIMIT 20;`}
+-- عرض آخر 20 حجز:
+-- SELECT 
+--   b.id AS "رقم الحجز",
+--   b.patient_name AS "اسم المريض",
+--   b.phone AS "الهاتف",
+--   b.service_name AS "الخدمة",
+--   bf.name_ar AS "نموذج الحجز",
+--   b.created_at AS "تاريخ الإنشاء"
+-- FROM bookings b
+-- LEFT JOIN booking_forms bf ON b.booking_form_id = bf.id
+-- ORDER BY b.created_at DESC
+-- LIMIT 20;`}
               </pre>
             </div>
           </div>
@@ -642,9 +736,12 @@ LIMIT 20;`}
                 <li>انسخ السكريبت باستخدام زر "نسخ السكريبت"</li>
                 <li>افتح Supabase SQL Editor من الرابط أعلاه</li>
                 <li>الصق السكريبت في المحرر</li>
-                <li>اختر الخيار المناسب من السكريبت (الخيار 1 لعرض النماذج)</li>
-                <li>شغّل السكريبت بالضغط على زر "Run"</li>
+                <li>شغّل السكريبت بالضغط على زر "Run" (سيضيف الأعمدة المطلوبة ويعرض حالة النماذج)</li>
+                <li>إذا كان كل شيء يعمل بنجاح، يمكنك الآن إنشاء نماذج حجز جديدة من صفحة "المقالات"</li>
               </ol>
+              <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
+                ملاحظة: السكريبت آمن ويستخدم ADD COLUMN IF NOT EXISTS، لذا لن يتسبب في أخطاء حتى لو كانت الأعمدة موجودة بالفعل.
+              </p>
             </AlertDescription>
           </Alert>
         </DialogContent>
