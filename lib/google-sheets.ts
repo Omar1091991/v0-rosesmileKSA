@@ -46,7 +46,7 @@ function cleanPrivateKey(key: string): string {
   return cleaned
 }
 
-export async function appendToGoogleSheet(bookingData: any) {
+export async function appendToGoogleSheet(bookingData: any, customSpreadsheetId?: string) {
   try {
     console.log("[v0] 🔍 بدء مزامنة Google Sheets...")
     console.log("[v0] بيانات الحجز:", JSON.stringify(bookingData, null, 2))
@@ -61,12 +61,15 @@ export async function appendToGoogleSheet(bookingData: any) {
       throw new Error("GOOGLE_SERVICE_ACCOUNT_EMAIL not configured")
     }
 
-    if (!process.env.GOOGLE_SHEET_ID) {
-      console.log("[v0] ❌ GOOGLE_SHEET_ID غير موجود")
-      throw new Error("GOOGLE_SHEET_ID not configured")
+    const spreadsheetId = customSpreadsheetId || process.env.GOOGLE_SHEET_ID
+    
+    if (!spreadsheetId) {
+      console.log("[v0] ❌ لا يوجد معرف جدول (لا GOOGLE_SHEET_ID ولا customSpreadsheetId)")
+      throw new Error("No spreadsheet ID provided")
     }
 
     console.log("[v0] ✅ جميع متغيرات البيئة موجودة")
+    console.log("[v0] 📊 معرف الجدول:", spreadsheetId)
 
     const privateKey = cleanPrivateKey(process.env.GOOGLE_PRIVATE_KEY)
 
@@ -80,7 +83,6 @@ export async function appendToGoogleSheet(bookingData: any) {
 
     console.log("[v0] إنشاء عميل Google Sheets...")
     const sheets = google.sheets({ version: "v4", auth })
-    const spreadsheetId = process.env.GOOGLE_SHEET_ID
 
     console.log("[v0] جاري الحصول على بيانات الجدول...")
     const spreadsheet = await sheets.spreadsheets.get({
