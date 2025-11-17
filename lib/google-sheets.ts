@@ -160,7 +160,7 @@ export async function testGoogleSheetsConnection(): Promise<{
         message: `متغيرات البيئة المفقودة: ${missingVars.join(", ")}`,
         details: {
           missingVars,
-          solution: "أضف المتغيرات المفقودة في إعدادات Vercel ثم أعد نشر المشروع",
+          solution: "أضف المتغيرات المفقودة في إعدادات Vercel ثم أعد نشر المشروع. تأكد من استخدام بيانات اعتماد مشروع rosesmile-booking",
         },
       }
     }
@@ -296,6 +296,7 @@ export async function testGoogleSheetsConnection(): Promise<{
         canCreateSheets: true,
         canDeleteSheets: true,
         testSheetId,
+        project: "rosesmile-booking"
       },
     }
   } catch (error: any) {

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CheckCircle2, XCircle, Loader2, Copy, ExternalLink, RotateCcw } from "lucide-react"
+import { CheckCircle2, XCircle, Loader2, Copy, ExternalLink, RotateCcw } from 'lucide-react'
 
 export default function GoogleSheetsSetupPage() {
   const [testing, setTesting] = useState(false)
@@ -71,35 +71,35 @@ export default function GoogleSheetsSetupPage() {
     navigator.clipboard.writeText(text)
   }
 
-  const serviceAccountEmail = "v0-rosesmile2@v0-rosesmile2.iam.gserviceaccount.com"
+  const serviceAccountEmail = "rosesmile-svc@rosesmile-booking.iam.gserviceaccount.com"
   const sheetId = "1aULNHz7f3WC33mWYWMCzt8BL2Mc0O3NR00tpFRaIFBU"
   const privateKey = `-----BEGIN PRIVATE KEY-----
-MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDrgbTWhJKzX9sj
-xvzamgSfG/NVIoBQkbkelP6f16DxiKcGd7kXfX5pFcyH2C+TyxRnlH7vrqt8U+Xn
-gq+mkuwQ1AYiARqakAsvlu/PHcR/JA+CySpzC0RsOB93Zfczt1NjZD1hGnd/frAQ
-vN8MSAjNfKoa04rq3SmAblo/scr4ten7qwF4T/9yrmIx5/BoyoFO2Vs1CzmXD1H/
-/6OHNA+uekZmoqAx0dYvMV5s6XvK2rLeObHuD1RySjo59Mqja5AMGpNWPWvph+Ej
-0lGwVhjvwLwx4Qy+wSwxi8m4fVFaER0Y2TexDcLg1J/jsrPmICNx32HouAgTmjsF
-Qb3+5oFZAgMBAAECggEABXOKKREGiEpmuyxG/BRmmPw/pK/YwoStAU03m6GVIyIj
-o52v1iBchbgwdNCHQWeJAGDKk2e6pnUWtEYtJLDv7+/IeI8H+53r9F0NDgFFZCAE
-j+VyKxmOquadq9jbYQIUVw+h8BZ5v6TCFJEapKEiOwdwtJBC/e7CoCttwV2vMhSQ
-h5y/k2kAQ3Vxnj9AF0wc2UPWfbAvj7L/Qy9UMpJTHC0D8qJqukR/hI5l2JCW/5Ol
-daenPzpqYK+uuxhAEmnq7UmZCXszQ3bWE4yMf4xSb2yIepWuVZfrwLPXrmbW9YyV
-F9yWfVJIvDmdzwyXYRhKBZ23vVrs2Fp4b1n9U0ESpQKBgQD9Eaxfan9ETOxNm8ui
-Wi0johL9ZSpBQuu7IGgxZCOBEqZxIY9uyYeWsAecRzv1I+SIxf/rrdV7byKxzMka
-gdFAKmhSQXbNiA9jl26s9yqcBneT4FPxNvktV1BRJESjnGs9SocrWWSFd7sk2Hrp
-optbP+3Ay26l0CoMnsSEWobcPwKBgQDuO/ZVE0lx/9Z8l1Bkk+VmN7ZgQSrXnBpQ
-eOOofhqROWwyey758MYmV9uOrvhbl38ElJQTDdNPzEyWo65xv7omKiwKOQSYMYcU
-r+QOrz5kJbSAY2mDmvnjaLqlmFozKOJZO+VPsM0syWYW3DyclZbRqUwFgsOyX+eG
-sFTyjjMcZwKBgQCqGAPkif8KWC2HqEyBTd0DEz9yQ1nYTXOF7a06bVUTvwZSCb2P
-ODNDDAPBfXuGM966M2Lk9I0Fjtgh60PL5i9P0nEVwFxqnqXBSZog9WwVPJ+IrAGf
-olRurj4Um6zqzwqhQoOBlm7i6mvFwx8yA5IqDdjueY1gM37fxqLNVs9IHwKBgQCL
-o535s/pi1cDU+qRmr8HQrms59Di2dIuAC7v1cSUFZpEi7c1VN2oN44WQFsMAfMY4
-2xYILRxlM6zYx0xi5CyqXiG+RDmLM8yntYmJifKaJPeuIZchSt+aCjMNCUYlops6
-Dr+UfF9nFw297I2igpQKhJ9Iw6MNlOVSr1y7Z9pRlQKBgHEf+jrdGQvm7BwEmrwy
-GAV4Ne6hrVX9DzzkX9VDH5AuhkRmI0rcs1VDfeT05T/sTfDvDaQJS59EUiC5B4f2
-vcV6CRqnntsLtfoKL3J+8Kik+Azh9IOjQDPKK33rpYkjNr99xiUevy3zMy9o6N4s
-TPehuVjQfxC9HOTF5LYOeHJz
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCjQWjDQs1LNPwd
+TwHlirG2WRzY20fcMeQdREYAJYIbFRnPnrVUkJEj8qHrvh/idYJs3pMNxaaLPxL1
+0I0ePk0F44D9E4SetL0LXdHdOpcD5sZcBZmcYz0qkWxu2k1TM07ve5ZavZUQ+HBV
+fyaf182HU9JVKqw/C9yiCydu8rn1tWO3MvEqIsy36vVtf+cUy1ZEejM/WJ5qDM0e
+Psk/nCHQ9STMQGxoicwEBLJ7rGAF7Z/xhvRYuqBBSWI4KkB+78RqwzGa0gBrvmjP
+qze3/uEcDdCSI9Et6jgltzRyk3GzU8/7ToYZQrJ3VtVqBYZ6lwfas9Kt4n0VaBJh
+Mm+aljHrAgMBAAECggEATzdndsv84r/gj/Ys5O1yQxmlikKI8XtSBbOBxgNtSOfp
+wNlxgomtq8RJtqLoRNIhSeOMdpPQNuQRtq6OMz0m0bMtfV/Rq9LmolPRiCgsbAu4
+d6GOApkS7otnErkh6TvN0x3kfL5eTUBH/ex3WPt1svNE7eeJcgQ2+HgyF7925Zbq
+ysKVj28YW0LV3i9xKOclKkFL7PTFBWpXUM9W6uS6+D/N2xflHtb7LNuuTWdwD0uH
+zg+emQi50cWLZZj6uEItS9wtF/XZClyCbGBC5hoIjFrKoK1VbxA7j78tXmDy0fOd
+PEFZEzz7/Ryy7x47t1tG+THDO4Yl6ArYBud2g2bm8QKBgQDROLXB9JukvqWWl3iS
+ay58QrhdvHHckMdX2feElJYmfdiY1c8E4Ty/bJwEvf6FKfjzTHCXMa67eMN7Ud4u
+/l3VExEQjNsLVbE7YNZVVzH67Zr+izUCPXYIKHlgZqe90ZTMWgITmgNKiMuT4+jQ
+s/04lQqhx9V/dQTvxYcfuCGbsQKBgQDHwbmkjGmRwiRJg9RnBroNl+CbwuMBilH5
+aMnsy1sSxV+pCWg+34jD7oZxZWMCMtc403ooIPQx8smihzitS6xQoPgGdrO+CIK6
+YW0xDsgWhALf6O4barkJIpm7eyCilCiyDv5sE4syWVccSQF/a5HAtqzzdyDPk/GU
+JFRKSWn6WwKBgB56X2foxT+jkiW03RifSn9JjOgCyqdx48g1dWw35QOoc4QYKXcx
+hJLyNGwwbUJi0eRHb2NnFmgy+G8fhvlbjrm6dFLv4fztt8rJmY+HCz3dnSWVi9xO
+rcIUe1ICwk7RmBaIyiKm3fHeqaFaoxC8F5hFhe35WW2e02BGax/AyAyRAoGBAKoW
+ZzcYJA/rajB6otHy5VsLtkGKqPY3y+L9eeo5oVuTWge5rdzTQ0XqBOnrNWm61o1Z
+bItcu/EH1O6iCv1sENY6qdX/Hr8xyfZfXLVH69FYKIZ1dME9lz6TCqmbhsdINnqe
+z75AyeZeMhEwjKjtdBbOtOc9yV9Wjn3gjTEP38A/AoGBAKMribERjf134k6JZkHr
+Eh7XK4z8Jb5hzMiADJOtgSYR6+/ed29D9uVaJMHeV7vzhdmK0bUik8T+qN+MxnSJ
+DK1XzFQW/RLlSjqQu6cJnUAF/a9QF2XUaiekTZiPBW3PSPQPvhMvoI8eLqxnl532
+4vZD2u7y0D1WbvfekEyooR0t
 -----END PRIVATE KEY-----`
 
   return (
@@ -186,7 +186,7 @@ TPehuVjQfxC9HOTF5LYOeHJz
                           <div className="text-sm bg-blue-50 p-3 rounded border border-blue-200">
                             <p className="font-semibold text-blue-800 mb-2">خطوات إضافية:</p>
                             <ol className="list-decimal list-inside space-y-1 text-blue-700 mr-2">
-                              <li>تأكد من تفعيل Google Sheets API و Google Drive API</li>
+                              <li>تأكد من تفعيل Google Sheets API و Google Drive API في مشروع rosesmile-booking</li>
                               <li>تحقق من أن المتغيرات البيئية تم إضافتها بشكل صحيح في Vercel</li>
                               <li>أعد نشر المشروع في Vercel بعد إضافة المتغيرات</li>
                               <li>انتظر 2-3 دقائق حتى تصبح التغييرات نافذة</li>
@@ -197,7 +197,7 @@ TPehuVjQfxC9HOTF5LYOeHJz
                                 size="sm"
                                 onClick={() =>
                                   window.open(
-                                    "https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=v0-rosesmile2",
+                                    "https://console.cloud.google.com/apis/library/sheets.googleapis.com?project=rosesmile-booking",
                                     "_blank",
                                   )
                                 }
@@ -210,7 +210,7 @@ TPehuVjQfxC9HOTF5LYOeHJz
                                 size="sm"
                                 onClick={() =>
                                   window.open(
-                                    "https://console.cloud.google.com/apis/library/drive.googleapis.com?project=v0-rosesmile2",
+                                    "https://console.cloud.google.com/apis/library/drive.googleapis.com?project=rosesmile-booking",
                                     "_blank",
                                   )
                                 }
@@ -393,7 +393,7 @@ TPehuVjQfxC9HOTF5LYOeHJz
               <div>
                 <h3 className="font-semibold mb-1">أعد نشر المشروع</h3>
                 <p className="text-sm text-muted-foreground">
-                  بعد إضافة المتغيرات، أعد نشر المشروع من Vercel لتطبيق التغييرات
+                  بعد إضافة المتغيرات، تأكد من تفعيل Google Sheets API و Google Drive API في مشروع rosesmile-booking، ثم أعد نشر المشروع من Vercel
                 </p>
               </div>
             </div>
