@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, FileText, Star, X, RefreshCw, Settings } from "lucide-react"
+import { Plus, FileText, Star, X, RefreshCw, Settings } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import { ImagePicker } from "@/components/image-picker"
@@ -52,8 +52,6 @@ interface BookingForm {
   is_active: boolean
   is_main: boolean
   order_index: number
-  google_sheet_id?: string
-  google_sheet_url?: string
   custom_services?: CustomService[]
   booking_form_services?: Array<{
     service_id: string
@@ -68,7 +66,6 @@ export default function BookingFormsPage() {
   const [open, setOpen] = useState(false)
   const [editingForm, setEditingForm] = useState<BookingForm | null>(null)
   const [initializing, setInitializing] = useState(false)
-  const [showReauthDialog, setShowReauthDialog] = useState(false)
   const [formData, setFormData] = useState({
     name_ar: "",
     name_en: "",
@@ -145,26 +142,10 @@ export default function BookingFormsPage() {
         const bookingUrl = `${baseUrl}/booking/${savedForm.id || editingForm?.id}`
         setFormUrl(bookingUrl)
 
-        if (!editingForm) {
-          // For new forms, check if Google Sheet was created
-          if (savedForm.sheetCreationStatus === "failed") {
-            toast({
-              title: "⚠️ تم إنشاء النموذج بدون Google Sheet",
-              description: `النموذج تم إنشاؤه بنجاح، لكن فشل إنشاء Google Sheet: ${savedForm.sheetCreationError || "خطأ غير معروف"}. يمكنك إنشاء الجدول لاحقاً من زر 'إنشاء جدول جديد'.`,
-              variant: "default",
-            })
-          } else {
-            toast({
-              title: "✅ تم إنشاء النموذج بنجاح",
-              description: "تم إنشاء النموذج وGoogle Sheet المرتبط به تلقائياً",
-            })
-          }
-        } else {
-          toast({
-            title: "نجح ✓",
-            description: "تم تحديث النموذج بنجاح",
-          })
-        }
+        toast({
+          title: editingForm ? "تم التحديث" : "تم الإنشاء",
+          description: editingForm ? "تم تحديث النموذج بنجاح" : "تم إنشاء النموذج بنجاح",
+        })
 
         fetchForms()
 
@@ -398,23 +379,6 @@ export default function BookingFormsPage() {
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto flex-wrap">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowReauthDialog(true)}
-            className="gap-2 flex-1 sm:flex-none bg-transparent"
-          >
-            <RefreshCw className="h-4 w-4" />
-            إعادة مصادقة Google
-          </Button>
-
-          <Button variant="outline" size="sm" asChild className="gap-2 flex-1 sm:flex-none bg-transparent">
-            <Link href="/dashboard/google-sheets-setup">
-              <Settings className="h-4 w-4" />
-              إعدادات Google
-            </Link>
-          </Button>
-
           {forms.length === 0 && (
             <Button
               onClick={initializeTables}
@@ -715,10 +679,10 @@ export default function BookingFormsPage() {
 
               <BookingFormActions
                 formId={form.id}
-                googleSheetUrl={form.google_sheet_url}
+                formName={form.name_ar}
                 onEdit={() => handleEdit(form)}
                 onDelete={() => handleDelete(form.id)}
-                onSheetCreated={() => fetchForms()}
+                onView={() => {}}
               />
 
               {!form.is_main && (
@@ -751,62 +715,6 @@ export default function BookingFormsPage() {
           </CardContent>
         </Card>
       )}
-
-      {/* Reauth dialog with detailed instructions */}
-      <AlertDialog open={showReauthDialog} onOpenChange={setShowReauthDialog}>
-        <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl">إعادة مصادقة Google Sheets</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4 text-right">
-              <p className="text-base text-foreground">إذا كنت تواجه مشاكل في إنشاء Google Sheets، اتبع هذه الخطوات:</p>
-
-              <div className="bg-muted p-4 rounded-lg space-y-3 text-sm">
-                <h4 className="font-semibold text-foreground">الخطوات المطلوبة:</h4>
-                <ol className="list-decimal list-inside space-y-2 text-foreground">
-                  <li>
-                    اذهب إلى صفحة{" "}
-                    <Link href="/dashboard/google-sheets-setup" className="text-primary underline font-medium">
-                      إعدادات Google Sheets
-                    </Link>
-                  </li>
-                  <li>اضغط على زر "اختبار الاتصال" للتحقق من الحالة الحالية</li>
-                  <li>إذا فشل الاختبار، اتبع التعليمات لإنشاء Service Account جديد</li>
-                  <li>
-                    تأكد من منح الصلاحيات المطلوبة:
-                    <ul className="list-disc list-inside mr-6 mt-1 space-y-1">
-                      <li>Google Sheets API</li>
-                      <li>Google Drive API</li>
-                    </ul>
-                  </li>
-                  <li>انسخ البيانات الجديدة (Email + Private Key)</li>
-                  <li>حدّث المتغيرات البيئية في Vercel من قسم "Vars" في الشريط الجانبي</li>
-                  <li>أعد نشر التطبيق لتطبيق التغييرات</li>
-                </ol>
-              </div>
-
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>ملاحظة مهمة:</strong> بعد إنشاء Service Account جديد، تأكد من إضافة Service Account Email إلى
-                  Google Sheet كمحرر (Editor) لكل جدول تريد الكتابة إليه.
-                </p>
-              </div>
-
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>نصيحة:</strong> يمكنك اختبار الاتصال مباشرة من صفحة الإعدادات للتأكد من نجاح المصادقة قبل
-                  محاولة إنشاء جداول جديدة.
-                </p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel className="w-full sm:w-auto">إلغاء</AlertDialogCancel>
-            <AlertDialogAction asChild className="w-full sm:w-auto">
-              <Link href="/dashboard/google-sheets-setup">الذهاب إلى الإعدادات</Link>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

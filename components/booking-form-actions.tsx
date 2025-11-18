@@ -2,193 +2,117 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Link2, Sheet, Pencil, Trash2, Loader2, AlertCircle } from "lucide-react"
+import { Copy, Edit, Trash2, Eye } from 'lucide-react'
 import { toast } from "@/hooks/use-toast"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface BookingFormActionsProps {
   formId: string
-  googleSheetUrl?: string
+  formName: string
   onEdit: () => void
   onDelete: () => void
-  onSheetCreated?: () => void
+  onView: () => void
 }
 
 export function BookingFormActions({
   formId,
-  googleSheetUrl,
+  formName,
   onEdit,
   onDelete,
-  onSheetCreated,
+  onView,
 }: BookingFormActionsProps) {
-  const [creatingSheet, setCreatingSheet] = useState(false)
-  const [hasSheet, setHasSheet] = useState(!!googleSheetUrl)
-  const [retryCount, setRetryCount] = useState(0)
-  const [sheetError, setSheetError] = useState<string | null>(null)
+  const [isCopying, setIsCopying] = useState(false)
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text)
-    toast({
-      title: "تم النسخ",
-      description: `تم نسخ ${label} إلى الحافظة`,
-    })
-  }
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/booking/${formId}`
 
-  const verifySheetCreation = async (maxRetries = 5) => {
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const response = await fetch(`/api/booking-forms/${formId}`)
-        if (response.ok) {
-          const form = await response.json()
-          if (form.google_sheet_url) {
-            console.log("[v0] ✅ تم التحقق من الجدول بنجاح")
-            return true
-          }
-        }
-        console.log(`[v0] الجدول ليس جاهز بعد، إعادة المحاولة... (${i + 1}/${maxRetries})`)
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-      } catch (error) {
-        console.warn("[v0] فشل فحص التحقق:", error)
-      }
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      setIsCopying(true)
+      await navigator.clipboard.writeText(text)
+      toast({
+        title: "تم النسخ!",
+        description: `تم نسخ ${label} بنجاح`,
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "فشل نسخ النص",
+      })
+    } finally {
+      setTimeout(() => setIsCopying(false), 1000)
     }
-    return false
-  }
-
-  const createNewSheet = async () => {
-    setCreatingSheet(true)
-    setRetryCount(0)
-    setSheetError(null)
-    const maxRetries = 3
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`[v0] إنشاء جدول Google Sheet (محاولة ${attempt}/${maxRetries})...`)
-
-        const response = await fetch(`/api/booking-forms/${formId}/create-sheet`, {
-          method: "POST",
-        })
-
-        const data = await response.json()
-
-        if (response.ok) {
-          console.log("[v0] تم الرد من الخادم بنجاح، جاري التحقق...")
-          const verified = await verifySheetCreation()
-
-          if (verified || data.googleSheetUrl) {
-            setHasSheet(true)
-            setRetryCount(0)
-            setSheetError(null)
-            toast({
-              title: "✅ تم إنشاء الجدول بنجاح",
-              description: "تم إنشاء جدول Google Sheet جديد وربطه بالنموذج",
-            })
-            onSheetCreated?.()
-            setCreatingSheet(false)
-            return
-          } else {
-            throw new Error("فشل التحقق من الجدول")
-          }
-        } else {
-          const errorMessage = data.error || "خطأ غير معروف من الخادم"
-          throw new Error(errorMessage)
-        }
-      } catch (error: any) {
-        console.error(`[v0] فشلت المحاولة ${attempt}:`, error.message)
-        setRetryCount(attempt)
-        setSheetError(error.message)
-
-        if (attempt < maxRetries) {
-          console.log(`[v0] إعادة المحاولة بعد ثانيتين...`)
-          await new Promise((resolve) => setTimeout(resolve, 2000))
-        } else {
-          console.error("[v0] فشلت جميع محاولات إعادة المحاولة")
-          toast({
-            title: "❌ فشل في إنشاء الجدول",
-            description: `${error.message}\n\nالرجاء التحقق من إعدادات Google Sheets في لوحة التحكم.`,
-            variant: "destructive",
-          })
-        }
-      }
-    }
-
-    setCreatingSheet(false)
   }
 
   return (
-    <div className="flex flex-col gap-2 w-full">
-      {sheetError && !creatingSheet && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-700 text-xs">{sheetError}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* الزر الأول: Google Sheet */}
-      <TooltipProvider>
+    <TooltipProvider>
+      <div className="flex gap-1">
+        {/* زر نسخ رابط الحجز */}
         <Tooltip>
           <TooltipTrigger asChild>
-            {hasSheet && googleSheetUrl ? (
-              <Button
-                onClick={() => copyToClipboard(googleSheetUrl, "رابط جدول Google Sheet")}
-                className="w-full h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium flex items-center justify-center gap-2 transition-colors"
-              >
-                <Sheet className="h-4 w-4" />
-                <span>نسخ الجدول</span>
-              </Button>
-            ) : (
-              <Button
-                onClick={createNewSheet}
-                disabled={creatingSheet}
-                className="w-full h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-              >
-                {creatingSheet ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>جاري الإنشاء ({retryCount}/3)...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sheet className="h-4 w-4" />
-                    <span>إنشاء جدول جديد</span>
-                  </>
-                )}
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => copyToClipboard(bookingUrl, "رابط صفحة الحجز")}
+              disabled={isCopying}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
           </TooltipTrigger>
-          <TooltipContent>{hasSheet ? "انسخ رابط جدول Google Sheet" : "لا يوجد جدول مرتبط حالياً"}</TooltipContent>
+          <TooltipContent>انسخ رابط صفحة الحجز</TooltipContent>
         </Tooltip>
-      </TooltipProvider>
 
-      {/* الزر الثاني: نسخ رابط النموذج */}
-      <Button
-        onClick={() => {
-          const bookingUrl = `${window.location.origin}/booking/${formId}`
-          copyToClipboard(bookingUrl, "رابط النموذج")
-        }}
-        className="w-full h-10 bg-slate-600 hover:bg-slate-700 text-white rounded-md font-medium flex items-center justify-center gap-2 transition-colors"
-      >
-        <Link2 className="h-4 w-4" />
-        <span>نسخ الرابط</span>
-      </Button>
+        {/* زر المعاينة */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onView}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>معاينة صفحة الحجز</TooltipContent>
+        </Tooltip>
 
-      {/* الأزرار الثالثة والرابعة: التعديل والحذف */}
-      <div className="flex gap-2">
-        <Button
-          onClick={onEdit}
-          className="flex-1 h-10 bg-slate-700 hover:bg-slate-800 text-white rounded-md font-medium flex items-center justify-center gap-2 transition-colors"
-        >
-          <Pencil className="h-4 w-4" />
-          <span className="hidden sm:inline">تعديل</span>
-        </Button>
-        <Button
-          onClick={onDelete}
-          className="flex-1 h-10 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium flex items-center justify-center gap-1 transition-colors"
-        >
-          <Trash2 className="h-4 w-4" />
-          <span className="hidden sm:inline">حذف</span>
-        </Button>
+        {/* زر التعديل */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onEdit}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>تعديل النموذج</TooltipContent>
+        </Tooltip>
+
+        {/* زر الحذف */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:bg-destructive/10"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>حذف النموذج</TooltipContent>
+        </Tooltip>
       </div>
-    </div>
+    </TooltipProvider>
   )
 }

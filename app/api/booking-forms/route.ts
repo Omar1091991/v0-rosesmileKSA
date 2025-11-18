@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { createGoogleSheet } from "@/lib/google-sheets"
 
 export async function GET(request: Request) {
   try {
@@ -87,25 +86,11 @@ export async function POST(request: Request) {
       custom_services: custom_services || [],
     }
 
-    console.log("[v0] 📊 محاولة إنشاء Google Sheet تلقائياً...")
-    const sheetResult = await createGoogleSheet(formData.name_ar || "نموذج حجز جديد")
-
-    let googleSheetId = null
-    let googleSheetUrl = null
-
-    if (sheetResult.success) {
-      console.log("[v0] ✅ تم إنشاء Google Sheet بنجاح!")
-      googleSheetId = sheetResult.spreadsheetId
-      googleSheetUrl = sheetResult.spreadsheetUrl
-    } else {
-      console.error("[v0] ❌ فشل إنشاء Google Sheet:", sheetResult.error)
-      console.warn("[v0] ⚠️ سيتم إنشاء النموذج بدون Google Sheet. يمكنك إنشاء الجدول لاحقاً من زر 'إنشاء جدول جديد'")
-    }
 
     const result = await db.query(
       `
-      INSERT INTO booking_forms (name_ar, name_en, title_ar, title_en, description_ar, description_en, image_url, services, fields, is_main, is_active, order_index, google_sheet_id, google_sheet_url)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      INSERT INTO booking_forms (name_ar, name_en, title_ar, title_en, description_ar, description_en, image_url, services, fields, is_main, is_active, order_index)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `,
       [
@@ -121,23 +106,14 @@ export async function POST(request: Request) {
         formData.is_main || false,
         formData.is_active !== false,
         formData.order_index || 0,
-        googleSheetId,
-        googleSheetUrl,
       ],
     )
 
-    const responseData = {
-      ...result.rows[0],
-      sheetCreationStatus: sheetResult.success ? "success" : "failed",
-      sheetCreationError: sheetResult.error || null,
-    }
-
     console.log("[v0] ✅ تم إنشاء نموذج الحجز:", {
       formId: result.rows[0].id,
-      googleSheetUrl: result.rows[0].google_sheet_url || "لم يتم الإنشاء",
     })
 
-    return NextResponse.json(responseData)
+    return NextResponse.json(result.rows[0])
   } catch (error: any) {
     console.error("[v0] Error creating booking form:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

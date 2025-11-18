@@ -1,6 +1,5 @@
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
-import { appendToGoogleSheet } from "@/lib/google-sheets"
 
 export async function GET() {
   try {
@@ -25,14 +24,8 @@ export async function GET() {
         COALESCE(b.service_name, b.service, '') as service_name,
         COALESCE(b.contacted, false) as contacted,
         COALESCE(b.admin_notes, '') as admin_notes,
-        COALESCE(b.contact_attempts, 0) as contact_attempts,
-        COALESCE(bf.name_ar, '') as booking_form_name_ar,
-        COALESCE(bf.name_en, '') as booking_form_name_en,
-        COALESCE(s.title_ar, '') as service_title_ar,
-        COALESCE(s.title_en, '') as service_title_en
+        COALESCE(b.contact_attempts, 0) as contact_attempts
       FROM bookings b
-      LEFT JOIN booking_forms bf ON b.booking_form_id = bf.id
-      LEFT JOIN services s ON b.service_id = s.id
       ORDER BY b.created_at DESC
     `)
 
@@ -44,7 +37,7 @@ export async function GET() {
       phone: booking.phone,
       email: booking.email,
       service_id: booking.service_id,
-      service_name: booking.service_title_ar || booking.service_name || booking.service || "",
+      service_name: booking.service_name || booking.service || "",
       doctor_id: booking.doctor_id,
       preferred_date: booking.preferred_date,
       preferred_time: booking.preferred_time,
@@ -54,7 +47,6 @@ export async function GET() {
       admin_notes: booking.admin_notes,
       contact_attempts: booking.contact_attempts,
       booking_form_id: booking.booking_form_id,
-      booking_form_name: booking.booking_form_name_ar || booking.booking_form_name_en || "",
       created_at: booking.created_at,
       updated_at: booking.updated_at,
     }))
@@ -110,7 +102,6 @@ export async function GET() {
         admin_notes: booking.admin_notes || "",
         contact_attempts: booking.contact_attempts || 0,
         booking_form_id: booking.booking_form_id || null,
-        booking_form_name: "",
         created_at: booking.created_at,
         updated_at: booking.updated_at,
       }))
@@ -208,61 +199,6 @@ export async function POST(request: Request) {
     const booking = result.rows[0]
 
     console.log("[v0] Created booking:", booking)
-
-    let bookingFormName = ""
-    let serviceName = booking.service_name || booking.service || ""
-    let googleSheetId = null
-
-    try {
-      if (booking.booking_form_id) {
-        const formResult = await db.query(
-          "SELECT name_ar, name_en, google_sheet_id FROM booking_forms WHERE id = $1",
-          [booking.booking_form_id],
-        )
-        if (formResult.rows.length > 0) {
-          bookingFormName = formResult.rows[0].name_ar || formResult.rows[0].name_en || ""
-          googleSheetId = formResult.rows[0].google_sheet_id
-          console.log("[v0] 📊 معرف جدول النموذج:", googleSheetId)
-        }
-      }
-
-      if (booking.service_id && !serviceName) {
-        const serviceResult = await db.query("SELECT title_ar, title_en FROM services WHERE id = $1", [
-          booking.service_id,
-        ])
-        if (serviceResult.rows.length > 0) {
-          serviceName = serviceResult.rows[0].title_ar || serviceResult.rows[0].title_en || ""
-        }
-      }
-    } catch (lookupError: any) {
-      console.log("[v0] ⚠️ Could not fetch form/service names:", lookupError.message)
-    }
-
-    try {
-      if (googleSheetId) {
-        console.log("[v0] 📤 إرسال الحجز إلى جدول النموذج المحدد...")
-        const sheetsResult = await appendToGoogleSheet({
-          full_name: booking.patient_name,
-          patient_name: booking.patient_name,
-          phone: booking.phone,
-          email: booking.email,
-          service: serviceName,
-          service_name: serviceName,
-          booking_form_name: bookingFormName,
-          notes: booking.notes || "",
-          id: booking.id,
-          created_at: booking.created_at,
-        }, googleSheetId)
-
-        if (sheetsResult.success) {
-          console.log("[v0] ✅ تمت مزامنة الحجز مع Google Sheet الخاص بالنموذج!")
-        }
-      } else {
-        console.log("[v0] ℹ️ لا يوجد Google Sheet محدد لهذا النموذج، تخطي المزامنة")
-      }
-    } catch (sheetsError: any) {
-      console.error("[v0] ❌ خطأ في Google Sheets (غير حرج):", sheetsError.message)
-    }
 
     return NextResponse.json({ booking })
   } catch (error: any) {

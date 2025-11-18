@@ -56,7 +56,7 @@
     "framer-motion": "latest",
     "fs": "latest",
     "geist": "latest",
-    "googleapis": "latest",
+    "googleapis": "164.1.0",
     "input-otp": "1.4.1",
     "jspdf": "latest",
     "lucide-react": "^0.454.0",
@@ -86,7 +86,6 @@
     "@types/react-dom": "^19",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
-    "tw-animate-css": "1.3.3",
     "typescript": "^5"
   },
   "trustedDependencies": [

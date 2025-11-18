@@ -1,24 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from "@/lib/utils"
-import {
-  Users,
-  Briefcase,
-  Stethoscope,
-  Building2,
-  Tag,
-  Calendar,
-  FileText,
-  LayoutDashboard,
-  LogOut,
-  LucideComponent as ImageIconComponent,
-  Newspaper,
-  UserCircle,
-  Database,
-  Sheet,
-} from "lucide-react"
+import { Users, Briefcase, Stethoscope, Building2, Tag, Calendar, FileText, LayoutDashboard, LogOut, LucideComponent as ImageIconComponent, Newspaper, UserCircle, Database } from 'lucide-react'
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -64,13 +49,6 @@ const menuItems = [
   { title: "المستخدمين", href: "/dashboard/users", icon: Users, roles: ["admin"], color: "text-rose-500" },
   { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText, roles: ["admin"], color: "text-lime-500" },
   {
-    title: "ربط Google Sheets",
-    href: "/dashboard/google-sheets-setup",
-    icon: Sheet,
-    roles: ["admin"],
-    color: "text-emerald-500",
-  },
-  {
     title: "نقل قاعدة البيانات",
     href: "/dashboard/migration",
     icon: Database,
@@ -102,10 +80,11 @@ export function DashboardSidebar() {
     }
   }
 
-  const visibleMenuItems = menuItems.filter((item) => {
-    if (!user) return false
-    return item.roles.includes(user.role)
-  })
+  const visibleMenuItems = menuItems // show all items temporarily
+  // const visibleMenuItems = menuItems.filter((item) => {
+  //   if (!user) return false
+  //   return item.roles.includes(user.role)
+  // })
 
   const getInitials = (name: string) => {
     const parts = name.split(" ")
