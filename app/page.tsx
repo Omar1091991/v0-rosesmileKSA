@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, CheckCircle2, Phone } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Phone, LayoutDashboard } from 'lucide-react'
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
@@ -16,7 +16,7 @@ import { useLanguage } from "@/components/language-switcher"
 import { HeroSlideshow } from "@/components/hero-slideshow"
 import { AnimatedBackground } from "@/components/animated-background"
 import { SocialMediaLinks } from "@/components/social-media-links"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 
 export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
@@ -339,6 +339,21 @@ export default function HomePage() {
           }}
         >
           <div className="container px-2 sm:px-4 md:px-6 lg:px-8">
+            {/* CHANGE: Added dashboard button at the top of hero section */}
+            <motion.div
+              className="flex justify-end mb-4"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Button variant="outline" size="sm" asChild className="bg-background/80 backdrop-blur-sm">
+                <Link href="/dashboard">
+                  <LayoutDashboard className="h-4 w-4 ml-2" />
+                  {language === "ar" ? "لوحة التحكم" : "Dashboard"}
+                </Link>
+              </Button>
+            </motion.div>
+
             <motion.div
               className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center"
               initial="initial"

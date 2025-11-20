@@ -12,25 +12,24 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  // useEffect(() => {
-  //   if (!loading && !user) {
-  //     router.push("/auth/login")
-  //   }
-  // }, [user, loading, router])
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/auth/login")
+    }
+  }, [user, loading, router])
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex min-h-screen flex-col">
-  //       <SiteHeader />
-  //       <LoadingSpinner />
-  //     </div>
-  //   )
-  // }
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <LoadingSpinner />
+      </div>
+    )
+  }
 
-  // if (!user) {
-  //   return null
-  // }
-  // </CHANGE>
+  if (!user) {
+    return null
+  }
 
   return (
     <div className="flex min-h-screen flex-col">

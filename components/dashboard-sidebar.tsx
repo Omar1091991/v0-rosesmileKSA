@@ -80,11 +80,10 @@ export function DashboardSidebar() {
     }
   }
 
-  const visibleMenuItems = menuItems // show all items temporarily
-  // const visibleMenuItems = menuItems.filter((item) => {
-  //   if (!user) return false
-  //   return item.roles.includes(user.role)
-  // })
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (!user) return false
+    return item.roles.includes(user.role)
+  })
 
   const getInitials = (name: string) => {
     const parts = name.split(" ")
