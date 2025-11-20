@@ -118,7 +118,22 @@ export function SiteHeader() {
             <LanguageSwitcher />
           </div>
 
-          <Button size="sm" asChild>
+          <Button
+            size="sm"
+            asChild
+            style={{
+              backgroundColor: "var(--book-appointment-button-bg-color, #ec4899)",
+              color: "var(--book-appointment-button-text-color, #ffffff)",
+            }}
+            onMouseEnter={(e) => {
+              const target = e.currentTarget
+              target.style.backgroundColor = "var(--book-appointment-button-hover-bg-color, #db2777)"
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget
+              target.style.backgroundColor = "var(--book-appointment-button-bg-color, #ec4899)"
+            }}
+          >
             <Link href={bookingLink}>احجز موعد</Link>
           </Button>
         </div>
@@ -200,7 +215,15 @@ export function SiteHeader() {
             <div className="flex flex-col gap-2 pt-2">
               <LanguageSwitcher />
 
-              <Button size="sm" asChild onClick={() => setIsMenuOpen(false)}>
+              <Button
+                size="sm"
+                asChild
+                onClick={() => setIsMenuOpen(false)}
+                style={{
+                  backgroundColor: "var(--book-appointment-button-bg-color, #ec4899)",
+                  color: "var(--book-appointment-button-text-color, #ffffff)",
+                }}
+              >
                 <Link href={bookingLink}>احجز موعد</Link>
               </Button>
             </div>

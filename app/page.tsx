@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, CheckCircle2, Phone, LayoutDashboard } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Phone, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
@@ -16,7 +16,7 @@ import { useLanguage } from "@/components/language-switcher"
 import { HeroSlideshow } from "@/components/hero-slideshow"
 import { AnimatedBackground } from "@/components/animated-background"
 import { SocialMediaLinks } from "@/components/social-media-links"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 
 export default function HomePage() {
   const [services, setServices] = useState<any[]>([])
@@ -387,12 +387,30 @@ export default function HomePage() {
                   className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4"
                   variants={fadeInUp}
                 >
-                  <Button size="lg" className="w-full sm:w-auto" asChild>
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto"
+                    asChild
+                    style={{
+                      backgroundColor: getColor("primary_button_bg_color") || undefined,
+                      color: getColor("primary_button_text_color") || undefined,
+                    }}
+                  >
                     <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
                       {language === "ar" ? "احجز موعد" : "Book Appointment"}
                     </Link>
                   </Button>
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto bg-transparent" asChild>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full sm:w-auto bg-transparent"
+                    asChild
+                    style={{
+                      backgroundColor: getColor("secondary_button_bg_color") || undefined,
+                      color: getColor("secondary_button_text_color") || undefined,
+                      borderColor: getColor("secondary_button_border_color") || undefined,
+                    }}
+                  >
                     <Link href="/services">
                       {language === "ar" ? "تصفح خدماتنا" : "Explore Our Services"}
                       <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
@@ -654,7 +672,17 @@ export default function HomePage() {
               viewport={{ once: true }}
               variants={fadeIn}
             >
-              <Button variant="outline" size="lg" className="w-full sm:w-auto bg-transparent" asChild>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto bg-transparent"
+                asChild
+                style={{
+                  backgroundColor: getColor("view_all_button_bg_color") || undefined,
+                  color: getColor("view_all_button_text_color") || undefined,
+                  borderColor: getColor("view_all_button_border_color") || undefined,
+                }}
+              >
                 <Link href="/services">
                   {language === "ar" ? "عرض جميع الخدمات" : "View All Services"}
                   <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
@@ -1100,7 +1128,10 @@ export default function HomePage() {
               viewport={{ once: true }}
               variants={fadeInUp}
             >
-              <h2 className="text-3xl md:text-4xl font-bold">
+              <h2
+                className="text-3xl md:text-4xl font-bold"
+                style={{ color: getColor("why_choose_us_title_color", "#1f2937") }}
+              >
                 {renderFormattedText(
                   getText("why_choose_us_title") ||
                     (language === "ar" ? "لماذا تختار عيادات ابتسامة الورود؟" : "Why Choose Rose Smile Clinics?"),
@@ -1191,7 +1222,15 @@ export default function HomePage() {
 
                 {/* Get Directions Button */}
                 <div className="text-center">
-                  <Button size="lg" className="w-full sm:w-auto" asChild>
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto"
+                    asChild
+                    style={{
+                      backgroundColor: getColor("directions_button_bg_color") || undefined,
+                      color: getColor("directions_button_text_color") || undefined,
+                    }}
+                  >
                     <a
                       href="https://maps.app.goo.gl/A1bn39TLNMNoCCJ8A"
                       target="_blank"
@@ -1263,7 +1302,15 @@ export default function HomePage() {
               </motion.p>
               <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4" variants={fadeInUp}>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button size="lg" className="relative overflow-hidden group" asChild>
+                  <Button
+                    size="lg"
+                    className="relative overflow-hidden group"
+                    asChild
+                    style={{
+                      backgroundColor: getColor("cta_primary_button_bg_color") || undefined,
+                      color: getColor("cta_primary_button_text_color") || undefined,
+                    }}
+                  >
                     <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
                       <motion.span
                         className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
@@ -1280,7 +1327,16 @@ export default function HomePage() {
                     </Link>
                   </Button>
                 </motion.div>
-                <Button variant="outline" size="lg" asChild>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  asChild
+                  style={{
+                    backgroundColor: getColor("cta_secondary_button_bg_color") || undefined,
+                    color: getColor("cta_secondary_button_text_color") || undefined,
+                    borderColor: getColor("cta_secondary_button_border_color") || undefined,
+                  }}
+                >
                   <Link href={`tel:${getText("cta_phone_number") || "+966123456789"}`}>
                     <Phone className="ml-2 h-5 w-5" />
                     {language === "ar" ? "اتصل بنا الآن" : "Contact Us Now"}

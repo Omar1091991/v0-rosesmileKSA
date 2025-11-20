@@ -296,19 +296,123 @@ const BACKGROUND_COLOR_SECTIONS = [
   },
   {
     section: "button_colors",
-    title: "ألوان الأزرار",
+    title: "ألوان أزرار الموقع",
     fields: [
-      { key: "primary_button_bg_color", label: "لون خلفية الزر الأساسي", type: "color", defaultValue: "#ec4899" },
-      { key: "primary_button_text_color", label: "لون نص الزر الأساسي", type: "color", defaultValue: "#ffffff" },
+      // زر احجز موعد في الهيدر
       {
-        key: "primary_button_hover_bg_color",
-        label: "لون خلفية الزر الأساسي عند التمرير",
+        key: "book_appointment_button_bg_color",
+        label: "لون خلفية زر احجز موعد (في الهيدر)",
+        type: "color",
+        defaultValue: "#ec4899",
+      },
+      {
+        key: "book_appointment_button_text_color",
+        label: "لون نص زر احجز موعد",
+        type: "color",
+        defaultValue: "#ffffff",
+      },
+      {
+        key: "book_appointment_button_hover_bg_color",
+        label: "لون خلفية زر احجز موعد عند التمرير",
         type: "color",
         defaultValue: "#db2777",
       },
-      { key: "secondary_button_bg_color", label: "لون خلفية الزر الثانوي", type: "color", defaultValue: "#ffffff" },
-      { key: "secondary_button_text_color", label: "لون نص الزر الثانوي", type: "color", defaultValue: "#1f2937" },
-      { key: "secondary_button_border_color", label: "لون حدود الزر الثانوي", type: "color", defaultValue: "#e5e7eb" },
+      // الأزرار الرئيسية (احجز موعد في الصفحات)
+      {
+        key: "primary_button_bg_color",
+        label: "لون خلفية الأزرار الرئيسية (احجز موعد في الصفحات)",
+        type: "color",
+        defaultValue: "#ec4899",
+      },
+      { key: "primary_button_text_color", label: "لون نص الأزرار الرئيسية", type: "color", defaultValue: "#ffffff" },
+      {
+        key: "primary_button_hover_bg_color",
+        label: "لون خلفية الأزرار الرئيسية عند التمرير",
+        type: "color",
+        defaultValue: "#db2777",
+      },
+      // الأزرار الثانوية (اتصل بنا، تصفح خدماتنا)
+      {
+        key: "secondary_button_bg_color",
+        label: "لون خلفية الأزرار الثانوية (اتصل بنا، تصفح الخدمات)",
+        type: "color",
+        defaultValue: "#ffffff",
+      },
+      {
+        key: "secondary_button_text_color",
+        label: "لون نص الأزرار الثانوية",
+        type: "color",
+        defaultValue: "#1f2937",
+      },
+      {
+        key: "secondary_button_border_color",
+        label: "لون حدود الأزرار الثانوية",
+        type: "color",
+        defaultValue: "#e5e7eb",
+      },
+      {
+        key: "secondary_button_hover_bg_color",
+        label: "لون خلفية الأزرار الثانوية عند التمرير",
+        type: "color",
+        defaultValue: "#f3f4f6",
+      },
+      // أزرار عرض الكل
+      {
+        key: "view_all_button_bg_color",
+        label: "لون خلفية أزرار عرض الكل (عرض جميع الخدمات، المقالات)",
+        type: "color",
+        defaultValue: "#ffffff",
+      },
+      {
+        key: "view_all_button_text_color",
+        label: "لون نص أزرار عرض الكل",
+        type: "color",
+        defaultValue: "#1f2937",
+      },
+      {
+        key: "view_all_button_border_color",
+        label: "لون حدود أزرار عرض الكل",
+        type: "color",
+        defaultValue: "#e5e7eb",
+      },
+      {
+        key: "view_all_button_hover_bg_color",
+        label: "لون خلفية أزرار عرض الكل عند التمرير",
+        type: "color",
+        defaultValue: "#f3f4f6",
+      },
+      // زر الحصول على الاتجاهات
+      {
+        key: "directions_button_bg_color",
+        label: "لون خلفية زر الحصول على الاتجاهات",
+        type: "color",
+        defaultValue: "#ec4899",
+      },
+      {
+        key: "directions_button_text_color",
+        label: "لون نص زر الحصول على الاتجاهات",
+        type: "color",
+        defaultValue: "#ffffff",
+      },
+      {
+        key: "directions_button_hover_bg_color",
+        label: "لون خلفية زر الحصول على الاتجاهات عند التمرير",
+        type: "color",
+        defaultValue: "#db2777",
+      },
+      // عناصر القائمة النشطة (لوحة التحكم)
+      {
+        key: "sidebar_active_item_bg_color",
+        label: "لون خلفية عنصر القائمة النشط (لوحة التحكم)",
+        type: "color",
+        defaultValue: "#ec4899",
+      },
+      {
+        key: "sidebar_active_item_text_color",
+        label: "لون نص عنصر القائمة النشط",
+        type: "color",
+        defaultValue: "#ffffff",
+      },
     ],
   },
   {
@@ -357,6 +461,12 @@ const BACKGROUND_COLOR_SECTIONS = [
         defaultValue: "#6b7280",
       },
       {
+        key: "why_choose_us_title_color",
+        label: "لون عنوان قسم لماذا تختارنا",
+        type: "color",
+        defaultValue: "#1f2937",
+      },
+      {
         key: "why_choose_us_item_color",
         label: "لون عناصر لماذا تختارنا",
         type: "color",
@@ -397,6 +507,42 @@ const BACKGROUND_COLOR_SECTIONS = [
         label: "لون نص قسم المقالات",
         type: "color",
         defaultValue: "#6b7280",
+      },
+    ],
+  },
+  {
+    section: "dashboard_sidebar_colors",
+    title: "ألوان القائمة الجانبية في لوحة التحكم",
+    fields: [
+      {
+        key: "sidebar_menu_bg_color",
+        label: "لون خلفية القائمة الجانبية",
+        type: "color",
+        defaultValue: "#f9fafb",
+      },
+      {
+        key: "sidebar_menu_item_text_color",
+        label: "لون نص عناصر القائمة",
+        type: "color",
+        defaultValue: "#6b7280",
+      },
+      {
+        key: "sidebar_menu_item_icon_color",
+        label: "لون أيقونات عناصر القائمة",
+        type: "color",
+        defaultValue: "#6b7280",
+      },
+      {
+        key: "sidebar_menu_item_hover_bg_color",
+        label: "لون خلفية عنصر القائمة عند التمرير",
+        type: "color",
+        defaultValue: "#f3f4f6",
+      },
+      {
+        key: "sidebar_menu_item_hover_text_color",
+        label: "لون نص عنصر القائمة عند التمرير",
+        type: "color",
+        defaultValue: "#1f2937",
       },
     ],
   },
@@ -1139,192 +1285,7 @@ export default function ContentManagementPage() {
         <TabsContent value="colors" className="space-y-6 mt-6">
           {[
             ...BACKGROUND_COLOR_SECTIONS,
-            {
-              section: "header_footer_text_colors",
-              title: "ألوان نصوص الهيدر والفوتر",
-              fields: [
-                { key: "header_logo_text_color", label: "لون نص شعار الهيدر", type: "color", defaultValue: "#ec4899" },
-                {
-                  key: "header_nav_text_color",
-                  label: "لون نصوص روابط القائمة",
-                  type: "color",
-                  defaultValue: "#1f2937",
-                },
-                {
-                  key: "header_nav_hover_color",
-                  label: "لون نصوص روابط القائمة عند التمرير",
-                  type: "color",
-                  defaultValue: "#ec4899",
-                },
-                { key: "footer_heading_color", label: "لون عناوين الفوتر", type: "color", defaultValue: "#ffffff" },
-                { key: "footer_text_color", label: "لون نصوص الفوتر", type: "color", defaultValue: "#d1d5db" },
-                { key: "footer_link_color", label: "لون روابط الفوتر", type: "color", defaultValue: "#d1d5db" },
-                {
-                  key: "footer_link_hover_color",
-                  label: "لون روابط الفوتر عند التمرير",
-                  type: "color",
-                  defaultValue: "#ec4899",
-                },
-                { key: "footer_copyright_color", label: "لون نص حقوق النشر", type: "color", defaultValue: "#9ca3af" },
-              ],
-            },
-            {
-              section: "button_colors",
-              title: "ألوان الأزرار",
-              fields: [
-                {
-                  key: "primary_button_bg_color",
-                  label: "لون خلفية الزر الأساسي",
-                  type: "color",
-                  defaultValue: "#ec4899",
-                },
-                {
-                  key: "primary_button_text_color",
-                  label: "لون نص الزر الأساسي",
-                  type: "color",
-                  defaultValue: "#ffffff",
-                },
-                {
-                  key: "primary_button_hover_bg_color",
-                  label: "لون خلفية الزر الأساسي عند التمرير",
-                  type: "color",
-                  defaultValue: "#db2777",
-                },
-                {
-                  key: "secondary_button_bg_color",
-                  label: "لون خلفية الزر الثانوي",
-                  type: "color",
-                  defaultValue: "#ffffff",
-                },
-                {
-                  key: "secondary_button_text_color",
-                  label: "لون نص الزر الثانوي",
-                  type: "color",
-                  defaultValue: "#1f2937",
-                },
-                {
-                  key: "secondary_button_border_color",
-                  label: "لون حدود الزر الثانوي",
-                  type: "color",
-                  defaultValue: "#e5e7eb",
-                },
-              ],
-            },
-            {
-              section: "card_colors",
-              title: "ألوان البطاقات (الخدمات، الأطباء، المقالات)",
-              fields: [
-                { key: "card_background_color", label: "لون خلفية البطاقة", type: "color", defaultValue: "#ffffff" },
-                { key: "card_title_color", label: "لون عنوان البطاقة", type: "color", defaultValue: "#1f2937" },
-                { key: "card_text_color", label: "لون نص البطاقة", type: "color", defaultValue: "#4b5563" },
-                { key: "card_border_color", label: "لون حدود البطاقة", type: "color", defaultValue: "#e5e7eb" },
-                {
-                  key: "card_hover_border_color",
-                  label: "لون حدود البطاقة عند التمرير",
-                  type: "color",
-                  defaultValue: "#ec4899",
-                },
-              ],
-            },
-            {
-              section: "text_colors",
-              title: "ألوان النصوص حسب القسم",
-              fields: [
-                { key: "hero_title_color", label: "لون عنوان القسم الرئيسي", type: "color", defaultValue: "#1f2937" },
-                {
-                  key: "hero_description_color",
-                  label: "لون وصف القسم الرئيسي",
-                  type: "color",
-                  defaultValue: "#4b5563",
-                },
-                {
-                  key: "features_title_color",
-                  label: "لون عنوان قسم المميزات",
-                  type: "color",
-                  defaultValue: "#1f2937",
-                },
-                { key: "features_text_color", label: "لون نص قسم المميزات", type: "color", defaultValue: "#4b5563" },
-                { key: "services_title_color", label: "لون عنوان قسم الخدمات", type: "color", defaultValue: "#1f2937" },
-                { key: "services_text_color", label: "لون نص قسم الخدمات", type: "color", defaultValue: "#4b5563" },
-                { key: "doctors_title_color", label: "لون عنوان قسم الأطباء", type: "color", defaultValue: "#1f2937" },
-                { key: "doctors_text_color", label: "لون نص قسم الأطباء", type: "color", defaultValue: "#4b5563" },
-                {
-                  key: "working_hours_title_color",
-                  label: "لون عنوان ساعات العمل",
-                  type: "color",
-                  defaultValue: "#1f2937",
-                },
-                {
-                  key: "working_hours_text_color",
-                  label: "لون نص ساعات العمل",
-                  type: "color",
-                  defaultValue: "#4b5563",
-                },
-                { key: "cta_title_color", label: "لون عنوان دعوة للعمل", type: "color", defaultValue: "#ffffff" },
-                { key: "cta_text_color", label: "لون نص دعوة للعمل", type: "color", defaultValue: "#ffffff" },
-              ],
-            },
-            // ADDED: new section for additional text colors
-            {
-              section: "additional_text_colors",
-              title: "ألوان نصوص الأقسام الإضافية",
-              fields: [
-                {
-                  key: "social_media_section_title_color",
-                  label: "لون عنوان قسم وسائل التواصل",
-                  type: "color",
-                  defaultValue: "#1f2937",
-                },
-                {
-                  key: "social_media_section_text_color",
-                  label: "لون نص قسم وسائل التواصل",
-                  type: "color",
-                  defaultValue: "#6b7280",
-                },
-                {
-                  key: "why_choose_us_item_color",
-                  label: "لون عناصر لماذا تختارنا",
-                  type: "color",
-                  defaultValue: "#1f2937",
-                },
-                {
-                  key: "location_section_title_color",
-                  label: "لون عنوان قسم الموقع",
-                  type: "color",
-                  defaultValue: "#1f2937",
-                },
-                {
-                  key: "location_section_subtitle_color",
-                  label: "لون العنوان الفرعي لقسم الموقع",
-                  type: "color",
-                  defaultValue: "#ec4899",
-                },
-                {
-                  key: "location_section_text_color",
-                  label: "لون نص قسم الموقع",
-                  type: "color",
-                  defaultValue: "#6b7280",
-                },
-                {
-                  key: "view_all_button_text_color",
-                  label: "لون نص أزرار عرض الكل",
-                  type: "color",
-                  defaultValue: "#1f2937",
-                },
-                {
-                  key: "articles_title_color",
-                  label: "لون عنوان قسم المقالات",
-                  type: "color",
-                  defaultValue: "#1f2937",
-                },
-                {
-                  key: "articles_text_color",
-                  label: "لون نص قسم المقالات",
-                  type: "color",
-                  defaultValue: "#6b7280",
-                },
-              ],
-            },
+            // Removed duplicate sections as they are now defined above
           ].map((section, sectionIndex) => {
             const sectionFieldKeys = section.fields.map((f) => f.key)
             const isSavingThisSection = savingSection && sectionFieldKeys.includes(savingSection)

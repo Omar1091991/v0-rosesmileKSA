@@ -1,9 +1,22 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Users, Briefcase, Stethoscope, Building2, Tag, Calendar, FileText, LayoutDashboard, LogOut, LucideComponent as ImageIconComponent, Newspaper, UserCircle, Database } from 'lucide-react'
+import {
+  Users,
+  Briefcase,
+  Stethoscope,
+  Building2,
+  Tag,
+  Calendar,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  LucideComponent as ImageIconComponent,
+  Newspaper,
+  UserCircle,
+} from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -48,13 +61,6 @@ const menuItems = [
   },
   { title: "المستخدمين", href: "/dashboard/users", icon: Users, roles: ["admin"], color: "text-rose-500" },
   { title: "محتوى الموقع", href: "/dashboard/content", icon: FileText, roles: ["admin"], color: "text-lime-500" },
-  {
-    title: "نقل قاعدة البيانات",
-    href: "/dashboard/migration",
-    icon: Database,
-    roles: ["admin"],
-    color: "text-violet-500",
-  },
 ]
 
 export function DashboardSidebar() {
@@ -94,7 +100,12 @@ export function DashboardSidebar() {
   }
 
   return (
-    <aside className="w-64 border-l bg-muted/30 p-6 space-y-4 flex flex-col">
+    <aside
+      className="w-64 border-l p-6 space-y-4 flex flex-col"
+      style={{
+        backgroundColor: "var(--sidebar-menu-bg-color, #f9fafb)",
+      }}
+    >
       {user && (
         <div className="space-y-4">
           <DropdownMenu>
@@ -151,11 +162,37 @@ export function DashboardSidebar() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted text-muted-foreground hover:text-foreground",
+                    ? "" // إزالة الكلاسات الافتراضية لاستخدام الألوان المخصصة
+                    : "hover:text-foreground",
                 )}
+                style={
+                  isActive
+                    ? {
+                        backgroundColor: "var(--sidebar-active-item-bg-color, #ec4899)",
+                        color: "var(--sidebar-active-item-text-color, #ffffff)",
+                      }
+                    : {
+                        backgroundColor: "transparent",
+                        color: "var(--sidebar-menu-item-text-color, #6b7280)",
+                      }
+                }
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = "var(--sidebar-menu-item-hover-bg-color, #f3f4f6)"
+                    e.currentTarget.style.color = "var(--sidebar-menu-item-hover-text-color, #1f2937)"
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = "transparent"
+                    e.currentTarget.style.color = "var(--sidebar-menu-item-text-color, #6b7280)"
+                  }
+                }}
               >
-                <item.icon className={cn("h-5 w-5", !isActive && item.color)} />
+                <item.icon
+                  className="h-5 w-5"
+                  style={!isActive ? { color: "var(--sidebar-menu-item-icon-color, #6b7280)" } : undefined}
+                />
                 {item.title}
               </Link>
             )

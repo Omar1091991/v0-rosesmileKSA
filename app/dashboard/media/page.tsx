@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trash2, Loader2, ImageIcon, Upload, RefreshCw } from "lucide-react"
+import { Trash2, Loader2, ImageIcon, Upload, RefreshCw, CheckCircle2, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
 import {
@@ -18,7 +18,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Progress } from "@/components/ui/progress"
 
 interface BlobImage {
   url: string
@@ -26,6 +28,8 @@ interface BlobImage {
   size: number
   uploadedAt: string
 }
+
+type UploadStatus = "idle" | "uploading" | "success" | "error"
 
 export default function MediaPage() {
   const [images, setImages] = useState<BlobImage[]>([])
@@ -35,6 +39,11 @@ export default function MediaPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [imageToDelete, setImageToDelete] = useState<BlobImage | null>(null)
   const { toast } = useToast()
+
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle")
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [uploadError, setUploadError] = useState<string>("")
 
   useEffect(() => {
     fetchImages()
@@ -91,7 +100,6 @@ export default function MediaPage() {
           title: "نجح",
           description: "تم حذف الصورة بنجاح",
         })
-        // Remove the image from the list
         setImages(images.filter((img) => img.url !== imageToDelete.url))
       } else {
         toast({
@@ -137,8 +145,25 @@ export default function MediaPage() {
       return
     }
 
+    // Show upload dialog
+    setUploadDialogOpen(true)
+    setUploadStatus("uploading")
+    setUploadProgress(0)
+    setUploadError("")
     setUploading(true)
+
     try {
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + 10
+        })
+      }, 200)
+
       const formData = new FormData()
       formData.append("file", file)
 
@@ -149,30 +174,37 @@ export default function MediaPage() {
 
       const data = await response.json()
 
+      clearInterval(progressInterval)
+      setUploadProgress(100)
+
       if (data.success) {
-        toast({
-          title: "نجح",
-          description: "تم رفع الصورة بنجاح",
-        })
-        // Refresh the images list
+        setUploadStatus("success")
         await fetchImages()
+
+        // Auto-close after 2 seconds on success
+        setTimeout(() => {
+          setUploadDialogOpen(false)
+          setUploadStatus("idle")
+        }, 2000)
       } else {
-        toast({
-          title: "خطأ",
-          description: data.error || "فشل في رفع الصورة",
-          variant: "destructive",
-        })
+        setUploadStatus("error")
+        setUploadError(data.error || "فشل في رفع الصورة")
       }
     } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "فشل في رفع الصورة",
-        variant: "destructive",
-      })
+      setUploadStatus("error")
+      setUploadError("فشل في رفع الصورة")
     } finally {
       setUploading(false)
-      // Reset the input
       e.target.value = ""
+    }
+  }
+
+  const handleCloseUploadDialog = () => {
+    if (uploadStatus !== "uploading") {
+      setUploadDialogOpen(false)
+      setUploadStatus("idle")
+      setUploadProgress(0)
+      setUploadError("")
     }
   }
 
@@ -290,6 +322,52 @@ export default function MediaPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={uploadDialogOpen} onOpenChange={handleCloseUploadDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {uploadStatus === "uploading" && "جاري رفع الصورة"}
+              {uploadStatus === "success" && "تم الرفع بنجاح"}
+              {uploadStatus === "error" && "فشل الرفع"}
+            </DialogTitle>
+            <DialogDescription>
+              {uploadStatus === "uploading" && "الرجاء الانتظار حتى اكتمال الرفع..."}
+              {uploadStatus === "success" && "تم رفع الصورة بنجاح إلى مكتبة الصور"}
+              {uploadStatus === "error" && uploadError}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {uploadStatus === "uploading" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>جاري الرفع...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
+
+            {uploadStatus === "success" && (
+              <div className="flex flex-col items-center justify-center py-6">
+                <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
+                <p className="text-lg font-semibold text-green-600">تم الرفع بنجاح!</p>
+              </div>
+            )}
+
+            {uploadStatus === "error" && (
+              <div className="flex flex-col items-center justify-center py-6">
+                <XCircle className="h-16 w-16 text-destructive mb-4" />
+                <p className="text-lg font-semibold text-destructive">فشل في رفع الصورة</p>
+                <Button onClick={handleCloseUploadDialog} variant="outline" className="mt-4 bg-transparent">
+                  إغلاق
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

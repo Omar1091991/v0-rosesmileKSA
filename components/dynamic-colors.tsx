@@ -38,7 +38,9 @@ export function DynamicColors() {
             setting.key.includes("button_") ||
             setting.key.includes("card_") ||
             setting.key.includes("_hover_") ||
-            setting.key.includes("_border_")
+            setting.key.includes("_border_") ||
+            setting.key.includes("book_appointment_") ||
+            setting.key.includes("sidebar_")
           ) {
             colorSettings[setting.key] = setting.value_ar || ""
           }
