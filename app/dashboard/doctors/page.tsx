@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { TextFormatter } from "@/components/text-formatter"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Pencil, Trash2, Stethoscope, Settings, X } from "lucide-react"
+import { Plus, Pencil, Trash2, Stethoscope, Settings, X, Loader2, CheckCircle2, XCircle } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -60,6 +60,14 @@ export default function DoctorsPage() {
   const [doctorCases, setDoctorCases] = useState<DoctorCase[]>([])
   const [caseImages, setCaseImages] = useState<string[]>([])
   const [caseImagePreviews, setCaseImagePreviews] = useState<string[]>([])
+
+  const [isSaving, setIsSaving] = useState(false)
+  const [isUploadingCases, setIsUploadingCases] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+  const [showCaseSuccessDialog, setShowCaseSuccessDialog] = useState(false)
+  const [showErrorDialog, setShowErrorDialog] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
 
   useEffect(() => {
     fetchDoctors()
@@ -162,38 +170,46 @@ export default function DoctorsPage() {
       return
     }
 
+    setIsUploadingCases(true)
+    setUploadProgress(0)
+
     try {
-      // إضافة كل صورة كحالة منفصلة
-      for (const image of caseImages) {
+      const totalImages = caseImages.length
+
+      for (let i = 0; i < caseImages.length; i++) {
         await fetch("/api/doctor-cases", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             doctor_id: editingDoctor.id,
-            image_url: image,
-            order_index: doctorCases.length,
+            image_url: caseImages[i],
+            order_index: doctorCases.length + i,
           }),
         })
+
+        setUploadProgress(Math.round(((i + 1) / totalImages) * 100))
       }
 
-      toast({
-        title: "نجح",
-        description: "تم إضافة الصور بنجاح",
-      })
+      setShowCaseSuccessDialog(true)
+      setTimeout(() => setShowCaseSuccessDialog(false), 2000)
+
       setCaseImages([])
       setCaseImagePreviews([])
       fetchDoctorCases(editingDoctor.id)
     } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء إضافة الصور",
-        variant: "destructive",
-      })
+      setErrorMessage("حدث خطأ أثناء رفع الصور")
+      setShowErrorDialog(true)
+      setTimeout(() => setShowErrorDialog(false), 3000)
+    } finally {
+      setIsUploadingCases(false)
+      setUploadProgress(0)
     }
   }
 
   const handleEdit = async () => {
     if (!editingDoctor) return
+
+    setIsSaving(true)
 
     try {
       const response = await fetch("/api/doctors", {
@@ -203,26 +219,24 @@ export default function DoctorsPage() {
       })
 
       if (response.ok) {
-        toast({
-          title: "نجح",
-          description: "تم تحديث الطبيب بنجاح",
-        })
-        setIsEditOpen(false)
-        resetForm()
+        setShowSuccessDialog(true)
+        setTimeout(() => {
+          setShowSuccessDialog(false)
+          setIsEditOpen(false)
+          resetForm()
+        }, 1500)
         fetchDoctors()
       } else {
-        toast({
-          title: "خطأ",
-          description: "فشل في تحديث الطبيب",
-          variant: "destructive",
-        })
+        setErrorMessage("فشل في تحديث الطبيب")
+        setShowErrorDialog(true)
+        setTimeout(() => setShowErrorDialog(false), 3000)
       }
     } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء تحديث الطبيب",
-        variant: "destructive",
-      })
+      setErrorMessage("حدث خطأ أثناء تحديث الطبيب")
+      setShowErrorDialog(true)
+      setTimeout(() => setShowErrorDialog(false), 3000)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -376,6 +390,8 @@ export default function DoctorsPage() {
       return
     }
 
+    setIsSaving(true)
+
     try {
       const response = await fetch("/api/doctors", {
         method: "POST",
@@ -384,27 +400,25 @@ export default function DoctorsPage() {
       })
 
       if (response.ok) {
-        toast({
-          title: "نجح",
-          description: "تم إضافة الطبيب بنجاح",
-        })
-        setIsAddOpen(false)
-        resetForm()
+        setShowSuccessDialog(true)
+        setTimeout(() => {
+          setShowSuccessDialog(false)
+          setIsAddOpen(false)
+          resetForm()
+        }, 1500)
         fetchDoctors()
       } else {
         const errorData = await response.json()
-        toast({
-          title: "خطأ",
-          description: errorData.error || "فشل في إضافة الطبيب",
-          variant: "destructive",
-        })
+        setErrorMessage(errorData.error || "فشل في إضافة الطبيب")
+        setShowErrorDialog(true)
+        setTimeout(() => setShowErrorDialog(false), 3000)
       }
     } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء إضافة الطبيب",
-        variant: "destructive",
-      })
+      setErrorMessage("حدث خطأ أثناء إضافة الطبيب")
+      setShowErrorDialog(true)
+      setTimeout(() => setShowErrorDialog(false), 3000)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -424,6 +438,73 @@ export default function DoctorsPage() {
             </Button>
           </AlertDescription>
         </Alert>
+      )}
+
+      {isSaving && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <Card className="p-6 space-y-4 min-w-[300px]">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <p className="text-lg font-semibold">جاري الحفظ...</p>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {showSuccessDialog && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <Card className="p-6 space-y-4 min-w-[300px]">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-6 w-6 text-green-500" />
+              <p className="text-lg font-semibold">تم الحفظ بنجاح!</p>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {isUploadingCases && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <Card className="p-6 space-y-4 min-w-[300px]">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <p className="text-lg font-semibold">جاري رفع الصور...</p>
+            </div>
+            <div className="space-y-2">
+              <div className="w-full bg-muted rounded-full h-2">
+                <div
+                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground text-center">{uploadProgress}%</p>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {showCaseSuccessDialog && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <Card className="p-6 space-y-4 min-w-[300px]">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-6 w-6 text-green-500" />
+              <p className="text-lg font-semibold">تم رفع الصور بنجاح!</p>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {showErrorDialog && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <Card className="p-6 space-y-4 min-w-[300px]">
+            <div className="flex items-center gap-3">
+              <XCircle className="h-6 w-6 text-destructive" />
+              <div>
+                <p className="text-lg font-semibold">حدث خطأ!</p>
+                <p className="text-sm text-muted-foreground">{errorMessage}</p>
+              </div>
+            </div>
+          </Card>
+        </div>
       )}
 
       <div className="flex items-center justify-between">
@@ -524,8 +605,15 @@ export default function DoctorsPage() {
                 )}
               </div>
 
-              <Button onClick={handleAdd} className="w-full">
-                إضافة الطبيب
+              <Button onClick={handleAdd} className="w-full" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                    جاري الإضافة...
+                  </>
+                ) : (
+                  "إضافة الطبيب"
+                )}
               </Button>
             </div>
           </DialogContent>
@@ -653,8 +741,15 @@ export default function DoctorsPage() {
                 )}
               </div>
 
-              <Button onClick={handleEdit} className="w-full">
-                حفظ التعديلات
+              <Button onClick={handleEdit} className="w-full" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                    جاري الحفظ...
+                  </>
+                ) : (
+                  "حفظ التعديلات"
+                )}
               </Button>
             </TabsContent>
 
@@ -700,9 +795,18 @@ export default function DoctorsPage() {
                   )}
 
                   {caseImages.length > 0 && (
-                    <Button onClick={handleAddCases} className="w-full">
-                      <Plus className="h-4 w-4 ml-2" />
-                      إضافة {caseImages.length} صورة
+                    <Button onClick={handleAddCases} className="w-full" disabled={isUploadingCases}>
+                      {isUploadingCases ? (
+                        <>
+                          <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                          جاري الرفع...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4 ml-2" />
+                          إضافة {caseImages.length} صورة
+                        </>
+                      )}
                     </Button>
                   )}
                 </CardContent>

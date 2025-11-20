@@ -1,26 +1,56 @@
+"use client"
+
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { AnimatedSection } from "@/components/animated-section"
-import { query } from "@/lib/db"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
 
-export const dynamic = "force-dynamic"
+export default function ServicesPage() {
+  const [services, setServices] = useState([])
+  const [colors, setColors] = useState({
+    cardDetailsButtonBg: "#f3f4f6",
+    cardDetailsButtonText: "#1f2937",
+    cardDetailsButtonHoverBg: "#e5e7eb",
+    cardBookButtonBg: "#ec4899",
+    cardBookButtonText: "#ffffff",
+    cardBookButtonHoverBg: "#db2777",
+  })
 
-async function getServices() {
-  try {
-    const result = await query("SELECT * FROM services WHERE is_active = true ORDER BY order_index")
-    return result.rows || []
-  } catch (error) {
-    console.error("[v0] Error fetching services:", error)
-    return []
-  }
-}
+  useEffect(() => {
+    fetch("/api/services")
+      .then((res) => res.json())
+      .then((data) => setServices(data.services || []))
+      .catch((error) => console.error("[v0] Error fetching services:", error))
 
-export default async function ServicesPage() {
-  const services = await getServices()
+    fetch("/api/site-settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.settings) {
+          const settings = data.settings.reduce((acc: any, setting: any) => {
+            acc[setting.key] = setting.value_ar
+            return acc
+          }, {})
+
+          console.log("[v0] Card colors loaded:", {
+            detailsBg: settings.card_details_button_bg_color,
+            detailsText: settings.card_details_button_text_color,
+          })
+
+          setColors({
+            cardDetailsButtonBg: settings.card_details_button_bg_color || "#f3f4f6",
+            cardDetailsButtonText: settings.card_details_button_text_color || "#1f2937",
+            cardDetailsButtonHoverBg: settings.card_details_button_hover_bg_color || "#e5e7eb",
+            cardBookButtonBg: settings.card_book_button_bg_color || "#ec4899",
+            cardBookButtonText: settings.card_book_button_text_color || "#ffffff",
+            cardBookButtonHoverBg: settings.card_book_button_hover_bg_color || "#db2777",
+          })
+        }
+      })
+      .catch((error) => console.error("[v0] Error fetching colors:", error))
+  }, [])
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -40,11 +70,10 @@ export default async function ServicesPage() {
           </section>
         </AnimatedSection>
 
-        {/* Services Grid */}
         <section className="py-12 sm:py-16 md:py-24">
           <div className="container px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {services?.map((service, index) => (
+              {services?.map((service: any, index: number) => (
                 <AnimatedSection key={service.id} animation="scale-in" delay={index * 0.1}>
                   <Card className="hover:shadow-lg transition-all hover:-translate-y-1 h-full flex flex-col">
                     <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
@@ -75,11 +104,42 @@ export default async function ServicesPage() {
 
                       <div className="flex flex-col gap-2 mt-auto">
                         <Link href={`/services/${service.id}`}>
-                          <Button variant="outline" className="w-full bg-transparent text-sm sm:text-base">
+                          <button
+                            className="w-full py-2 px-4 text-sm sm:text-base rounded-md transition-colors border"
+                            style={{
+                              backgroundColor: colors.cardDetailsButtonBg,
+                              color: colors.cardDetailsButtonText,
+                              borderColor: colors.cardDetailsButtonText,
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = colors.cardDetailsButtonHoverBg
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = colors.cardDetailsButtonBg
+                            }}
+                          >
                             التفاصيل
-                          </Button>
+                          </button>
                         </Link>
-                        <BookingDialog trigger={<Button className="w-full text-sm sm:text-base">احجز موعد</Button>} />
+                        <BookingDialog
+                          trigger={
+                            <button
+                              className="w-full py-2 px-4 text-sm sm:text-base rounded-md transition-colors"
+                              style={{
+                                backgroundColor: colors.cardBookButtonBg,
+                                color: colors.cardBookButtonText,
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = colors.cardBookButtonHoverBg
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = colors.cardBookButtonBg
+                              }}
+                            >
+                              احجز موعد
+                            </button>
+                          }
+                        />
                       </div>
                     </CardContent>
                   </Card>

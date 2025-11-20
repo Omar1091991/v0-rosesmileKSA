@@ -617,21 +617,51 @@ export default function HomePage() {
                             )}
                           </p>
                           <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 bg-transparent text-xs sm:text-sm"
+                            <button
+                              className="flex-1 py-2 px-4 text-xs sm:text-sm rounded-md transition-colors border"
+                              style={{
+                                backgroundColor: getColor("card_details_button_bg_color", "#f3f4f6"),
+                                color: getColor("card_details_button_text_color", "#1f2937"),
+                                borderColor: getColor("card_details_button_text_color", "#1f2937"),
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = getColor(
+                                  "card_details_button_hover_bg_color",
+                                  "#e5e7eb",
+                                )
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = getColor(
+                                  "card_details_button_bg_color",
+                                  "#f3f4f6",
+                                )
+                              }}
                               onClick={(e) => {
                                 e.stopPropagation()
                                 window.location.href = `/services/${service.id}`
                               }}
                             >
                               {language === "ar" ? "التفاصيل" : "Details"}
-                            </Button>
+                            </button>
                             <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                              <Button
-                                size="sm"
-                                className="w-full text-xs sm:text-sm relative overflow-hidden group"
+                              <button
+                                className="w-full py-2 px-4 text-xs sm:text-sm rounded-md transition-colors relative overflow-hidden group"
+                                style={{
+                                  backgroundColor: getColor("card_book_button_bg_color", "#ec4899"),
+                                  color: getColor("card_book_button_text_color", "#ffffff"),
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = getColor(
+                                    "card_book_button_hover_bg_color",
+                                    "#db2777",
+                                  )
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = getColor(
+                                    "card_book_button_bg_color",
+                                    "#ec4899",
+                                  )
+                                }}
                                 onClick={(e) => {
                                   e.preventDefault()
                                   e.stopPropagation()
@@ -654,7 +684,7 @@ export default function HomePage() {
                                 <span className="relative z-10">
                                   {language === "ar" ? "احجز موعد" : "Book Appointment"}
                                 </span>
-                              </Button>
+                              </button>
                             </motion.div>
                           </div>
                         </CardContent>
@@ -778,48 +808,97 @@ export default function HomePage() {
                         className="w-[300px] sm:w-[350px]"
                       >
                         <Card
-                          className="text-center h-full hover:shadow-lg transition-all hover:scale-105 flex flex-col cursor-pointer"
-                          onClick={() => {
-                            router.push(`/doctors/${doctor.id}`)
+                          style={{
+                            backgroundColor: getColor("card_background_color", "#ffffff"),
+                            borderColor: getColor("card_border_color", "#e5e7eb"),
                           }}
+                          className="overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer h-full flex flex-col"
+                          onClick={() => (window.location.href = `/doctors/${doctor.id}`)}
                         >
-                          <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-4 flex flex-col flex-1 p-4 sm:p-6">
-                            <div className="w-full aspect-square relative bg-muted flex items-center justify-center text-4xl sm:text-6xl overflow-hidden rounded-lg mx-auto max-w-xs">
-                              {doctor.image_url ? (
-                                <Image
-                                  src={doctor.image_url || "/placeholder.svg"}
-                                  alt={doctor.name_ar}
-                                  fill
-                                  className="object-cover"
-                                />
-                              ) : (
-                                "👨‍⚕️"
-                              )}
+                          <CardContent className="p-0 flex flex-col h-full">
+                            {/* Doctor Image */}
+                            <div className="relative h-[320px] overflow-hidden">
+                              <Image
+                                src={doctor.image_url || "/placeholder.svg"}
+                                alt={language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
                             </div>
-                            <div className="flex-1">
-                              <h3 className="text-base sm:text-lg md:text-xl font-semibold line-clamp-2">
+
+                            {/* Doctor Info */}
+                            <div className="p-6 flex flex-col flex-1">
+                              <h3
+                                className="text-xl font-bold mb-2 line-clamp-1"
+                                style={{ color: getColor("card_title_color", "#1f2937") }}
+                              >
                                 {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
                               </h3>
-                              <p className="text-primary font-medium mt-2 text-sm sm:text-base line-clamp-2">
+                              <p
+                                className="text-sm mb-4 line-clamp-1"
+                                style={{ color: getColor("card_text_color", "#6b7280") }}
+                              >
                                 {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
                               </p>
-                            </div>
-                            <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 bg-transparent text-xs sm:text-sm"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  router.push(`/doctors/${doctor.id}`)
-                                }}
-                              >
-                                {language === "ar" ? "التفاصيل" : "Details"}
-                              </Button>
-                              <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Button
-                                  size="sm"
-                                  className="w-full text-xs sm:text-sm relative overflow-hidden group"
+
+                              {/* Bio excerpt */}
+                              {doctor.bio_ar && (
+                                <p
+                                  className="text-sm mb-4 line-clamp-2 flex-1"
+                                  style={{ color: getColor("card_text_color", "#6b7280") }}
+                                >
+                                  {language === "ar"
+                                    ? doctor.bio_ar.replace(/<[^>]*>/g, "").substring(0, 80) + "..."
+                                    : (doctor.bio_en || doctor.bio_ar).replace(/<[^>]*>/g, "").substring(0, 80) + "..."}
+                                </p>
+                              )}
+
+                              {/* Action Buttons */}
+                              <div className="flex gap-3 mt-auto pt-4">
+                                <button
+                                  className="flex-1 py-2 px-4 text-sm rounded-md transition-colors border"
+                                  style={{
+                                    backgroundColor: getColor("card_details_button_bg_color", "#f3f4f6"),
+                                    color: getColor("card_details_button_text_color", "#1f2937"),
+                                    borderColor: getColor("card_details_button_text_color", "#1f2937"),
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = getColor(
+                                      "card_details_button_hover_bg_color",
+                                      "#e5e7eb",
+                                    )
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = getColor(
+                                      "card_details_button_bg_color",
+                                      "#f3f4f6",
+                                    )
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    window.location.href = `/doctors/${doctor.id}`
+                                  }}
+                                >
+                                  {language === "ar" ? "عرض التفاصيل" : "View Details"}
+                                </button>
+                                <button
+                                  className="flex-1 py-2 px-4 text-sm rounded-md transition-colors"
+                                  style={{
+                                    backgroundColor: getColor("card_book_button_bg_color", "#ec4899"),
+                                    color: getColor("card_book_button_text_color", "#ffffff"),
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = getColor(
+                                      "card_book_button_hover_bg_color",
+                                      "#db2777",
+                                    )
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = getColor(
+                                      "card_book_button_bg_color",
+                                      "#ec4899",
+                                    )
+                                  }}
                                   onClick={(e) => {
                                     e.preventDefault()
                                     e.stopPropagation()
@@ -828,22 +907,9 @@ export default function HomePage() {
                                       : "/booking"
                                   }}
                                 >
-                                  <motion.span
-                                    className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
-                                    animate={{
-                                      x: ["-100%", "100%"],
-                                    }}
-                                    transition={{
-                                      duration: 2,
-                                      repeat: Number.POSITIVE_INFINITY,
-                                      ease: "linear",
-                                    }}
-                                  />
-                                  <span className="relative z-10">
-                                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                                  </span>
-                                </Button>
-                              </motion.div>
+                                  {language === "ar" ? "احجز الآن" : "Book Now"}
+                                </button>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -889,7 +955,13 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                   >
-                    <Card className="bg-background text-foreground h-full flex flex-col">
+                    <Card
+                      style={{
+                        backgroundColor: getColor("card_background_color", "#ffffff"),
+                        borderColor: getColor("card_border_color", "#e5e7eb"),
+                      }}
+                      className="text-foreground h-full flex flex-col"
+                    >
                       <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
                         {offer.image_url && (
                           <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
@@ -902,7 +974,7 @@ export default function HomePage() {
                           </div>
                         )}
                         <div className="flex items-center justify-between">
-                          <h3 className="text-2xl font-bold">
+                          <h3 className="text-2xl font-bold" style={{ color: getColor("card_title_color", "#1f2937") }}>
                             {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
                           </h3>
                           {offer.discount_percentage && (
@@ -913,7 +985,10 @@ export default function HomePage() {
                             </div>
                           )}
                         </div>
-                        <p className="text-muted-foreground leading-relaxed line-clamp-3">
+                        <p
+                          className="leading-relaxed line-clamp-3"
+                          style={{ color: getColor("card_text_color", "#6b7280") }}
+                        >
                           {language === "ar" ? offer.description_ar : offer.description_en || offer.description_ar}
                         </p>
                         {offer.price_before && offer.price_after && (
@@ -924,11 +999,27 @@ export default function HomePage() {
                             </span>
                           </div>
                         )}
-                        <Button className="w-full" asChild>
-                          <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                            {language === "ar" ? "احجز الآن" : "Book Now"}
-                          </Link>
-                        </Button>
+                        <button
+                          className="w-full py-3 px-4 rounded-md transition-colors font-semibold"
+                          style={{
+                            backgroundColor: getColor("card_book_button_bg_color", "#ec4899"),
+                            color: getColor("card_book_button_text_color", "#ffffff"),
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = getColor(
+                              "card_book_button_hover_bg_color",
+                              "#db2777",
+                            )
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = getColor("card_book_button_bg_color", "#ec4899")
+                          }}
+                          onClick={() => {
+                            window.location.href = mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"
+                          }}
+                        >
+                          {language === "ar" ? "احجز الآن" : "Book Now"}
+                        </button>
                       </CardContent>
                     </Card>
                   </motion.div>

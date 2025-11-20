@@ -20,10 +20,13 @@ export async function GET(request: Request) {
 
     query += " ORDER BY order_index ASC"
 
+    console.log("[v0] الاستعلام:", query)
     const result = await db.query(query, params)
+    console.log("[v0] ✅ نجح الاستعلام - عدد الصفوف:", result.rows.length)
 
     return NextResponse.json(result.rows)
   } catch (error: any) {
+    console.log("[v0] ❌ خطأ في الاستعلام:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
@@ -33,15 +36,26 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { doctor_id, image_url, title_ar, title_en, description_ar, description_en, order_index } = body
 
+    console.log("[v0] الاستعلام: INSERT INTO doctor_cases")
     const result = await db.query(
       `INSERT INTO doctor_cases (doctor_id, image_url, title_ar, title_en, description_ar, description_en, order_index) 
        VALUES ($1, $2, $3, $4, $5, $6, $7) 
        RETURNING *`,
-      [doctor_id, image_url, title_ar, title_en, description_ar, description_en, order_index || 0],
+      [
+        doctor_id,
+        image_url,
+        title_ar || "", // Default to empty string if not provided
+        title_en || "", // Default to empty string if not provided
+        description_ar || "", // Default to empty string if not provided
+        description_en || "", // Default to empty string if not provided
+        order_index || 0,
+      ],
     )
+    console.log("[v0] ✅ نجح الاستعلام - تمت الإضافة")
 
     return NextResponse.json(result.rows[0])
   } catch (error: any) {
+    console.log("[v0] ❌ خطأ في الاستعلام:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

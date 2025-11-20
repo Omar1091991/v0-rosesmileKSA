@@ -424,6 +424,42 @@ const BACKGROUND_COLOR_SECTIONS = [
       { key: "card_text_color", label: "لون نص البطاقة", type: "color", defaultValue: "#4b5563" },
       { key: "card_border_color", label: "لون حدود البطاقة", type: "color", defaultValue: "#e5e7eb" },
       { key: "card_hover_border_color", label: "لون حدود البطاقة عند التمرير", type: "color", defaultValue: "#ec4899" },
+      {
+        key: "card_details_button_bg_color",
+        label: "لون خلفية زر التفاصيل في البطاقة",
+        type: "color",
+        defaultValue: "#f3f4f6",
+      },
+      {
+        key: "card_details_button_text_color",
+        label: "لون نص زر التفاصيل في البطاقة",
+        type: "color",
+        defaultValue: "#1f2937",
+      },
+      {
+        key: "card_details_button_hover_bg_color",
+        label: "لون خلفية زر التفاصيل عند التمرير",
+        type: "color",
+        defaultValue: "#e5e7eb",
+      },
+      {
+        key: "card_book_button_bg_color",
+        label: "لون خلفية زر احجز الآن في البطاقة",
+        type: "color",
+        defaultValue: "#ec4899",
+      },
+      {
+        key: "card_book_button_text_color",
+        label: "لون نص زر احجز الآن في البطاقة",
+        type: "color",
+        defaultValue: "#ffffff",
+      },
+      {
+        key: "card_book_button_hover_bg_color",
+        label: "لون خلفية زر احجز الآن عند التمرير",
+        type: "color",
+        defaultValue: "#db2777",
+      },
     ],
   },
   {
@@ -850,7 +886,7 @@ export default function ContentManagementPage() {
   async function fetchSettings() {
     try {
       console.log("[v0] Fetching site settings...")
-      const response = await fetch("/api/site-settings")
+      const response = await fetch("/api/site-settings", { cache: "no-store" })
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -863,8 +899,42 @@ export default function ContentManagementPage() {
 
       const settingsMap: Record<string, any> = {}
       data.forEach((setting: any) => {
-        settingsMap[setting.key] = setting
+        settingsMap[setting.key] = {
+          id: setting.id,
+          key: setting.key,
+          value_ar: setting.value_ar,
+          value_en: setting.value_en,
+          type: setting.type,
+          category: setting.category,
+        }
       })
+
+      const cardColorDefaults = [
+        { key: "card_background_color", value: "#ffffff", type: "color", category: "cards" },
+        { key: "card_title_color", value: "#1f2937", type: "color", category: "cards" },
+        { key: "card_text_color", value: "#4b5563", type: "color", category: "cards" },
+        { key: "card_border_color", value: "#e5e7eb", type: "color", category: "cards" },
+        { key: "card_hover_border_color", value: "#ec4899", type: "color", category: "cards" },
+        { key: "card_details_button_bg_color", value: "#f3f4f6", type: "color", category: "cards" },
+        { key: "card_details_button_text_color", value: "#1f2937", type: "color", category: "cards" },
+        { key: "card_details_button_hover_bg_color", value: "#e5e7eb", type: "color", category: "cards" },
+        { key: "card_book_button_bg_color", value: "#ec4899", type: "color", category: "cards" },
+        { key: "card_book_button_text_color", value: "#ffffff", type: "color", category: "cards" },
+        { key: "card_book_button_hover_bg_color", value: "#db2777", type: "color", category: "cards" },
+      ]
+
+      for (const defaultSetting of cardColorDefaults) {
+        if (!settingsMap[defaultSetting.key]) {
+          settingsMap[defaultSetting.key] = {
+            id: null,
+            key: defaultSetting.key,
+            value_ar: defaultSetting.value,
+            value_en: defaultSetting.value,
+            type: defaultSetting.type,
+            category: defaultSetting.category,
+          }
+        }
+      }
 
       setSettings(settingsMap)
     } catch (error: any) {

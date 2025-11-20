@@ -24,6 +24,7 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
         console.log("[v0] Fetching doctor with ID:", params.id)
         setLoading(true)
         setDoctor(null)
+        setCases([])
 
         const response = await fetch(`/api/doctors?id=${params.id}`)
         const data = await response.json()
@@ -31,6 +32,12 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
         console.log("[v0] Doctor data received:", data)
         if (data.length > 0) {
           setDoctor(data[0])
+
+          // Fetch doctor cases
+          const casesResponse = await fetch(`/api/doctor-cases?doctor_id=${params.id}`)
+          const casesData = await casesResponse.json()
+          console.log("[v0] Doctor cases received:", casesData)
+          setCases(casesData || [])
         }
         setLoading(false)
       } catch (error) {
@@ -39,7 +46,7 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
       }
     }
     fetchData()
-  }, [params.id]) // التأكد من إعادة التحميل عند تغيير المعرف
+  }, [params.id])
 
   if (loading) {
     return (
@@ -50,7 +57,6 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
       </div>
     )
   }
-  // </CHANGE>
 
   if (!doctor) {
     return <div className="flex min-h-screen items-center justify-center">الطبيب غير موجود</div>
