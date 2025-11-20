@@ -30,131 +30,183 @@ export function SiteHeader() {
   const bookingLink = mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"
 
   return (
-    <>
-      <style jsx>{`
-        .header-logo-text {
-          color: var(--header-logo-text-color, #ffffff);
-        }
-        .header-nav-link {
-          color: var(--header-nav-text-color, #ffffff);
-        }
-        .header-nav-link:hover {
-          color: var(--header-nav-hover-color, rgba(255, 255, 255, 0.8));
-        }
-        .header-icon {
-          color: var(--header-nav-text-color, #ffffff);
-        }
-        header {
-          background-color: var(--header-background-color, #ec4899) !important;
-        }
-      `}</style>
+    <header
+      className="sticky top-0 z-50 w-full border-b border-border/40 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      style={{
+        backgroundColor: "var(--header-background-color, #ec4899)",
+      }}
+    >
+      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+        <Link href="/" className="flex items-center gap-3 px-2 sm:px-0">
+          <Image
+            src="/images/untitled-2.png"
+            alt="ابتسامة الورود"
+            width={50}
+            height={50}
+            className="h-12 w-auto"
+            priority
+          />
+          <div
+            className="text-xl font-bold hidden sm:block"
+            style={{
+              color: "var(--header-logo-text-color, #ffffff)",
+            }}
+          >
+            ابتسامة الورود
+          </div>
+        </Link>
 
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-3 px-2 sm:px-0">
-            <Image
-              src="/images/untitled-2.png"
-              alt="ابتسامة الورود"
-              width={50}
-              height={50}
-              className="h-12 w-auto"
-              priority
-            />
-            <div className="text-xl font-bold header-logo-text hidden sm:block">ابتسامة الورود</div>
+        <nav className="hidden md:flex items-center gap-6">
+          <Link
+            href="/"
+            className="text-sm font-medium transition-colors"
+            style={{
+              color: "var(--header-nav-text-color, #ffffff)",
+            }}
+          >
+            الرئيسية
           </Link>
+          <Link
+            href="/services"
+            className="text-sm font-medium transition-colors"
+            style={{
+              color: "var(--header-nav-text-color, #ffffff)",
+            }}
+          >
+            الخدمات
+          </Link>
+          <Link
+            href="/doctors"
+            className="text-sm font-medium transition-colors"
+            style={{
+              color: "var(--header-nav-text-color, #ffffff)",
+            }}
+          >
+            الأطباء
+          </Link>
+          <Link
+            href="/departments"
+            className="text-sm font-medium transition-colors"
+            style={{
+              color: "var(--header-nav-text-color, #ffffff)",
+            }}
+          >
+            الأقسام
+          </Link>
+          <Link
+            href="/offers"
+            className="text-sm font-medium transition-colors"
+            style={{
+              color: "var(--header-nav-text-color, #ffffff)",
+            }}
+          >
+            العروض
+          </Link>
+          <Link
+            href="/articles"
+            className="text-sm font-medium transition-colors"
+            style={{
+              color: "var(--header-nav-text-color, #ffffff)",
+            }}
+          >
+            المقالات
+          </Link>
+        </nav>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm font-medium header-nav-link transition-colors">
-              الرئيسية
-            </Link>
-            <Link href="/services" className="text-sm font-medium header-nav-link transition-colors">
-              الخدمات
-            </Link>
-            <Link href="/doctors" className="text-sm font-medium header-nav-link transition-colors">
-              الأطباء
-            </Link>
-            <Link href="/departments" className="text-sm font-medium header-nav-link transition-colors">
-              الأقسام
-            </Link>
-            <Link href="/offers" className="text-sm font-medium header-nav-link transition-colors">
-              العروض
-            </Link>
-            <Link href="/articles" className="text-sm font-medium header-nav-link transition-colors">
-              المقالات
-            </Link>
-          </nav>
-
-          <div className="hidden md:flex items-center gap-3">
-            <div className="header-icon">
-              <LanguageSwitcher />
-            </div>
-
-            <Button size="sm" asChild>
-              <Link href={bookingLink}>احجز موعد</Link>
-            </Button>
+        <div className="hidden md:flex items-center gap-3">
+          <div style={{ color: "var(--header-nav-text-color, #ffffff)" }}>
+            <LanguageSwitcher />
           </div>
 
-          <button className="md:hidden p-3 header-icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <Button size="sm" asChild>
+            <Link href={bookingLink}>احجز موعد</Link>
+          </Button>
         </div>
 
-        {isMenuOpen && (
-          <div className="md:hidden border-t border-border/40 bg-background">
-            <nav className="container flex flex-col gap-4 py-4 px-6">
-              <Link
-                href="/"
-                className="text-sm font-medium header-nav-link transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                الرئيسية
-              </Link>
-              <Link
-                href="/services"
-                className="text-sm font-medium header-nav-link transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                الخدمات
-              </Link>
-              <Link
-                href="/doctors"
-                className="text-sm font-medium header-nav-link transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                الأطباء
-              </Link>
-              <Link
-                href="/departments"
-                className="text-sm font-medium header-nav-link transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                الأقسام
-              </Link>
-              <Link
-                href="/offers"
-                className="text-sm font-medium header-nav-link transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                العروض
-              </Link>
-              <Link
-                href="/articles"
-                className="text-sm font-medium header-nav-link transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                المقالات
-              </Link>
-              <div className="flex flex-col gap-2 pt-2">
-                <LanguageSwitcher />
+        <button
+          className="md:hidden p-3"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          style={{
+            color: "var(--header-nav-text-color, #ffffff)",
+          }}
+        >
+          {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
 
-                <Button size="sm" asChild onClick={() => setIsMenuOpen(false)}>
-                  <Link href={bookingLink}>احجز موعد</Link>
-                </Button>
-              </div>
-            </nav>
-          </div>
-        )}
-      </header>
-    </>
+      {isMenuOpen && (
+        <div className="md:hidden border-t border-border/40 bg-background">
+          <nav className="container flex flex-col gap-4 py-4 px-6">
+            <Link
+              href="/"
+              className="text-sm font-medium transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+              style={{
+                color: "var(--header-nav-text-color, #ffffff)",
+              }}
+            >
+              الرئيسية
+            </Link>
+            <Link
+              href="/services"
+              className="text-sm font-medium transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+              style={{
+                color: "var(--header-nav-text-color, #ffffff)",
+              }}
+            >
+              الخدمات
+            </Link>
+            <Link
+              href="/doctors"
+              className="text-sm font-medium transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+              style={{
+                color: "var(--header-nav-text-color, #ffffff)",
+              }}
+            >
+              الأطباء
+            </Link>
+            <Link
+              href="/departments"
+              className="text-sm font-medium transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+              style={{
+                color: "var(--header-nav-text-color, #ffffff)",
+              }}
+            >
+              الأقسام
+            </Link>
+            <Link
+              href="/offers"
+              className="text-sm font-medium transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+              style={{
+                color: "var(--header-nav-text-color, #ffffff)",
+              }}
+            >
+              العروض
+            </Link>
+            <Link
+              href="/articles"
+              className="text-sm font-medium transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+              style={{
+                color: "var(--header-nav-text-color, #ffffff)",
+              }}
+            >
+              المقالات
+            </Link>
+            <div className="flex flex-col gap-2 pt-2">
+              <LanguageSwitcher />
+
+              <Button size="sm" asChild onClick={() => setIsMenuOpen(false)}>
+                <Link href={bookingLink}>احجز موعد</Link>
+              </Button>
+            </div>
+          </nav>
+        </div>
+      )}
+    </header>
   )
 }

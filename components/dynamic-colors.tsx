@@ -19,7 +19,6 @@ export function DynamicColors() {
         })
 
         if (!response.ok) {
-          console.error("[v0] Failed to fetch site settings:", response.status)
           return
         }
 
@@ -47,7 +46,7 @@ export function DynamicColors() {
 
         setColors(colorSettings)
       } catch (error) {
-        console.error("[v0] Error fetching colors:", error)
+        console.error("Error fetching colors:", error)
       } finally {
         setLoading(false)
       }
@@ -55,21 +54,17 @@ export function DynamicColors() {
 
     fetchColors()
 
-    const interval = setInterval(fetchColors, 30000)
+    const interval = setInterval(() => {
+      fetchColors()
+    }, 30000)
 
     return () => clearInterval(interval)
   }, [])
 
-  // Apply colors as CSS variables
   useEffect(() => {
     if (loading || Object.keys(colors).length === 0) return
 
     const root = document.documentElement
-
-    const existingVars = Array.from(root.style).filter((prop) => prop.startsWith("--") && prop.includes("color"))
-    existingVars.forEach((prop) => {
-      root.style.removeProperty(prop)
-    })
 
     // Apply each color as a CSS variable
     Object.entries(colors).forEach(([key, value]) => {
@@ -79,10 +74,13 @@ export function DynamicColors() {
       }
     })
 
-    document.body.style.display = "none"
-    // biome-ignore lint: Force reflow
-    document.body.offsetHeight
-    document.body.style.display = ""
+    // Force CSS recalculation without visible reload
+    requestAnimationFrame(() => {
+      root.style.transform = "translateZ(0)"
+      requestAnimationFrame(() => {
+        root.style.transform = ""
+      })
+    })
   }, [colors, loading])
 
   return null
