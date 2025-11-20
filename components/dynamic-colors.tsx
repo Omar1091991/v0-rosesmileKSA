@@ -4,12 +4,22 @@ import { useEffect, useState } from "react"
 
 export function DynamicColors() {
   const [colors, setColors] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchColors() {
       try {
-        const response = await fetch("/api/site-settings")
-        if (!response.ok) return
+        const response = await fetch("/api/site-settings?_t=" + Date.now(), {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        })
+
+        if (!response.ok) {
+          console.error("[v0] Failed to fetch site settings:", response.status)
+          return
+        }
 
         const data = await response.json()
         const settings = Array.isArray(data) ? data : data.settings || []
@@ -34,29 +44,47 @@ export function DynamicColors() {
         })
 
         setColors(colorSettings)
+        console.log("[v0] Fetched", Object.keys(colorSettings).length, "color settings from database")
       } catch (error) {
         console.error("[v0] Error fetching colors:", error)
+      } finally {
+        setLoading(false)
       }
     }
 
     fetchColors()
+
+    const interval = setInterval(fetchColors, 30000)
+
+    return () => clearInterval(interval)
   }, [])
 
   // Apply colors as CSS variables
   useEffect(() => {
-    if (Object.keys(colors).length === 0) return
+    if (loading || Object.keys(colors).length === 0) return
 
     const root = document.documentElement
+
+    const existingVars = Array.from(root.style).filter((prop) => prop.startsWith("--") && prop.includes("color"))
+    existingVars.forEach((prop) => {
+      root.style.removeProperty(prop)
+    })
 
     // Apply each color as a CSS variable
     Object.entries(colors).forEach(([key, value]) => {
       if (value) {
-        root.style.setProperty(`--${key.replace(/_/g, "-")}`, value)
+        const cssVarName = `--${key.replace(/_/g, "-")}`
+        root.style.setProperty(cssVarName, value)
       }
     })
 
-    console.log("[v0] Applied", Object.keys(colors).length, "custom colors")
-  }, [colors])
+    console.log("[v0] ✅ Applied", Object.keys(colors).length, "custom colors from database globally")
+
+    document.body.style.display = "none"
+    // biome-ignore lint: Force reflow
+    document.body.offsetHeight
+    document.body.style.display = ""
+  }, [colors, loading])
 
   return null
 }
