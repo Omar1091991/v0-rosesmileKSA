@@ -12,7 +12,9 @@ export function DynamicColors() {
         const response = await fetch("/api/site-settings?_t=" + Date.now(), {
           cache: "no-store",
           headers: {
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
           },
         })
 
@@ -44,7 +46,6 @@ export function DynamicColors() {
         })
 
         setColors(colorSettings)
-        console.log("[v0] Fetched", Object.keys(colorSettings).length, "color settings from database")
       } catch (error) {
         console.error("[v0] Error fetching colors:", error)
       } finally {
@@ -77,8 +78,6 @@ export function DynamicColors() {
         root.style.setProperty(cssVarName, value)
       }
     })
-
-    console.log("[v0] ✅ Applied", Object.keys(colors).length, "custom colors from database globally")
 
     document.body.style.display = "none"
     // biome-ignore lint: Force reflow
