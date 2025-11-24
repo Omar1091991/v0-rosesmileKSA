@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, CheckCircle2, Phone, LayoutDashboard } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Phone } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
@@ -374,96 +374,84 @@ export default function HomePage() {
           }}
         >
           <div className="container px-2 sm:px-4 md:px-6 lg:px-8">
-            {/* CHANGE: Added dashboard button at the top of hero section */}
+            {/* CHANGE: Removed dashboard button from hero section */}
             <motion.div
-              className="flex justify-end mb-4"
-              initial={{ opacity: 0, y: -20 }}
+              className="text-center space-y-6"
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <Button variant="outline" size="sm" asChild className="bg-background/80 backdrop-blur-sm">
-                <Link href="/dashboard">
-                  <LayoutDashboard className="h-4 w-4 ml-2" />
-                  {language === "ar" ? "لوحة التحكم" : "Dashboard"}
-                </Link>
-              </Button>
-            </motion.div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
+                <div className="space-y-4 sm:space-y-6 lg:space-y-8 text-center lg:text-right order-2 lg:order-1 px-2 sm:px-0">
+                  <motion.h1
+                    className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-balance leading-tight"
+                    variants={fadeInUp}
+                    style={{ color: getColor("hero_title_color", "#1f2937") }}
+                  >
+                    {renderFormattedText(
+                      getText("hero_title") ||
+                        (language === "ar" ? "ابتسامة الورود ابتسامتك بتعود" : "Rose Smile - Your Smile Returns"),
+                    )}
+                  </motion.h1>
+                  <motion.p
+                    className="text-base sm:text-lg md:text-xl text-balance leading-relaxed"
+                    variants={fadeInUp}
+                    style={{ color: getColor("hero_description_color", "#4b5563") }}
+                  >
+                    {renderFormattedText(
+                      getText("hero_description") ||
+                        (language === "ar"
+                          ? "نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة"
+                          : "We provide the best medical services with the latest technologies in Makkah"),
+                    )}
+                  </motion.p>
+                  <motion.div
+                    className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4"
+                    variants={fadeInUp}
+                  >
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto"
+                      asChild
+                      style={{
+                        backgroundColor: getColor("primary_button_bg_color") || undefined,
+                        color: getColor("primary_button_text_color") || undefined,
+                      }}
+                    >
+                      <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                        {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full sm:w-auto bg-transparent"
+                      asChild
+                      style={{
+                        backgroundColor: getColor("secondary_button_bg_color") || undefined,
+                        color: getColor("secondary_button_text_color") || undefined,
+                        borderColor: getColor("secondary_button_border_color") || undefined,
+                      }}
+                    >
+                      <Link href="/services">
+                        {language === "ar" ? "تصفح خدماتنا" : "Explore Our Services"}
+                        <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      </Link>
+                    </Button>
+                  </motion.div>
+                </div>
 
-            <motion.div
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center"
-              initial="initial"
-              animate="animate"
-              variants={staggerContainer}
-            >
-              <div className="space-y-4 sm:space-y-6 lg:space-y-8 text-center lg:text-right order-2 lg:order-1 px-2 sm:px-0">
-                <motion.h1
-                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-balance leading-tight"
-                  variants={fadeInUp}
-                  style={{ color: getColor("hero_title_color", "#1f2937") }}
-                >
-                  {renderFormattedText(
-                    getText("hero_title") ||
-                      (language === "ar" ? "ابتسامة الورود ابتسامتك بتعود" : "Rose Smile - Your Smile Returns"),
-                  )}
-                </motion.h1>
-                <motion.p
-                  className="text-base sm:text-lg md:text-xl text-balance leading-relaxed"
-                  variants={fadeInUp}
-                  style={{ color: getColor("hero_description_color", "#4b5563") }}
-                >
-                  {renderFormattedText(
-                    getText("hero_description") ||
-                      (language === "ar"
-                        ? "نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة"
-                        : "We provide the best medical services with the latest technologies in Makkah"),
-                  )}
-                </motion.p>
                 <motion.div
-                  className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4"
-                  variants={fadeInUp}
+                  className="relative w-full aspect-square max-w-full sm:max-w-md md:max-w-lg mx-auto lg:max-w-full order-1 lg:order-2"
+                  variants={scaleIn}
                 >
-                  <Button
-                    size="lg"
-                    className="w-full sm:w-auto"
-                    asChild
-                    style={{
-                      backgroundColor: getColor("primary_button_bg_color") || undefined,
-                      color: getColor("primary_button_text_color") || undefined,
-                    }}
-                  >
-                    <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                      {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="w-full sm:w-auto bg-transparent"
-                    asChild
-                    style={{
-                      backgroundColor: getColor("secondary_button_bg_color") || undefined,
-                      color: getColor("secondary_button_text_color") || undefined,
-                      borderColor: getColor("secondary_button_border_color") || undefined,
-                    }}
-                  >
-                    <Link href="/services">
-                      {language === "ar" ? "تصفح خدماتنا" : "Explore Our Services"}
-                      <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                    </Link>
-                  </Button>
+                  <HeroSlideshow
+                    images={getHeroImages()}
+                    duration={getHeroSlideshowDuration()}
+                    animationType={getHeroAnimationType()}
+                  />
                 </motion.div>
               </div>
-
-              <motion.div
-                className="relative w-full aspect-square max-w-full sm:max-w-md md:max-w-lg mx-auto lg:max-w-full order-1 lg:order-2"
-                variants={scaleIn}
-              >
-                <HeroSlideshow
-                  images={getHeroImages()}
-                  duration={getHeroSlideshowDuration()}
-                  animationType={getHeroAnimationType()}
-                />
-              </motion.div>
             </motion.div>
           </div>
         </section>

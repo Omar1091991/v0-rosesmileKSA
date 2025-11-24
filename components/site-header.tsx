@@ -10,6 +10,8 @@ import { LanguageSwitcher } from "@/components/language-switcher"
 export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mainBookingFormId, setMainBookingFormId] = useState<string>("")
+  const [logoUrl, setLogoUrl] = useState<string>("/images/untitled-2.png")
+  const [siteName, setSiteName] = useState<string>("ابتسامة الورود")
 
   useEffect(() => {
     async function fetchData() {
@@ -19,6 +21,22 @@ export function SiteHeader() {
         const mainForm = forms.find((f: any) => f.is_main)
         if (mainForm) {
           setMainBookingFormId(mainForm.id)
+        }
+
+        const settingsResponse = await fetch("/api/site-settings")
+        if (settingsResponse.ok) {
+          const settingsData = await settingsResponse.json()
+          const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
+
+          const logoSetting = settings.find((s: any) => s.key === "site_logo_url")
+          const nameSetting = settings.find((s: any) => s.key === "site_name_ar")
+
+          if (logoSetting?.value_ar) {
+            setLogoUrl(logoSetting.value_ar)
+          }
+          if (nameSetting?.value_ar) {
+            setSiteName(nameSetting.value_ar)
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error)
@@ -39,8 +57,8 @@ export function SiteHeader() {
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-3 px-2 sm:px-0">
           <Image
-            src="/images/untitled-2.png"
-            alt="ابتسامة الورود"
+            src={logoUrl || "/placeholder.svg"}
+            alt={siteName}
             width={50}
             height={50}
             className="h-12 w-auto"
@@ -52,7 +70,7 @@ export function SiteHeader() {
               color: "var(--header-logo-text-color, #ffffff)",
             }}
           >
-            ابتسامة الورود
+            {siteName}
           </div>
         </Link>
 

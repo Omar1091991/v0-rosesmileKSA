@@ -242,6 +242,24 @@ const CONTENT_SECTIONS = [
   },
 ]
 
+const GENERAL_SECTIONS = [
+  {
+    section: "general",
+    title: "الإعدادات العامة",
+    fields: [
+      { key: "site_name_ar", label: "اسم الموقع (عربي)", type: "text", defaultValue: "ابتسامة الورود" },
+      { key: "site_name_en", label: "اسم الموقع (إنجليزي)", type: "text", defaultValue: "Rose Smile" },
+      { key: "site_logo_url", label: "شعار الموقع (اللوجو)", type: "image", defaultValue: "/images/untitled-2.png" },
+      {
+        key: "site_description_ar",
+        label: "وصف الموقع (عربي)",
+        type: "textarea",
+        defaultValue: "عيادة أسنان متخصصة في مكة المكرمة",
+      },
+    ],
+  },
+]
+
 const BACKGROUND_COLOR_SECTIONS = [
   {
     section: "global_backgrounds",
@@ -910,6 +928,7 @@ export default function ContentManagementPage() {
         }
       })
 
+      // Add default values for card colors if they don't exist
       const cardColorDefaults = [
         { key: "card_background_color", value: "#ffffff", type: "color", category: "cards" },
         { key: "card_title_color", value: "#1f2937", type: "color", category: "cards" },
@@ -931,6 +950,32 @@ export default function ContentManagementPage() {
             key: defaultSetting.key,
             value_ar: defaultSetting.value,
             value_en: defaultSetting.value,
+            type: defaultSetting.type,
+            category: defaultSetting.category,
+          }
+        }
+      }
+
+      // Add default values for general settings if they don't exist
+      const generalDefaults = [
+        { key: "site_name_ar", value: "ابتسامة الورود", type: "text", category: "general" },
+        { key: "site_name_en", value: "Rose Smile", type: "text", category: "general" },
+        { key: "site_logo_url", value: "/images/untitled-2.png", type: "image", category: "general" },
+        {
+          key: "site_description_ar",
+          value: "عيادة أسنان متخصصة في مكة المكرمة",
+          type: "textarea",
+          category: "general",
+        },
+      ]
+
+      for (const defaultSetting of generalDefaults) {
+        if (!settingsMap[defaultSetting.key]) {
+          settingsMap[defaultSetting.key] = {
+            id: null,
+            key: defaultSetting.key,
+            value_ar: defaultSetting.value,
+            value_en: defaultSetting.value, // Assuming value_en should also be updated for consistency
             type: defaultSetting.type,
             category: defaultSetting.category,
           }
@@ -1091,6 +1136,21 @@ export default function ContentManagementPage() {
     }
   }
 
+  // Helper functions to get and update settings
+  const getSetting = (key: string) => settings[key] || { value_ar: "", value_en: "", type: "text" }
+  const updateSetting = (key: string, value: string, type?: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        key,
+        value_ar: value,
+        value_en: value, // Assuming value_en should also be updated for consistency
+        type: type || prev[key]?.type || "text",
+      },
+    }))
+  }
+
   function handleChange(key: string, value: string, type: string) {
     setSettings((prev) => ({
       ...prev,
@@ -1201,7 +1261,7 @@ export default function ContentManagementPage() {
         </TabsList>
 
         <TabsContent value="content" className="space-y-6 mt-6">
-          {CONTENT_SECTIONS.map((section, sectionIndex) => {
+          {[...GENERAL_SECTIONS, ...CONTENT_SECTIONS].map((section, sectionIndex) => {
             const sectionFieldKeys = section.fields.map((f) => f.key)
             const isSavingThisSection = savingSection && sectionFieldKeys.includes(savingSection)
 
@@ -1293,11 +1353,67 @@ export default function ContentManagementPage() {
                           </Select>
                         )}
                         {field.type === "image" && (
-                          <ImagePicker
-                            value={settings[field.key]?.value_ar ?? ""}
-                            onChange={(url) => handleChange(field.key, url, field.type)}
-                            onRemove={() => handleChange(field.key, "", field.type)}
-                          />
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    try {
+                                      const formData = new FormData()
+                                      formData.append("file", file)
+
+                                      const response = await fetch("/api/upload-image", {
+                                        method: "POST",
+                                        body: formData,
+                                      })
+
+                                      if (response.ok) {
+                                        const data = await response.json()
+                                        updateSetting(field.key, data.url)
+                                        toast({
+                                          title: "تم رفع الصورة بنجاح",
+                                          description: "تم تحديث شعار الموقع",
+                                        })
+                                      } else {
+                                        toast({
+                                          title: "خطأ",
+                                          description: "فشل رفع الصورة",
+                                          variant: "destructive",
+                                        })
+                                      }
+                                    } catch (error) {
+                                      console.error("Error uploading image:", error)
+                                      toast({
+                                        title: "خطأ",
+                                        description: "حدث خطأ أثناء رفع الصورة",
+                                        variant: "destructive",
+                                      })
+                                    }
+                                  }
+                                }}
+                                className="flex-1"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateSetting(field.key, field.defaultValue)}
+                              >
+                                إعادة تعيين
+                              </Button>
+                            </div>
+                            {getSetting(field.key).value_ar && (
+                              <div className="border rounded-lg p-2 bg-muted/30">
+                                <img
+                                  src={getSetting(field.key).value_ar || field.defaultValue}
+                                  alt="Logo Preview"
+                                  className="h-16 w-auto object-contain"
+                                />
+                              </div>
+                            )}
+                          </div>
                         )}
                         {field.type === "images" && (
                           <div className="space-y-4">
@@ -1391,30 +1507,94 @@ export default function ContentManagementPage() {
                     {section.fields.map((field) => (
                       <div key={field.key} className="space-y-2">
                         <Label htmlFor={field.key}>{field.label}</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id={field.key}
-                            type="color"
-                            value={settings[field.key]?.value_ar || field.defaultValue}
-                            onChange={(e) => handleChange(field.key, e.target.value, field.type)}
-                            className="w-20 h-10"
-                          />
-                          <Input
-                            type="text"
-                            value={settings[field.key]?.value_ar || field.defaultValue}
-                            onChange={(e) => handleChange(field.key, e.target.value, field.type)}
-                            placeholder={field.defaultValue}
-                            className="flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleChange(field.key, field.defaultValue, field.type)}
-                          >
-                            إعادة تعيين
-                          </Button>
-                        </div>
+                        {field.type === "color" && (
+                          <div className="flex gap-2">
+                            <Input
+                              type="color"
+                              value={getSetting(field.key).value_ar || field.defaultValue}
+                              onChange={(e) => updateSetting(field.key, e.target.value)}
+                              className="w-20 h-10"
+                            />
+                            <Input
+                              type="text"
+                              value={getSetting(field.key).value_ar || field.defaultValue}
+                              onChange={(e) => updateSetting(field.key, e.target.value)}
+                              placeholder={field.defaultValue}
+                              dir="ltr"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateSetting(field.key, field.defaultValue)}
+                            >
+                              إعادة تعيين
+                            </Button>
+                          </div>
+                        )}
+
+                        {field.type === "image" && (
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    try {
+                                      const formData = new FormData()
+                                      formData.append("file", file)
+
+                                      const response = await fetch("/api/upload-image", {
+                                        method: "POST",
+                                        body: formData,
+                                      })
+
+                                      if (response.ok) {
+                                        const data = await response.json()
+                                        updateSetting(field.key, data.url)
+                                        toast({
+                                          title: "تم رفع الصورة بنجاح",
+                                          description: "تم تحديث شعار الموقع",
+                                        })
+                                      } else {
+                                        toast({
+                                          title: "خطأ",
+                                          description: "فشل رفع الصورة",
+                                          variant: "destructive",
+                                        })
+                                      }
+                                    } catch (error) {
+                                      console.error("Error uploading image:", error)
+                                      toast({
+                                        title: "خطأ",
+                                        description: "حدث خطأ أثناء رفع الصورة",
+                                        variant: "destructive",
+                                      })
+                                    }
+                                  }
+                                }}
+                                className="flex-1"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateSetting(field.key, field.defaultValue)}
+                              >
+                                إعادة تعيين
+                              </Button>
+                            </div>
+                            {getSetting(field.key).value_ar && (
+                              <div className="border rounded-lg p-2 bg-muted/30">
+                                <img
+                                  src={getSetting(field.key).value_ar || field.defaultValue}
+                                  alt="Logo Preview"
+                                  className="h-16 w-auto object-contain"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
                         <div
                           className="w-full h-16 rounded-lg border-2 border-dashed"
                           style={{ backgroundColor: settings[field.key]?.value_ar || field.defaultValue }}
