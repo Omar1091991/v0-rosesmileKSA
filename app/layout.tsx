@@ -20,6 +20,14 @@ export const metadata: Metadata = {
   title: "عيادات ابتسامة الورود - مكة المكرمة",
   description: "عيادات طبية متخصصة في مكة المكرمة - نقدم أفضل الخدمات الطبية بأحدث التقنيات",
   generator: "v0.app",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  manifest: "/manifest.json",
 }
 
 export default function RootLayout({

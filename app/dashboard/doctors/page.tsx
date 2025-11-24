@@ -428,7 +428,7 @@ export default function DoctorsPage() {
 
   return (
     <div className="space-y-6">
-      {needsInit && (
+      {false && needsInit && (
         <Alert>
           <Settings className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
