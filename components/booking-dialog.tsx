@@ -112,10 +112,15 @@ export function BookingDialog({ trigger, formId }: BookingDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button size="lg" className="gap-2">
+          <button
+            className="py-3 px-6 text-white rounded-lg transition-colors text-lg font-semibold inline-flex items-center gap-2"
+            style={{ backgroundColor: "#1a4f8b" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+          >
             <Calendar className="h-5 w-5" />
             احجز موعد
-          </Button>
+          </button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">

@@ -1,3 +1,5 @@
+"use client"
+
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { BookingDialog } from "@/components/booking-dialog"
@@ -85,7 +87,12 @@ export default async function OffersPage() {
 
                     <BookingDialog
                       trigger={
-                        <button className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-semibold">
+                        <button
+                          className="w-full py-3 px-4 text-white rounded-md transition-colors font-semibold"
+                          style={{ backgroundColor: "#1a4f8b" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                        >
                           احجز الآن واستفد من العرض
                         </button>
                       }
@@ -112,7 +119,12 @@ export default async function OffersPage() {
               <p className="text-lg text-primary-foreground/80">احجز موعدك الآن واستفد من عروضنا الحصرية</p>
               <BookingDialog
                 trigger={
-                  <button className="py-3 px-8 bg-background text-foreground rounded-md hover:bg-background/90 transition-colors font-semibold text-lg">
+                  <button
+                    className="py-3 px-8 text-white rounded-md transition-colors font-semibold text-lg"
+                    style={{ backgroundColor: "#1a4f8b" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                  >
                     احجز موعد الآن
                   </button>
                 }

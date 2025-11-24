@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, CheckCircle2, Phone } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Phone, MapPin } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
@@ -1439,38 +1439,23 @@ export default function HomePage() {
 
                 {/* Get Directions Button */}
                 <div className="text-center">
+                  {/* CHANGE: Changed doctors layout to show 2 cards vertically with horizontal scroll */}
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto"
-                    asChild
+                    className="gap-2"
                     style={{
-                      backgroundColor: getColor("directions_button_bg_color") || undefined,
-                      color: getColor("directions_button_text_color") || undefined,
+                      backgroundColor: "#1a4f8b",
+                      color: "#ffffff",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#153d6f"
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#1a4f8b"
                     }}
                   >
-                    <a
-                      href="https://maps.app.goo.gl/A1bn39TLNMNoCCJ8A"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-map-pin"
-                      >
-                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
-                      {language === "ar" ? "اضغط للحصول على الاتجاهات" : "Click to Get Directions"}
-                    </a>
+                    <MapPin className="h-5 w-5" />
+                    {language === "ar" ? "اضغط للحصول على الاتجاهات" : "Get Directions"}
                   </Button>
                 </div>
               </motion.div>
@@ -1530,79 +1515,50 @@ export default function HomePage() {
                   >
                     <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
                       <motion.span
-                        className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
+                        className="absolute inset-0 bg-gradient-to-r
+from-white/20 to-transparent"
+                        style={{
+                          background: `linear-gradient(to right, ${getColor(
+                            "cta_primary_button_hover_bg_color",
+                            "#e5e7eb",
+                          )} 0%, rgba(255,255,255,0) 50%, ${getColor(
+                            "cta_primary_button_hover_bg_color",
+                            "#e5e7eb",
+                          )} 100%)`,
+                        }}
                         animate={{
                           x: ["-100%", "100%"],
                         }}
                         transition={{
-                          duration: 2,
+                          duration: 1.5,
                           repeat: Number.POSITIVE_INFINITY,
                           ease: "linear",
                         }}
                       />
-                      <span className="relative z-10">{language === "ar" ? "احجز موعد" : "Book Appointment"}</span>
+                      <span className="relative z-10">
+                        {language === "ar" ? "احجز موعدك الآن" : "Book Your Appointment Now"}
+                      </span>
                     </Link>
                   </Button>
                 </motion.div>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  asChild
-                  style={{
-                    backgroundColor: getColor("cta_secondary_button_bg_color") || undefined,
-                    color: getColor("cta_secondary_button_text_color") || undefined,
-                    borderColor: getColor("cta_secondary_button_border_color") || undefined,
-                  }}
-                >
-                  <Link href={`tel:${getText("cta_phone_number") || "+966123456789"}`}>
-                    <Phone className="ml-2 h-5 w-5" />
-                    {language === "ar" ? "اتصل بنا الآن" : "Contact Us Now"}
-                  </Link>
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    asChild
+                    style={{
+                      color: getColor("cta_secondary_button_text_color", "#ffffff"),
+                      borderColor: getColor("cta_secondary_button_border_color", "#ffffff"),
+                      backgroundColor: getColor("cta_secondary_button_bg_color", "transparent"),
+                    }}
+                  >
+                    <Link href="/contact">
+                      {language === "ar" ? "اتصل بنا" : "Contact Us"}
+                      <Phone className="h-4 w-4 ml-2" />
+                    </Link>
+                  </Button>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Working Hours Section (Assuming this is a new section to be added) */}
-        <section
-          className="py-12 sm:py-16 md:py-20 lg:py-24"
-          style={{
-            backgroundColor: getColor("working_hours_background_color", "#f9fafb"),
-          }}
-        >
-          <div className="container px-4 sm:px-6 lg:px-8">
-            <motion.div
-              className="text-center space-y-6 max-w-3xl mx-auto"
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              variants={fadeInUp}
-            >
-              <h2
-                className="text-3xl md:text-4xl font-bold"
-                style={{ color: getColor("working_hours_title_color", "#1f2937") }}
-              >
-                {language === "ar" ? "ساعات العمل" : "Working Hours"}
-              </h2>
-              <div className="space-y-4">
-                {[
-                  {
-                    day: language === "ar" ? "الأحد - الخميس" : "Sunday - Thursday",
-                    hours: language === "ar" ? "9:00 صباحاً - 9:00 مساءً" : "9:00 AM - 9:00 PM",
-                  },
-                  { day: language === "ar" ? "الجمعة" : "Friday", hours: language === "ar" ? "مغلق" : "Closed" },
-                  {
-                    day: language === "ar" ? "السبت" : "Saturday",
-                    hours: language === "ar" ? "10:00 صباحاً - 6:00 مساءً" : "10:00 AM - 6:00 PM",
-                  },
-                ].map((item, index) => (
-                  <div key={index} className="flex justify-between text-lg font-medium">
-                    <span style={{ color: getColor("working_hours_day_color", "#4b5563") }}>{item.day}</span>
-                    <span style={{ color: getColor("working_hours_time_color", "#1f2937") }}>{item.hours}</span>
-                  </div>
-                ))}
-              </div>
             </motion.div>
           </div>
         </section>

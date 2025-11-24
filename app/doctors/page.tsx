@@ -192,7 +192,18 @@ export default function DoctorsPage() {
               <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">احجز موعدك مع أفضل الأطباء</h2>
                 <p className="text-base sm:text-lg text-muted-foreground">نحن هنا لخدمتك على مدار الساعة</p>
-                <BookingDialog />
+                <BookingDialog
+                  trigger={
+                    <button
+                      className="py-3 px-6 sm:px-8 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
+                      style={{ backgroundColor: "#1a4f8b" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                    >
+                      احجز موعد
+                    </button>
+                  }
+                />
               </div>
             </div>
           </section>

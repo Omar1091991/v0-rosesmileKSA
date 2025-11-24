@@ -21,7 +21,6 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
   useEffect(() => {
     async function fetchData() {
       try {
-        console.log("[v0] Fetching doctor with ID:", params.id)
         setLoading(true)
         setDoctor(null)
         setCases([])
@@ -29,19 +28,16 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
         const response = await fetch(`/api/doctors?id=${params.id}`)
         const data = await response.json()
 
-        console.log("[v0] Doctor data received:", data)
         if (data.length > 0) {
           setDoctor(data[0])
 
-          // Fetch doctor cases
           const casesResponse = await fetch(`/api/doctor-cases?doctor_id=${params.id}`)
           const casesData = await casesResponse.json()
-          console.log("[v0] Doctor cases received:", casesData)
           setCases(casesData || [])
         }
         setLoading(false)
       } catch (error) {
-        console.error("[v0] Error fetching doctor:", error)
+        console.error("Error fetching doctor:", error)
         setLoading(false)
       }
     }
@@ -72,7 +68,8 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
             <div className="container px-4 sm:px-6 lg:px-8">
               <Link
                 href="/doctors"
-                className="inline-flex items-center gap-2 text-primary hover:underline mb-6 sm:mb-8"
+                className="inline-flex items-center gap-2 hover:underline mb-6 sm:mb-8"
+                style={{ color: "#1a4f8b" }}
               >
                 <ArrowRight className="h-4 w-4" />
                 {language === "ar" ? "العودة إلى الأطباء" : "Back to Doctors"}
@@ -126,10 +123,15 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
 
                     <BookingDialog
                       trigger={
-                        <button className="w-full py-3 px-4 sm:px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-base sm:text-lg font-semibold">
+                        <button
+                          className="w-full py-3 px-4 sm:px-6 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
+                          style={{ backgroundColor: "#1a4f8b" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                        >
                           {language === "ar"
-                            ? `احجز موعد مع ${doctor.name_ar.split(" ")[0]}`
-                            : `Book with ${(doctor.name_en || doctor.name_ar).split(" ")[0]}`}
+                            ? `احجز موعد مع ${doctor.name_ar}`
+                            : `Book with ${doctor.name_en || doctor.name_ar}`}
                         </button>
                       }
                     />
@@ -146,9 +148,7 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
               <AnimatedSection animation="fade-up">
                 <div className="text-center mb-8 sm:mb-12">
                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-                    {language === "ar"
-                      ? `حالات ${doctor.name_ar.split(" ")[0]}`
-                      : `${(doctor.name_en || doctor.name_ar).split(" ")[0]}'s Cases`}
+                    {language === "ar" ? `حالات ${doctor.name_ar}` : `${doctor.name_en || doctor.name_ar}'s Cases`}
                   </h2>
                   <p className="text-base sm:text-lg text-muted-foreground">
                     {language === "ar"
@@ -196,13 +196,24 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
               <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
                   {language === "ar"
-                    ? `احجز موعدك مع ${doctor.name_ar.split(" ")[0]}`
-                    : `Book with ${(doctor.name_en || doctor.name_ar).split(" ")[0]}`}
+                    ? `احجز موعدك مع ${doctor.name_ar}`
+                    : `Book with ${doctor.name_en || doctor.name_ar}`}
                 </h2>
                 <p className="text-base sm:text-lg text-muted-foreground">
                   {language === "ar" ? "نحن هنا لخدمتك على مدار الساعة" : "We are here to serve you 24/7"}
                 </p>
-                <BookingDialog />
+                <BookingDialog
+                  trigger={
+                    <button
+                      className="py-3 px-6 sm:px-8 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
+                      style={{ backgroundColor: "#1a4f8b" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                    >
+                      {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                    </button>
+                  }
+                />
               </div>
             </div>
           </section>
