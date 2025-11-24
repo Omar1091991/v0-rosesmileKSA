@@ -949,12 +949,23 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 variants={fadeIn}
               >
-                <Button variant="outline" size="lg" className="w-full sm:w-auto bg-transparent" asChild>
-                  <Link href="/doctors">
-                    {language === "ar" ? "تعرف على جميع الأطباء" : "Meet All Our Doctors"}
-                    <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  </Link>
-                </Button>
+                <button
+                  className="px-6 py-3 rounded-md font-medium transition-colors flex items-center gap-2 mx-auto"
+                  style={{
+                    backgroundColor: "#1a4f8b",
+                    color: "#ffffff",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#153d6f"
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1a4f8b"
+                  }}
+                  onClick={() => (window.location.href = "/doctors")}
+                >
+                  {language === "ar" ? "تعرف على جميع الأطباء" : "Meet All Our Doctors"}
+                  <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
               </motion.div>
             </div>
           </section>
