@@ -419,6 +419,66 @@ const BACKGROUND_COLOR_SECTIONS = [
         type: "color",
         defaultValue: "#db2777",
       },
+      {
+        key: "doctors_section_button_text_ar",
+        label: 'نص زر "تعرف على جميع الأطباء" (عربي)',
+        type: "text",
+        defaultValue: "تعرف على جميع الأطباء",
+      },
+      {
+        key: "doctors_section_button_text_en",
+        label: 'نص زر "تعرف على جميع الأطباء" (إنجليزي)',
+        type: "text",
+        defaultValue: "Meet All Our Doctors",
+      },
+      {
+        key: "doctors_section_button_bg_color",
+        label: 'لون خلفية زر "تعرف على جميع الأطباء"',
+        type: "color",
+        defaultValue: "#1a4f8b",
+      },
+      {
+        key: "doctors_section_button_text_color",
+        label: 'لون نص زر "تعرف على جميع الأطباء"',
+        type: "color",
+        defaultValue: "#ffffff",
+      },
+      {
+        key: "doctors_section_button_hover_bg_color",
+        label: 'لون خلفية زر "تعرف على جميع الأطباء" عند التمرير',
+        type: "color",
+        defaultValue: "#153d6f",
+      },
+      {
+        key: "articles_section_button_text_ar",
+        label: 'نص زر "عرض جميع المقالات" (عربي)',
+        type: "text",
+        defaultValue: "عرض جميع المقالات",
+      },
+      {
+        key: "articles_section_button_text_en",
+        label: 'نص زر "عرض جميع المقالات" (إنجليزي)',
+        type: "text",
+        defaultValue: "View All Articles",
+      },
+      {
+        key: "articles_section_button_bg_color",
+        label: 'لون خلفية زر "عرض جميع المقالات"',
+        type: "color",
+        defaultValue: "#1a4f8b",
+      },
+      {
+        key: "articles_section_button_text_color",
+        label: 'لون نص زر "عرض جميع المقالات"',
+        type: "color",
+        defaultValue: "#ffffff",
+      },
+      {
+        key: "articles_section_button_hover_bg_color",
+        label: 'لون خلفية زر "عرض جميع المقالات" عند التمرير',
+        type: "color",
+        defaultValue: "#153d6f",
+      },
       // عناصر القائمة النشطة (لوحة التحكم)
       {
         key: "sidebar_active_item_bg_color",
@@ -598,6 +658,24 @@ const BACKGROUND_COLOR_SECTIONS = [
         label: "لون نص عنصر القائمة عند التمرير",
         type: "color",
         defaultValue: "#1f2937",
+      },
+    ],
+  },
+  {
+    section: "offers_section_colors",
+    title: "ألوان قسم العروض الخاصة",
+    fields: [
+      {
+        key: "offers_title_color",
+        label: "لون عنوان القسم (عروضنا الخاصة)",
+        type: "color",
+        defaultValue: "#1f2937",
+      },
+      {
+        key: "offers_text_color",
+        label: "لون وصف القسم",
+        type: "color",
+        defaultValue: "#4b5563",
       },
     ],
   },
@@ -976,6 +1054,35 @@ export default function ContentManagementPage() {
             key: defaultSetting.key,
             value_ar: defaultSetting.value,
             value_en: defaultSetting.value, // Assuming value_en should also be updated for consistency
+            type: defaultSetting.type,
+            category: defaultSetting.category,
+          }
+        }
+      }
+
+      // Add default values for button colors if they don't exist
+      const buttonColorDefaults = [
+        // Button "Meet All Our Doctors"
+        { key: "doctors_section_button_text_ar", value: "تعرف على جميع الأطباء", type: "text", category: "buttons" },
+        { key: "doctors_section_button_text_en", value: "Meet All Our Doctors", type: "text", category: "buttons" },
+        { key: "doctors_section_button_bg_color", value: "#1a4f8b", type: "color", category: "buttons" },
+        { key: "doctors_section_button_text_color", value: "#ffffff", type: "color", category: "buttons" },
+        { key: "doctors_section_button_hover_bg_color", value: "#153d6f", type: "color", category: "buttons" },
+        // Button "View All Articles"
+        { key: "articles_section_button_text_ar", value: "عرض جميع المقالات", type: "text", category: "buttons" },
+        { key: "articles_section_button_text_en", value: "View All Articles", type: "text", category: "buttons" },
+        { key: "articles_section_button_bg_color", value: "#1a4f8b", type: "color", category: "buttons" },
+        { key: "articles_section_button_text_color", value: "#ffffff", type: "color", category: "buttons" },
+        { key: "articles_section_button_hover_bg_color", value: "#153d6f", type: "color", category: "buttons" },
+      ]
+
+      for (const defaultSetting of buttonColorDefaults) {
+        if (!settingsMap[defaultSetting.key]) {
+          settingsMap[defaultSetting.key] = {
+            id: null,
+            key: defaultSetting.key,
+            value_ar: defaultSetting.value,
+            value_en: defaultSetting.value,
             type: defaultSetting.type,
             category: defaultSetting.category,
           }

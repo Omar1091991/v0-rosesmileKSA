@@ -269,9 +269,9 @@ export default function HomePage() {
     return <span dangerouslySetInnerHTML={{ __html: sanitizedText }} style={{ whiteSpace: "pre-wrap" }} />
   }
 
-  const getText = (key: string) => {
+  const getText = (key: string, defaultValue?: string) => {
     const langKey = `${key}_${language}`
-    const value = siteSettings[langKey] || siteSettings[`${key}_ar`] || ""
+    const value = siteSettings[langKey] || siteSettings[`${key}_ar`] || defaultValue || ""
     return value
   }
 
@@ -943,7 +943,7 @@ export default function HomePage() {
               </div>
 
               <motion.div
-                className="text-center mt-8 sm:mt-12"
+                className="text-center mt-12"
                 initial="initial"
                 whileInView="animate"
                 viewport={{ once: true }}
@@ -952,18 +952,20 @@ export default function HomePage() {
                 <button
                   className="px-6 py-3 rounded-md font-medium transition-colors flex items-center gap-2 mx-auto"
                   style={{
-                    backgroundColor: "#1a4f8b",
-                    color: "#ffffff",
+                    backgroundColor: getColor("doctors_section_button_bg_color", "#1a4f8b"),
+                    color: getColor("doctors_section_button_text_color", "#ffffff"),
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#153d6f"
+                    e.currentTarget.style.backgroundColor = getColor("doctors_section_button_hover_bg_color", "#153d6f")
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "#1a4f8b"
+                    e.currentTarget.style.backgroundColor = getColor("doctors_section_button_bg_color", "#1a4f8b")
                   }}
                   onClick={() => (window.location.href = "/doctors")}
                 >
-                  {language === "ar" ? "تعرف على جميع الأطباء" : "Meet All Our Doctors"}
+                  {language === "ar"
+                    ? getText("doctors_section_button_text_ar", "تعرف على جميع الأطباء")
+                    : getText("doctors_section_button_text_en", "Meet All Our Doctors")}
                   <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </motion.div>
@@ -1294,17 +1296,29 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 variants={fadeIn}
               >
-                <Button
-                  variant="outline"
-                  size="lg"
-                  asChild
-                  style={{ color: getColor("view_all_button_text_color", "#1f2937") }}
+                <button
+                  className="px-6 py-3 rounded-md font-medium transition-colors flex items-center gap-2 mx-auto border"
+                  style={{
+                    backgroundColor: getColor("articles_section_button_bg_color", "#1a4f8b"),
+                    color: getColor("articles_section_button_text_color", "#ffffff"),
+                    borderColor: getColor("articles_section_button_bg_color", "#1a4f8b"),
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = getColor(
+                      "articles_section_button_hover_bg_color",
+                      "#153d6f",
+                    )
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = getColor("articles_section_button_bg_color", "#1a4f8b")
+                  }}
+                  onClick={() => (window.location.href = "/articles")}
                 >
-                  <Link href="/articles">
-                    {language === "ar" ? "عرض جميع المقالات" : "View All Articles"}
-                    <ArrowLeft className="mr-2 h-5 w-5" />
-                  </Link>
-                </Button>
+                  {language === "ar"
+                    ? getText("articles_section_button_text_ar", "عرض جميع المقالات")
+                    : getText("articles_section_button_text_en", "View All Articles")}
+                  <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
               </motion.div>
             </div>
           </section>

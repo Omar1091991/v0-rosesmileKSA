@@ -7,17 +7,17 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File
 
     if (!file) {
-      return NextResponse.json({ error: "لم يتم تحديد ملف" }, { status: 400 })
+      return NextResponse.json({ success: false, error: "لم يتم تحديد ملف" }, { status: 400 })
     }
 
     // Check file type
     if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "يجب أن يكون الملف صورة" }, { status: 400 })
+      return NextResponse.json({ success: false, error: "يجب أن يكون الملف صورة" }, { status: 400 })
     }
 
     // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت" }, { status: 400 })
+      return NextResponse.json({ success: false, error: "حجم الصورة يجب أن يكون أقل من 5 ميجابايت" }, { status: 400 })
     }
 
     // Upload to Vercel Blob
@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({
+      success: true,
       url: blob.url,
       filename: file.name,
       size: file.size,
@@ -34,6 +35,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Upload error:", error)
-    return NextResponse.json({ error: "فشل رفع الصورة" }, { status: 500 })
+    return NextResponse.json({ success: false, error: "فشل رفع الصورة" }, { status: 500 })
   }
 }
