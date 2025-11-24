@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Calendar } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface BookingDialogProps {
   trigger?: React.ReactNode
@@ -60,7 +60,8 @@ export function BookingDialog({ trigger, formId }: BookingDialogProps) {
           const response = await fetch("/api/services")
           if (response.ok) {
             const data = await response.json()
-            setServices(data.filter((s: any) => s.is_active))
+            const servicesArray = Array.isArray(data) ? data : data.services || []
+            setServices(servicesArray.filter((s: any) => s.is_active))
           }
         } catch (error) {
           console.error("[v0] Error fetching services:", error)

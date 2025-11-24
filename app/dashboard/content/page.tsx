@@ -260,6 +260,7 @@ const BACKGROUND_COLOR_SECTIONS = [
       { key: "features_background_color", label: "لون خلفية قسم المميزات", type: "color", defaultValue: "#f9fafb" },
       { key: "services_background_color", label: "لون خلفية قسم الخدمات", type: "color", defaultValue: "#ffffff" },
       { key: "doctors_background_color", label: "لون خلفية قسم الأطباء", type: "color", defaultValue: "#f9fafb" },
+      { key: "offers_background_color", label: "لون خلفية قسم العروض", type: "color", defaultValue: "#f9fafb" },
       {
         key: "why_choose_us_background_color",
         label: "لون خلفية قسم لماذا تختارنا",
@@ -1353,10 +1354,7 @@ export default function ContentManagementPage() {
         </TabsContent>
 
         <TabsContent value="colors" className="space-y-6 mt-6">
-          {[
-            ...BACKGROUND_COLOR_SECTIONS,
-            // Removed duplicate sections as they are now defined above
-          ].map((section, sectionIndex) => {
+          {BACKGROUND_COLOR_SECTIONS.map((section, sectionIndex) => {
             const sectionFieldKeys = section.fields.map((f) => f.key)
             const isSavingThisSection = savingSection && sectionFieldKeys.includes(savingSection)
 

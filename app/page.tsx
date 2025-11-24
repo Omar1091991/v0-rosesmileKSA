@@ -36,10 +36,12 @@ export default function HomePage() {
 
   const [isServicesAutoScrollPaused, setIsServicesAutoScrollPaused] = useState(false)
   const [isDoctorsAutoScrollPaused, setIsDoctorsAutoScrollPaused] = useState(false)
+  const [isOffersAutoScrollPaused, setIsOffersAutoScrollPaused] = useState(false) // Added state for offers
   const [isArticlesAutoScrollPaused, setIsArticlesAutoScrollPaused] = useState(false)
 
   const [servicesScrollDirection, setServicesScrollDirection] = useState<"forward" | "backward">("forward")
   const [doctorsScrollDirection, setDoctorsScrollDirection] = useState<"forward" | "backward">("forward")
+  const [offersScrollDirection, setOffersScrollDirection] = useState<"forward" | "backward">("forward") // Added state for offers
   const [articlesScrollDirection, setArticlesScrollDirection] = useState<"forward" | "backward">("forward")
 
   useEffect(() => {
@@ -61,7 +63,8 @@ export default function HomePage() {
         const settingsData = await settingsRes.json()
         const formsData = await formsRes.json()
 
-        setServices(servicesData.filter((s: any) => s.is_active))
+        const servicesArray = Array.isArray(servicesData) ? servicesData : servicesData.services || []
+        setServices(servicesArray.filter((s: any) => s.is_active))
         setDoctors(doctorsData.filter((d: any) => d.is_active))
         setOffers(offersData.filter((o: any) => o.is_active))
         setArticles(articlesData.filter((a: any) => a.is_published))
@@ -157,6 +160,36 @@ export default function HomePage() {
 
     return () => clearInterval(interval)
   }, [doctors, isDoctorsAutoScrollPaused, doctorsScrollDirection])
+
+  useEffect(() => {
+    if (!offersScrollRef.current || offers.length === 0 || isOffersAutoScrollPaused) return
+
+    const interval = setInterval(() => {
+      if (offersScrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = offersScrollRef.current
+        const isRTL = document.dir === "rtl" || document.documentElement.dir === "rtl"
+
+        if (offersScrollDirection === "forward") {
+          if (Math.abs(scrollLeft) + clientWidth >= scrollWidth - 10) {
+            setOffersScrollDirection("backward")
+            offersScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
+          } else {
+            offersScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
+          }
+        } else {
+          // Scrolling backward - check if at the beginning
+          if (Math.abs(scrollLeft) <= 10) {
+            setOffersScrollDirection("forward")
+            offersScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
+          } else {
+            offersScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
+          }
+        }
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [offers, isOffersAutoScrollPaused, offersScrollDirection])
 
   useEffect(() => {
     if (!articlesScrollRef.current || articles.length === 0 || isArticlesAutoScrollPaused) return
@@ -319,6 +352,8 @@ export default function HomePage() {
     autoScroll: getText("offers_carousel_auto_scroll") !== "false",
   })
 
+  const filteredOffers = offers // Assuming offers is already filtered by is_active
+
   return (
     <div className="flex min-h-screen flex-col">
       <AnimatedBackground />
@@ -437,7 +472,7 @@ export default function HomePage() {
         <section
           className="py-12 sm:py-16 md:py-20 lg:py-24"
           style={{
-            backgroundColor: getColor("features_background_color"),
+            backgroundColor: getColor("features_background_color", "#f9fafb"),
           }}
         >
           <div className="container px-4 sm:px-6 lg:px-8">
@@ -938,92 +973,190 @@ export default function HomePage() {
         )}
 
         {/* Offers Section */}
-        {offers && offers.length > 0 && (
-          <section className="py-16 md:py-24 bg-gradient-to-br from-primary to-primary/90 text-primary-foreground">
-            <div className="container">
+        {filteredOffers && filteredOffers.length > 0 && (
+          <section
+            className="py-12 sm:py-16 md:py-20 lg:py-24"
+            style={{
+              backgroundColor: getColor("offers_background_color", "#f9fafb"),
+            }}
+          >
+            <div className="container px-4 sm:px-6 lg:px-8">
               <motion.div
-                className="max-w-6xl mx-auto"
+                className="text-center space-y-3 sm:space-y-4 mb-8 sm:mb-12"
                 initial="initial"
                 whileInView="animate"
                 viewport={{ once: true }}
-                variants={staggerContainer}
+                variants={fadeInUp}
               >
-                {offers.map((offer) => (
-                  <motion.div
-                    key={offer.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
+                <Link href="/offers" className="inline-block hover:opacity-80 transition-opacity">
+                  <h2
+                    className="text-2xl sm:text-3xl md:text-4xl font-bold cursor-pointer"
+                    style={{ color: getColor("offers_title_color", "#1f2937") }}
                   >
-                    <Card
-                      style={{
-                        backgroundColor: getColor("card_background_color", "#ffffff"),
-                        borderColor: getColor("card_border_color", "#e5e7eb"),
-                      }}
-                      className="text-foreground h-full flex flex-col"
-                    >
-                      <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
-                        {offer.image_url && (
-                          <div className="w-full aspect-video relative rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-90 transition-opacity">
-                            <Image
-                              src={offer.image_url || "/placeholder.svg"}
-                              alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-2xl font-bold" style={{ color: getColor("card_title_color", "#1f2937") }}>
-                            {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
-                          </h3>
-                          {offer.discount_percentage && (
-                            <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-bold">
-                              {language === "ar"
-                                ? `خصم ${offer.discount_percentage}%`
-                                : `Discount ${offer.discount_percentage}%`}
-                            </div>
-                          )}
-                        </div>
-                        <p
-                          className="leading-relaxed line-clamp-3"
-                          style={{ color: getColor("card_text_color", "#6b7280") }}
-                        >
-                          {language === "ar" ? offer.description_ar : offer.description_en || offer.description_ar}
-                        </p>
-                        {offer.price_before && offer.price_after && (
-                          <div className="flex items-center gap-4">
-                            <span className="text-3xl font-bold text-primary">{offer.price_after} ريال</span>
-                            <span className="text-lg text-muted-foreground line-through">
-                              {offer.price_before} ريال
-                            </span>
-                          </div>
-                        )}
-                        <button
-                          className="w-full py-3 px-4 rounded-md transition-colors font-semibold"
+                    {renderFormattedText(
+                      getText("offers_title") || (language === "ar" ? "عروضنا الخاصة" : "Our Special Offers"),
+                    )}
+                  </h2>
+                </Link>
+                <p
+                  className="text-base sm:text-lg max-w-2xl mx-auto px-4"
+                  style={{ color: getColor("offers_text_color", "#4b5563") }}
+                >
+                  {renderFormattedText(
+                    getText("offers_description") ||
+                      (language === "ar"
+                        ? "استفد من عروضنا الطبية المميزة والمصممة خصيصاً لتلبية احتياجاتك"
+                        : "Take advantage of our special medical offers designed specifically for your needs"),
+                  )}
+                </p>
+              </motion.div>
+
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
+                  onClick={() => {
+                    scroll(offersScrollRef, "left")
+                    handleUserScroll(setIsOffersAutoScrollPaused)
+                  }}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg hidden md:flex"
+                  onClick={() => {
+                    scroll(offersScrollRef, "right")
+                    handleUserScroll(setIsOffersAutoScrollPaused)
+                  }}
+                >
+                  <ArrowLeft className="h-5 w-5 rotate-180" />
+                </Button>
+
+                <div
+                  ref={offersScrollRef}
+                  className="overflow-x-auto pb-4 scroll-smooth scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40"
+                  onMouseEnter={() => setIsOffersAutoScrollPaused(true)}
+                  onMouseLeave={() => setIsOffersAutoScrollPaused(false)}
+                  onTouchStart={() => handleUserScroll(setIsOffersAutoScrollPaused)}
+                  onWheel={() => handleUserScroll(setIsOffersAutoScrollPaused)}
+                >
+                  <div className="flex gap-6" style={{ width: "max-content" }}>
+                    {filteredOffers.map((offer) => (
+                      <motion.div
+                        key={offer.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="w-[300px] sm:w-[350px]"
+                      >
+                        <div
+                          className="rounded-lg border hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer overflow-hidden"
                           style={{
-                            backgroundColor: getColor("card_book_button_bg_color", "#ec4899"),
-                            color: getColor("card_book_button_text_color", "#ffffff"),
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = getColor(
-                              "card_book_button_hover_bg_color",
-                              "#db2777",
-                            )
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = getColor("card_book_button_bg_color", "#ec4899")
+                            backgroundColor: getColor("card_background_color", "#ffffff"),
+                            borderColor: getColor("card_border_color", "#e5e7eb"),
                           }}
                           onClick={() => {
-                            window.location.href = mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"
+                            window.location.href = `/offers/${offer.id}`
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = getColor("card_hover_border_color", "#ec4899")
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = getColor("card_border_color", "#e5e7eb")
                           }}
                         >
-                          {language === "ar" ? "احجز الآن" : "Book Now"}
-                        </button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
+                          <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 flex flex-col flex-1">
+                            {offer.image_url && (
+                              <div className="w-full aspect-video relative rounded-lg overflow-hidden">
+                                <Image
+                                  src={offer.image_url || "/placeholder.svg"}
+                                  alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+                            <h3
+                              className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2"
+                              style={{ color: getColor("card_title_color", "#1f2937") }}
+                            >
+                              {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
+                            </h3>
+                            <p
+                              className="text-center text-xs sm:text-sm line-clamp-2 flex-1"
+                              style={{ color: getColor("card_text_color", "#4b5563") }}
+                            >
+                              {renderFormattedText(
+                                language === "ar" ? offer.description_ar : offer.description_en || offer.description_ar,
+                              )}
+                            </p>
+                            {offer.end_date && new Date(offer.end_date) >= new Date() && (
+                              <p className="text-xs text-center text-muted-foreground">
+                                {language === "ar" ? "ينتهي في" : "Ends on"}:{" "}
+                                {new Date(offer.end_date).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US")}
+                              </p>
+                            )}
+                            <button
+                              className="w-full py-2 px-4 text-xs sm:text-sm rounded-md transition-colors border"
+                              style={{
+                                backgroundColor: getColor("card_details_button_bg_color", "#f3f4f6"),
+                                color: getColor("card_details_button_text_color", "#1f2937"),
+                                borderColor: getColor("card_details_button_text_color", "#1f2937"),
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = getColor(
+                                  "card_details_button_hover_bg_color",
+                                  "#e5e7eb",
+                                )
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = getColor(
+                                  "card_details_button_bg_color",
+                                  "#f3f4f6",
+                                )
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                window.location.href = `/offers/${offer.id}`
+                              }}
+                            >
+                              {language === "ar" ? "التفاصيل" : "Details"}
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <motion.div
+                className="text-center mt-8 sm:mt-12"
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true }}
+                variants={fadeIn}
+              >
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto bg-transparent"
+                  asChild
+                  style={{
+                    backgroundColor: getColor("view_all_button_bg_color") || undefined,
+                    color: getColor("view_all_button_text_color") || undefined,
+                    borderColor: getColor("view_all_button_border_color") || undefined,
+                  }}
+                >
+                  <Link href="/offers">
+                    {language === "ar" ? "عرض جميع العروض" : "View All Offers"}
+                    <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  </Link>
+                </Button>
               </motion.div>
             </div>
           </section>
@@ -1210,7 +1343,12 @@ export default function HomePage() {
         </section>
 
         {/* Why Choose Us Section */}
-        <section className="py-16 md:py-24">
+        <section
+          className="py-12 sm:py-16 md:py-20 lg:py-24"
+          style={{
+            backgroundColor: getColor("why_choose_us_background_color", "#ffffff"),
+          }}
+        >
           <div className="container">
             <motion.div
               className="text-center space-y-4 mb-12"
@@ -1354,9 +1492,9 @@ export default function HomePage() {
 
         {/* CTA Section */}
         <section
-          className="py-16 md:py-24"
+          className="py-12 sm:py-16 md:py-20 lg:py-24"
           style={{
-            backgroundColor: getColor("cta_background_color"),
+            backgroundColor: getColor("cta_background_color", "#ec4899"),
           }}
         >
           <div className="container">
@@ -1434,6 +1572,49 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </motion.div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Working Hours Section (Assuming this is a new section to be added) */}
+        <section
+          className="py-12 sm:py-16 md:py-20 lg:py-24"
+          style={{
+            backgroundColor: getColor("working_hours_background_color", "#f9fafb"),
+          }}
+        >
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <motion.div
+              className="text-center space-y-6 max-w-3xl mx-auto"
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+            >
+              <h2
+                className="text-3xl md:text-4xl font-bold"
+                style={{ color: getColor("working_hours_title_color", "#1f2937") }}
+              >
+                {language === "ar" ? "ساعات العمل" : "Working Hours"}
+              </h2>
+              <div className="space-y-4">
+                {[
+                  {
+                    day: language === "ar" ? "الأحد - الخميس" : "Sunday - Thursday",
+                    hours: language === "ar" ? "9:00 صباحاً - 9:00 مساءً" : "9:00 AM - 9:00 PM",
+                  },
+                  { day: language === "ar" ? "الجمعة" : "Friday", hours: language === "ar" ? "مغلق" : "Closed" },
+                  {
+                    day: language === "ar" ? "السبت" : "Saturday",
+                    hours: language === "ar" ? "10:00 صباحاً - 6:00 مساءً" : "10:00 AM - 6:00 PM",
+                  },
+                ].map((item, index) => (
+                  <div key={index} className="flex justify-between text-lg font-medium">
+                    <span style={{ color: getColor("working_hours_day_color", "#4b5563") }}>{item.day}</span>
+                    <span style={{ color: getColor("working_hours_time_color", "#1f2937") }}>{item.hours}</span>
+                  </div>
+                ))}
+              </div>
             </motion.div>
           </div>
         </section>
