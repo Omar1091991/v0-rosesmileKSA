@@ -17,15 +17,83 @@ const cairo = Cairo({
 })
 
 export const metadata: Metadata = {
-  title: "عيادات ابتسامة الورود - مكة المكرمة",
-  description: "عيادات طبية متخصصة في مكة المكرمة - نقدم أفضل الخدمات الطبية بأحدث التقنيات",
+  title: {
+    default: "عيادات ابتسامة الورود - عيادة أسنان في مكة المكرمة | تقويم وزراعة وتجميل الأسنان",
+    template: "%s | عيادات ابتسامة الورود - مكة المكرمة",
+  },
+  description:
+    "عيادة أسنان متخصصة في مكة المكرمة تقدم جميع خدمات طب الأسنان: تقويم الأسنان، زراعة الأسنان، تجميل الأسنان، تبييض الأسنان، علاج اللثة، وجراحة الفم. أفضل أطباء أسنان في مكة بأحدث التقنيات وأسعار مناسبة.",
+  keywords: [
+    "عيادة أسنان مكة",
+    "طبيب أسنان مكة المكرمة",
+    "تقويم أسنان مكة",
+    "زراعة أسنان مكة",
+    "تجميل أسنان مكة",
+    "تبييض أسنان مكة",
+    "ابتسامة هوليود مكة",
+    "عيادة ابتسامة الورود",
+    "افضل عيادة اسنان في مكة",
+    "طوارئ اسنان مكة",
+    "علاج جذور مكة",
+    "تركيبات اسنان مكة",
+  ],
+  authors: [{ name: "عيادات ابتسامة الورود" }],
+  creator: "عيادات ابتسامة الورود",
+  publisher: "عيادات ابتسامة الورود",
+  formatDetection: {
+    email: false,
+    address: true,
+    telephone: true,
+  },
+  openGraph: {
+    title: "عيادات ابتسامة الورود - أفضل عيادة أسنان في مكة المكرمة",
+    description:
+      "عيادة أسنان متخصصة في مكة المكرمة - تقويم، زراعة، تجميل الأسنان وجميع خدمات طب الأسنان بأحدث التقنيات",
+    url: "https://rosesmileksa.com",
+    siteName: "عيادات ابتسامة الورود",
+    locale: "ar_SA",
+    type: "website",
+    images: [
+      {
+        url: "/icon.jpg",
+        width: 512,
+        height: 512,
+        alt: "شعار عيادات ابتسامة الورود",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "عيادات ابتسامة الورود - عيادة أسنان في مكة المكرمة",
+    description: "تقويم، زراعة، تجميل الأسنان وجميع خدمات طب الأسنان في مكة",
+    images: ["/icon.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "google-site-verification-code", // يمكن للمستخدم إضافة الكود من Google Search Console
+  },
+  alternates: {
+    canonical: "https://rosesmileksa.com",
+  },
+  category: "healthcare",
   generator: "v0.app",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "32x32" },
-      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
+      { url: "/icon.jpg", type: "image/png", sizes: "512x512" },
     ],
-    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: "/apple-icon.jpg", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/favicon.ico"],
   },
   manifest: "/manifest.json",
 }
@@ -35,8 +103,60 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Dentist",
+    name: "عيادات ابتسامة الورود",
+    image: "https://rosesmileksa.com/icon.jpg",
+    description: "عيادة أسنان متخصصة في مكة المكرمة تقدم جميع خدمات طب الأسنان",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "مكة المكرمة",
+      addressRegion: "مكة المكرمة",
+      addressCountry: "SA",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 21.3891,
+      longitude: 39.8579,
+    },
+    url: "https://rosesmileksa.com",
+    telephone: "+966-XX-XXX-XXXX",
+    priceRange: "$$",
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Saturday"],
+        opens: "09:00",
+        closes: "21:00",
+      },
+    ],
+    medicalSpecialty: ["Dentistry", "Orthodontics", "Dental Implants", "Cosmetic Dentistry"],
+    availableService: [
+      {
+        "@type": "MedicalProcedure",
+        name: "تقويم الأسنان",
+      },
+      {
+        "@type": "MedicalProcedure",
+        name: "زراعة الأسنان",
+      },
+      {
+        "@type": "MedicalProcedure",
+        name: "تجميل الأسنان",
+      },
+      {
+        "@type": "MedicalProcedure",
+        name: "تبييض الأسنان",
+      },
+    ],
+  }
+
   return (
     <html lang="ar" dir="rtl">
+      <head>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      </head>
       <body className={`font-sans ${cairo.variable} ${GeistMono.variable}`}>
         <DynamicColors />
         <Suspense fallback={<div>Loading...</div>}>

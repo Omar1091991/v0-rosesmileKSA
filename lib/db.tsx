@@ -6,8 +6,14 @@ if (!connectionString) {
   console.warn("[v0] ⚠️ SUPABASE_POSTGRES_URL غير متاح - تأكد من إضافة متغير البيئة في Vercel")
 }
 
-// إنشاء Pool للاستعلامات العادية
-const pool = connectionString ? new Pool({ connectionString }) : null
+const pool = connectionString
+  ? new Pool({
+      connectionString,
+      max: 10, // حد أقصى 10 اتصالات متزامنة
+      idleTimeoutMillis: 30000, // إغلاق الاتصالات الخاملة بعد 30 ثانية
+      connectionTimeoutMillis: 10000, // timeout للاتصال الجديد 10 ثوان
+    })
+  : null
 
 // إنشاء SQL client للاستعلامات باستخدام tagged templates
 const sql = connectionString ? neon(connectionString) : null
@@ -21,8 +27,9 @@ export async function query(text: string, params?: any[]) {
 
   console.log("[v0] الاستعلام:", text.substring(0, 100))
 
+  const client = await pool.connect()
   try {
-    const result = await pool.query(text, params || [])
+    const result = await client.query(text, params || [])
     console.log("[v0] ✅ نجح الاستعلام - عدد الصفوف:", result.rows.length)
 
     return {
@@ -33,6 +40,8 @@ export async function query(text: string, params?: any[]) {
     console.error("[v0] ❌ خطأ في الاستعلام:", error.message)
     console.error("[v0] الاستعلام:", text.substring(0, 200))
     throw error
+  } finally {
+    client.release()
   }
 }
 
