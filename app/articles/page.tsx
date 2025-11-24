@@ -49,11 +49,11 @@ async function ArticlesList() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
       {articles.map((article: any) => (
-        <Card key={article.id} className="overflow-hidden transition-shadow hover:shadow-lg">
+        <Card key={article.id} className="overflow-hidden transition-shadow hover:shadow-lg flex flex-col">
           {article.image_url && (
-            <div className="relative h-48 w-full overflow-hidden">
+            <div className="relative h-32 sm:h-40 md:h-48 w-full overflow-hidden">
               <img
                 src={article.image_url || "/placeholder.svg"}
                 alt={article.title_ar}
@@ -61,30 +61,30 @@ async function ArticlesList() {
               />
             </div>
           )}
-          <CardHeader>
-            <CardTitle className="line-clamp-2">{article.title_ar}</CardTitle>
+          <CardHeader className="p-3 sm:p-4 flex-1">
+            <CardTitle className="line-clamp-2 text-sm sm:text-base md:text-lg">{article.title_ar}</CardTitle>
             <CardDescription
-              className="line-clamp-3 whitespace-pre-line"
+              className="line-clamp-2 text-xs sm:text-sm whitespace-pre-line hidden sm:block"
               dangerouslySetInnerHTML={{
-                __html: article.excerpt_ar || article.content_ar?.substring(0, 150) + "...",
+                __html: article.excerpt_ar || article.content_ar?.substring(0, 100) + "...",
               }}
             />
           </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="flex flex-col gap-2 text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
               <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span>{article.author_ar}</span>
+                <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="truncate">{article.author_ar}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>{new Date(article.created_at).toLocaleDateString("ar-SA")}</span>
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs">{new Date(article.created_at).toLocaleDateString("ar-SA")}</span>
               </div>
             </div>
-            <Button asChild className="mt-4 w-full">
+            <Button asChild className="w-full h-8 sm:h-9 text-xs sm:text-sm">
               <Link href={`/articles/${article.id}`}>
                 قراءة المزيد
-                <ArrowRight className="mr-2 h-4 w-4" />
+                <ArrowRight className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               </Link>
             </Button>
           </CardContent>

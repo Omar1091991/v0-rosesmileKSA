@@ -72,11 +72,11 @@ export default function ServicesPage() {
 
         <section className="py-12 sm:py-16 md:py-24">
           <div className="container px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
               {services?.map((service: any, index: number) => (
                 <AnimatedSection key={service.id} animation="scale-in" delay={index * 0.1}>
                   <Card className="hover:shadow-lg transition-all hover:-translate-y-1 h-full flex flex-col">
-                    <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 flex flex-col flex-1 p-4 sm:p-6">
+                    <CardContent className="pt-3 sm:pt-4 space-y-2 sm:space-y-3 flex flex-col flex-1 p-2 sm:p-4">
                       <Link href={`/services/${service.id}`} className="block">
                         {service.image_url ? (
                           <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity">
@@ -87,25 +87,25 @@ export default function ServicesPage() {
                             />
                           </div>
                         ) : (
-                          <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-5xl sm:text-6xl cursor-pointer hover:opacity-90 transition-opacity">
+                          <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-3xl sm:text-4xl md:text-5xl cursor-pointer hover:opacity-90 transition-opacity">
                             {service.icon || "🏥"}
                           </div>
                         )}
                       </Link>
 
-                      <div className="space-y-2 flex-1">
-                        <h3 className="text-xl sm:text-2xl font-bold">{service.title_ar}</h3>
+                      <div className="space-y-1 flex-1">
+                        <h3 className="text-sm sm:text-base md:text-lg font-bold line-clamp-2">{service.title_ar}</h3>
                         {service.subtitle_ar && (
-                          <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                          <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm line-clamp-2 hidden sm:block">
                             {service.subtitle_ar}
                           </p>
                         )}
                       </div>
 
-                      <div className="flex flex-col gap-2 mt-auto">
+                      <div className="flex flex-col gap-1 sm:gap-2 mt-auto">
                         <Link href={`/services/${service.id}`}>
                           <button
-                            className="w-full py-2 px-4 text-sm sm:text-base rounded-md transition-colors border"
+                            className="w-full py-1.5 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm rounded-md transition-colors border"
                             style={{
                               backgroundColor: colors.cardDetailsButtonBg,
                               color: colors.cardDetailsButtonText,
@@ -124,7 +124,7 @@ export default function ServicesPage() {
                         <BookingDialog
                           trigger={
                             <button
-                              className="w-full py-2 px-4 text-sm sm:text-base rounded-md transition-colors"
+                              className="w-full py-1.5 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm rounded-md transition-colors"
                               style={{
                                 backgroundColor: colors.cardBookButtonBg,
                                 color: colors.cardBookButtonText,
@@ -136,7 +136,7 @@ export default function ServicesPage() {
                                 e.currentTarget.style.backgroundColor = colors.cardBookButtonBg
                               }}
                             >
-                              احجز موعد
+                              احجز
                             </button>
                           }
                         />

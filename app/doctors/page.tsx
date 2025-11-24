@@ -39,7 +39,12 @@ export default function DoctorsPage() {
   useEffect(() => {
     fetch("/api/doctors")
       .then((res) => res.json())
-      .then((data) => setDoctors(data.doctors || []))
+      .then((data) => {
+        // Handle both array and object formats
+        const doctorsData = Array.isArray(data) ? data : data.doctors || []
+        console.log("[v0] Loaded doctors:", doctorsData.length)
+        setDoctors(doctorsData)
+      })
       .catch((error) => console.error("[v0] Error fetching doctors:", error))
 
     fetch("/api/site-settings")
@@ -91,11 +96,11 @@ export default function DoctorsPage() {
 
         <section className="py-12 sm:py-16 md:py-24">
           <div className="container px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
               {doctors?.map((doctor: any, index: number) => (
                 <AnimatedSection key={doctor.id} animation="scale-in" delay={index * 0.1}>
                   <Card className="hover:shadow-lg transition-all hover:-translate-y-1 h-full flex flex-col">
-                    <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 p-4 sm:p-6 flex flex-col flex-1">
+                    <CardContent className="pt-3 sm:pt-4 space-y-2 sm:space-y-3 p-2 sm:p-4 flex flex-col flex-1">
                       <Link href={`/doctors/${doctor.id}`} className="block">
                         {doctor.image_url ? (
                           <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity">
@@ -106,29 +111,33 @@ export default function DoctorsPage() {
                             />
                           </div>
                         ) : (
-                          <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-5xl sm:text-6xl cursor-pointer hover:opacity-90 transition-opacity">
+                          <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-3xl sm:text-4xl md:text-5xl cursor-pointer hover:opacity-90 transition-opacity">
                             👨‍⚕️
                           </div>
                         )}
                       </Link>
 
-                      <div className="space-y-2 flex-1 flex flex-col">
+                      <div className="space-y-1 flex-1 flex flex-col">
                         <div>
-                          <h3 className="text-xl sm:text-2xl font-bold leading-tight">{doctor.name_ar}</h3>
-                          <p className="text-primary font-medium text-sm sm:text-base mt-1">{doctor.specialty_ar}</p>
+                          <h3 className="text-sm sm:text-base md:text-lg font-bold leading-tight line-clamp-2">
+                            {doctor.name_ar}
+                          </h3>
+                          <p className="text-primary font-medium text-xs sm:text-sm mt-0.5 line-clamp-1">
+                            {doctor.specialty_ar}
+                          </p>
                         </div>
 
                         {doctor.bio_ar && (
-                          <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm line-clamp-2">
-                            {getExcerpt(doctor.bio_ar, 80)}
+                          <p className="text-muted-foreground leading-relaxed text-xs line-clamp-2 hidden sm:block">
+                            {getExcerpt(doctor.bio_ar, 60)}
                           </p>
                         )}
                       </div>
 
-                      <div className="flex gap-2 mt-auto pt-2">
+                      <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 mt-auto pt-1 sm:pt-2">
                         <Link href={`/doctors/${doctor.id}`} className="flex-1">
                           <button
-                            className="w-full py-2 px-3 text-sm rounded-md transition-colors"
+                            className="w-full py-1.5 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm rounded-md transition-colors"
                             style={{
                               backgroundColor: colors.cardDetailsButtonBg,
                               color: colors.cardDetailsButtonText,
@@ -140,13 +149,13 @@ export default function DoctorsPage() {
                               e.currentTarget.style.backgroundColor = colors.cardDetailsButtonBg
                             }}
                           >
-                            عرض التفاصيل
+                            التفاصيل
                           </button>
                         </Link>
                         <BookingDialog
                           trigger={
                             <button
-                              className="flex-1 py-2 px-3 text-sm rounded-md transition-colors"
+                              className="flex-1 py-1.5 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm rounded-md transition-colors"
                               style={{
                                 backgroundColor: colors.cardBookButtonBg,
                                 color: colors.cardBookButtonText,
@@ -158,7 +167,7 @@ export default function DoctorsPage() {
                                 e.currentTarget.style.backgroundColor = colors.cardBookButtonBg
                               }}
                             >
-                              احجز الآن
+                              احجز
                             </button>
                           }
                         />

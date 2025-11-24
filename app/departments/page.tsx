@@ -34,11 +34,11 @@ export default async function DepartmentsPage() {
 
         {/* Departments Grid */}
         <section className="py-16 md:py-24">
-          <div className="container">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
               {departments?.map((department) => (
-                <Card key={department.id} className="hover:shadow-lg transition-all hover:-translate-y-1">
-                  <CardContent className="pt-6 space-y-4">
+                <Card key={department.id} className="hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col">
+                  <CardContent className="pt-3 sm:pt-4 space-y-2 sm:space-y-3 p-2 sm:p-4 flex flex-col flex-1">
                     {department.image_url ? (
                       <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted">
                         <img
@@ -48,17 +48,19 @@ export default async function DepartmentsPage() {
                         />
                       </div>
                     ) : (
-                      <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-6xl">
+                      <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center text-3xl sm:text-4xl md:text-5xl">
                         {department.icon || "🏥"}
                       </div>
                     )}
-                    <div className="space-y-2">
-                      <h3 className="text-2xl font-bold">{department.name_ar}</h3>
-                      <p className="text-muted-foreground leading-relaxed">{department.description_ar}</p>
+                    <div className="space-y-1 flex-1">
+                      <h3 className="text-sm sm:text-base md:text-lg font-bold line-clamp-2">{department.name_ar}</h3>
+                      <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm line-clamp-2 hidden sm:block">
+                        {department.description_ar}
+                      </p>
                     </div>
                     <BookingDialog
                       trigger={
-                        <button className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                        <button className="w-full py-1.5 sm:py-2 px-2 sm:px-3 bg-primary text-primary-foreground text-xs sm:text-sm rounded-md hover:bg-primary/90 transition-colors mt-auto">
                           احجز موعد
                         </button>
                       }
