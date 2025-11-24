@@ -1,7 +1,7 @@
 {
   "name": "عيادات ابتسامة الورود - مكة المكرمة",
   "short_name": "ابتسامة الورود",
-  "description": "عيادة أسنان متخصصة في مكة المكرمة - تقويم، زراعة، تجميل الأسنان وجميع خدمات طب الأسنان",
+  "description": "عيادة أسنان متخصصة في مكة المكرمة - تقويم، تجميل، زراعة، تبييض وجميع خدمات الأسنان",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,15 +9,21 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/images/logo.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/apple-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
+      "src": "/images/logo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     }
   ],
   "dir": "rtl",

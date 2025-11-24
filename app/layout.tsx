@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/icon.jpg",
+        url: "/images/logo.jpeg",
         width: 512,
         height: 512,
         alt: "شعار عيادات ابتسامة الورود",
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "عيادات ابتسامة الورود - عيادة أسنان في مكة المكرمة",
     description: "تقويم، زراعة، تجميل الأسنان وجميع خدمات طب الأسنان في مكة",
-    images: ["/icon.jpg"],
+    images: ["/images/logo.jpeg"],
   },
   robots: {
     index: true,
@@ -80,7 +80,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: "google-site-verification-code", // يمكن للمستخدم إضافة الكود من Google Search Console
+    google: "google-site-verification-code",
   },
   alternates: {
     canonical: "https://rosesmileksa.com",
@@ -90,9 +90,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
-      { url: "/icon.jpg", type: "image/png", sizes: "512x512" },
+      { url: "/images/logo.jpeg", type: "image/jpeg", sizes: "192x192" },
     ],
-    apple: [{ url: "/apple-icon.jpg", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: "/images/logo.jpeg", sizes: "180x180", type: "image/jpeg" }],
     shortcut: ["/favicon.ico"],
   },
   manifest: "/manifest.json",
@@ -107,7 +107,7 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "Dentist",
     name: "عيادات ابتسامة الورود",
-    image: "https://rosesmileksa.com/icon.jpg",
+    image: "https://rosesmileksa.com/images/logo.jpeg",
     description: "عيادة أسنان متخصصة في مكة المكرمة تقدم جميع خدمات طب الأسنان",
     address: {
       "@type": "PostalAddress",
