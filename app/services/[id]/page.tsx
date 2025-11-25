@@ -24,8 +24,8 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
         const response = await fetch(`/api/services?id=${params.id}`)
         const data = await response.json()
 
-        if (data.length > 0) {
-          setService(data[0])
+        if (data.service) {
+          setService(data.service)
         }
         setLoading(false)
       } catch (error) {
