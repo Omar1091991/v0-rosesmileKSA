@@ -2,7 +2,6 @@
 
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { AnimatedSection } from "@/components/animated-section"
 import Link from "next/link"
@@ -121,25 +120,23 @@ export default function ServicesPage() {
                             التفاصيل
                           </button>
                         </Link>
-                        <BookingDialog
-                          trigger={
-                            <button
-                              className="w-full py-1.5 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm rounded-md transition-colors"
-                              style={{
-                                backgroundColor: colors.cardBookButtonBg,
-                                color: colors.cardBookButtonText,
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = colors.cardBookButtonHoverBg
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = colors.cardBookButtonBg
-                              }}
-                            >
-                              احجز
-                            </button>
-                          }
-                        />
+                        <Link href="/booking/1">
+                          <button
+                            className="w-full py-1.5 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm rounded-md transition-colors"
+                            style={{
+                              backgroundColor: colors.cardBookButtonBg,
+                              color: colors.cardBookButtonText,
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = colors.cardBookButtonHoverBg
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = colors.cardBookButtonBg
+                            }}
+                          >
+                            احجز
+                          </button>
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>
@@ -161,18 +158,16 @@ export default function ServicesPage() {
               <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">هل تحتاج لاستشارة طبية؟</h2>
                 <p className="text-base sm:text-lg text-muted-foreground">احجز موعدك الآن واحصل على استشارة مجانية</p>
-                <BookingDialog
-                  trigger={
-                    <button
-                      className="py-3 px-6 sm:px-8 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
-                      style={{ backgroundColor: "#1a4f8b" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
-                    >
-                      احجز موعد
-                    </button>
-                  }
-                />
+                <Link href="/booking/1">
+                  <button
+                    className="py-3 px-6 sm:px-8 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
+                    style={{ backgroundColor: "#1a4f8b" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                  >
+                    احجز موعد
+                  </button>
+                </Link>
               </div>
             </div>
           </section>

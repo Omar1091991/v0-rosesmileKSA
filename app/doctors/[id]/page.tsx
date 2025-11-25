@@ -2,7 +2,6 @@
 
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AnimatedSection } from "@/components/animated-section"
@@ -121,20 +120,18 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
                       </div>
                     )}
 
-                    <BookingDialog
-                      trigger={
-                        <button
-                          className="w-full py-3 px-4 sm:px-6 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
-                          style={{ backgroundColor: "#1a4f8b" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
-                        >
-                          {language === "ar"
-                            ? `احجز موعد مع ${doctor.name_ar}`
-                            : `Book with ${doctor.name_en || doctor.name_ar}`}
-                        </button>
-                      }
-                    />
+                    <Link href="/booking/1">
+                      <button
+                        className="w-full py-3 px-4 sm:px-6 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
+                        style={{ backgroundColor: "#1a4f8b" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                      >
+                        {language === "ar"
+                          ? `احجز موعد مع ${doctor.name_ar}`
+                          : `Book with ${doctor.name_en || doctor.name_ar}`}
+                      </button>
+                    </Link>
                   </div>
                 </AnimatedSection>
               </div>
@@ -202,18 +199,16 @@ export default function DoctorDetailPage({ params }: { params: { id: string } })
                 <p className="text-base sm:text-lg text-muted-foreground">
                   {language === "ar" ? "نحن هنا لخدمتك على مدار الساعة" : "We are here to serve you 24/7"}
                 </p>
-                <BookingDialog
-                  trigger={
-                    <button
-                      className="py-3 px-6 sm:px-8 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
-                      style={{ backgroundColor: "#1a4f8b" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
-                    >
-                      {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                    </button>
-                  }
-                />
+                <Link href="/booking/1">
+                  <button
+                    className="py-3 px-6 sm:px-8 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
+                    style={{ backgroundColor: "#1a4f8b" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                  >
+                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                  </button>
+                </Link>
               </div>
             </div>
           </section>

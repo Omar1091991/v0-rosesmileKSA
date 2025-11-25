@@ -2,11 +2,11 @@
 
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Tag } from "lucide-react"
 import { query } from "@/lib/db"
+import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
@@ -85,18 +85,16 @@ export default async function OffersPage() {
                       </div>
                     )}
 
-                    <BookingDialog
-                      trigger={
-                        <button
-                          className="w-full py-3 px-4 text-white rounded-md transition-colors font-semibold"
-                          style={{ backgroundColor: "#1a4f8b" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
-                        >
-                          احجز الآن واستفد من العرض
-                        </button>
-                      }
-                    />
+                    <Link href="/booking/1">
+                      <button
+                        className="w-full py-3 px-4 text-white rounded-md transition-colors font-semibold"
+                        style={{ backgroundColor: "#1a4f8b" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                      >
+                        احجز الآن واستفد من العرض
+                      </button>
+                    </Link>
                   </CardContent>
                 </Card>
               ))}
@@ -117,18 +115,16 @@ export default async function OffersPage() {
             <div className="max-w-3xl mx-auto text-center space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold">لا تفوت الفرصة</h2>
               <p className="text-lg text-primary-foreground/80">احجز موعدك الآن واستفد من عروضنا الحصرية</p>
-              <BookingDialog
-                trigger={
-                  <button
-                    className="py-3 px-8 text-white rounded-md transition-colors font-semibold text-lg"
-                    style={{ backgroundColor: "#1a4f8b" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
-                  >
-                    احجز موعد الآن
-                  </button>
-                }
-              />
+              <Link href="/booking/1">
+                <button
+                  className="py-3 px-8 text-white rounded-md transition-colors font-semibold text-lg"
+                  style={{ backgroundColor: "#1a4f8b" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                >
+                  احجز موعد الآن
+                </button>
+              </Link>
             </div>
           </div>
         </section>

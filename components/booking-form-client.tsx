@@ -127,22 +127,27 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
   }
 
   return (
-    <Card>
-      <CardContent className="pt-6">
+    <Card className="bg-gradient-to-br from-white via-pink-50/30 to-blue-50/30 shadow-2xl border-2 border-pink-100/50 backdrop-blur-sm">
+      <CardContent className="pt-8 pb-8 px-6 sm:px-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="full_name">الاسم الكامل *</Label>
+            <Label htmlFor="full_name" className="text-base font-semibold text-gray-700">
+              الاسم الكامل *
+            </Label>
             <Input
               id="full_name"
               value={formData.full_name}
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               required
               placeholder="أدخل اسمك الكامل"
+              className="h-12 text-base border-2 border-gray-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 transition-all duration-200"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">رقم الجوال *</Label>
+            <Label htmlFor="phone" className="text-base font-semibold text-gray-700">
+              رقم الجوال *
+            </Label>
             <Input
               id="phone"
               value={formData.phone}
@@ -151,52 +156,79 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
               type="tel"
               placeholder="05xxxxxxxx"
               dir="ltr"
+              className="h-12 text-base border-2 border-gray-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 transition-all duration-200"
             />
           </div>
 
           <div className="space-y-3">
-            <Label className="text-right block">الخدمة المطلوبة *</Label>
+            <Label className="text-base font-semibold text-gray-700 text-right block">الخدمة المطلوبة *</Label>
             <RadioGroup
               value={formData.service_id}
               onValueChange={(value) => setFormData({ ...formData, service_id: value })}
               required
-              className="space-y-2"
+              className="space-y-3"
               dir="rtl"
             >
               {services.map((service) => (
                 <div
                   key={service.id}
-                  className="flex items-start gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                  className={`flex items-center gap-3 overflow-hidden border-2 rounded-xl transition-all duration-300 cursor-pointer ${
+                    formData.service_id === service.id
+                      ? "border-pink-400 shadow-lg scale-[1.02]"
+                      : "border-gray-200 hover:border-blue-300 hover:shadow-md"
+                  }`}
                   onClick={() => setFormData({ ...formData, service_id: service.id })}
                 >
-                  <Label htmlFor={service.id} className="flex-1 cursor-pointer font-medium text-right leading-relaxed">
-                    {service.title_ar}
-                  </Label>
-                  <RadioGroupItem value={service.id} id={service.id} className="mt-1 shrink-0" />
+                  <div
+                    className={`flex-1 px-5 py-4 transition-all duration-300`}
+                    style={{
+                      background:
+                        formData.service_id === service.id
+                          ? "linear-gradient(to right, #f5479e, #ff6bb5)"
+                          : "linear-gradient(to right, #063465, #0a4a8f)",
+                    }}
+                  >
+                    <Label
+                      htmlFor={service.id}
+                      className="cursor-pointer font-bold text-white text-lg leading-relaxed block text-right"
+                    >
+                      {service.title_ar}
+                    </Label>
+                  </div>
+                  <div className="px-4">
+                    <RadioGroupItem value={service.id} id={service.id} className="shrink-0" />
+                  </div>
                 </div>
               ))}
             </RadioGroup>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">ملاحظات إضافية</Label>
+            <Label htmlFor="notes" className="text-base font-semibold text-gray-700">
+              ملاحظات إضافية
+            </Label>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="أي ملاحظات أو استفسارات..."
               rows={4}
+              className="text-base border-2 border-gray-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 transition-all duration-200 resize-none"
             />
           </div>
 
-          <Button type="submit" className="w-full text-lg py-6" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full text-lg py-7 font-bold bg-gradient-to-r from-pink-500 via-pink-600 to-blue-600 hover:from-pink-600 hover:via-pink-700 hover:to-blue-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+            disabled={loading}
+          >
             {loading ? (
               <>
                 <Loader2 className="ml-2 h-5 w-5 animate-spin" />
                 جاري الإرسال...
               </>
             ) : (
-              "إرسال طلب الحجز"
+              "إرسال طلب الحجز 📋"
             )}
           </Button>
         </form>

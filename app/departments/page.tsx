@@ -1,8 +1,10 @@
+"use client"
+
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { BookingDialog } from "@/components/booking-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { query } from "@/lib/db"
+import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
@@ -58,13 +60,11 @@ export default async function DepartmentsPage() {
                         {department.description_ar}
                       </p>
                     </div>
-                    <BookingDialog
-                      trigger={
-                        <button className="w-full py-1.5 sm:py-2 px-2 sm:px-3 bg-primary text-primary-foreground text-xs sm:text-sm rounded-md hover:bg-primary/90 transition-colors mt-auto">
-                          احجز موعد
-                        </button>
-                      }
-                    />
+                    <Link href="/booking/1">
+                      <button className="w-full py-1.5 sm:py-2 px-2 sm:px-3 bg-primary text-primary-foreground text-xs sm:text-sm rounded-md hover:bg-primary/90 transition-colors mt-auto">
+                        احجز موعد
+                      </button>
+                    </Link>
                   </CardContent>
                 </Card>
               ))}
@@ -84,7 +84,16 @@ export default async function DepartmentsPage() {
             <div className="max-w-3xl mx-auto text-center space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold">نحن هنا لخدمتك</h2>
               <p className="text-lg text-muted-foreground">احجز موعدك في القسم المناسب لك</p>
-              <BookingDialog />
+              <Link href="/booking/1">
+                <button
+                  className="py-3 px-8 text-white rounded-lg transition-colors text-lg font-semibold"
+                  style={{ backgroundColor: "#1a4f8b" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                >
+                  احجز موعد
+                </button>
+              </Link>
             </div>
           </div>
         </section>

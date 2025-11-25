@@ -2,7 +2,6 @@
 
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { BookingDialog } from "@/components/booking-dialog"
 import { AnimatedSection } from "@/components/animated-section"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { ArrowRight } from "lucide-react"
@@ -109,15 +108,13 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                       </div>
                     )}
 
-                    <BookingDialog
-                      trigger={
-                        <button className="w-full py-3 px-4 sm:px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-base sm:text-lg font-semibold">
-                          {language === "ar"
-                            ? `احجز موعد لـ ${service.title_ar}`
-                            : `Book for ${service.title_en || service.title_ar}`}
-                        </button>
-                      }
-                    />
+                    <Link href="/booking/1">
+                      <button className="w-full py-3 px-4 sm:px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-base sm:text-lg font-semibold">
+                        {language === "ar"
+                          ? `احجز موعد لـ ${service.title_ar}`
+                          : `Book for ${service.title_en || service.title_ar}`}
+                      </button>
+                    </Link>
                   </div>
                 </AnimatedSection>
               </div>
@@ -135,7 +132,16 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                 <p className="text-base sm:text-lg text-muted-foreground">
                   {language === "ar" ? "نحن هنا لخدمتك على مدار الساعة" : "We are here to serve you 24/7"}
                 </p>
-                <BookingDialog />
+                <Link href="/booking/1">
+                  <button
+                    className="py-3 px-6 sm:px-8 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
+                    style={{ backgroundColor: "#1a4f8b" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                  >
+                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                  </button>
+                </Link>
               </div>
             </div>
           </section>
