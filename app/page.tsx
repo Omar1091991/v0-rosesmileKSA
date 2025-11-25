@@ -98,11 +98,8 @@ export default function HomePage() {
     fetchData()
   }, [])
 
-  // CHANGE: Update auto-scroll useEffects to use dynamic settings from database
   useEffect(() => {
-    const settings = getServicesCarouselSettings()
-    if (!servicesScrollRef.current || services.length === 0 || isServicesAutoScrollPaused || !settings.autoScroll)
-      return
+    if (!servicesScrollRef.current || services.length === 0 || isServicesAutoScrollPaused) return
 
     const interval = setInterval(() => {
       if (servicesScrollRef.current) {
@@ -110,30 +107,32 @@ export default function HomePage() {
         const isRTL = document.dir === "rtl" || document.documentElement.dir === "rtl"
 
         if (servicesScrollDirection === "forward") {
+          // Check if reached the end (most negative value in RTL, or rightmost in LTR)
           if (Math.abs(scrollLeft) + clientWidth >= scrollWidth - 10) {
             setServicesScrollDirection("backward")
             servicesScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
           } else {
+            // Scroll forward (more negative in RTL, positive in LTR)
             servicesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           }
         } else {
+          // Scrolling backward - check if at the beginning
           if (Math.abs(scrollLeft) <= 10) {
             setServicesScrollDirection("forward")
             servicesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           } else {
+            // Scroll backward (less negative in RTL, negative in LTR)
             servicesScrollRef.current.scrollBy({ left: isRTL ? 350 : -350, behavior: "smooth" })
           }
         }
       }
-    }, settings.scrollDuration * 1000)
+    }, 3000)
 
     return () => clearInterval(interval)
-  }, [services, isServicesAutoScrollPaused, servicesScrollDirection, siteSettings])
+  }, [services, isServicesAutoScrollPaused, servicesScrollDirection])
 
-  // CHANGE: Update auto-scroll useEffects to use dynamic settings from database
   useEffect(() => {
-    const settings = getDoctorsCarouselSettings()
-    if (!doctorsScrollRef.current || doctors.length === 0 || isDoctorsAutoScrollPaused || !settings.autoScroll) return
+    if (!doctorsScrollRef.current || doctors.length === 0 || isDoctorsAutoScrollPaused) return
 
     const interval = setInterval(() => {
       if (doctorsScrollRef.current) {
@@ -148,6 +147,7 @@ export default function HomePage() {
             doctorsScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           }
         } else {
+          // Scrolling backward - check if at the beginning
           if (Math.abs(scrollLeft) <= 10) {
             setDoctorsScrollDirection("forward")
             doctorsScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
@@ -156,15 +156,13 @@ export default function HomePage() {
           }
         }
       }
-    }, settings.scrollDuration * 1000)
+    }, 3000)
 
     return () => clearInterval(interval)
-  }, [doctors, isDoctorsAutoScrollPaused, doctorsScrollDirection, siteSettings])
+  }, [doctors, isDoctorsAutoScrollPaused, doctorsScrollDirection])
 
-  // CHANGE: Update auto-scroll useEffects to use dynamic settings from database
   useEffect(() => {
-    const settings = getOffersCarouselSettings()
-    if (!offersScrollRef.current || offers.length === 0 || isOffersAutoScrollPaused || !settings.autoScroll) return
+    if (!offersScrollRef.current || offers.length === 0 || isOffersAutoScrollPaused) return
 
     const interval = setInterval(() => {
       if (offersScrollRef.current) {
@@ -179,6 +177,7 @@ export default function HomePage() {
             offersScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           }
         } else {
+          // Scrolling backward - check if at the beginning
           if (Math.abs(scrollLeft) <= 10) {
             setOffersScrollDirection("forward")
             offersScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
@@ -187,16 +186,13 @@ export default function HomePage() {
           }
         }
       }
-    }, settings.scrollDuration * 1000)
+    }, 3000)
 
     return () => clearInterval(interval)
-  }, [offers, isOffersAutoScrollPaused, offersScrollDirection, siteSettings])
+  }, [offers, isOffersAutoScrollPaused, offersScrollDirection])
 
-  // CHANGE: Update auto-scroll useEffects to use dynamic settings from database
   useEffect(() => {
-    const settings = getArticlesCarouselSettings()
-    if (!articlesScrollRef.current || articles.length === 0 || isArticlesAutoScrollPaused || !settings.autoScroll)
-      return
+    if (!articlesScrollRef.current || articles.length === 0 || isArticlesAutoScrollPaused) return
 
     const interval = setInterval(() => {
       if (articlesScrollRef.current) {
@@ -211,6 +207,7 @@ export default function HomePage() {
             articlesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
           }
         } else {
+          // Scrolling backward - check if at the beginning
           if (Math.abs(scrollLeft) <= 10) {
             setArticlesScrollDirection("forward")
             articlesScrollRef.current.scrollBy({ left: isRTL ? -350 : 350, behavior: "smooth" })
@@ -219,10 +216,10 @@ export default function HomePage() {
           }
         }
       }
-    }, settings.scrollDuration * 1000)
+    }, 3000)
 
     return () => clearInterval(interval)
-  }, [articles, isArticlesAutoScrollPaused, articlesScrollDirection, siteSettings])
+  }, [articles, isArticlesAutoScrollPaused, articlesScrollDirection])
 
   const scroll = (ref: React.RefObject<HTMLDivElement>, direction: "left" | "right") => {
     if (ref.current) {
@@ -602,137 +599,121 @@ export default function HomePage() {
                 onTouchStart={() => handleUserScroll(setIsServicesAutoScrollPaused)}
                 onWheel={() => handleUserScroll(setIsServicesAutoScrollPaused)}
               >
-                {/* CHANGE: Fixed services section to calculate card width correctly based on viewport width */}
-                <div className="flex gap-4" style={{ width: "max-content" }}>
-                  {services.map((service) => {
-                    const servicesSettings = getServicesCarouselSettings()
-                    const cardCount = servicesSettings.itemsPerView
-                    // Calculate card width based on container width minus padding
-                    const containerPadding = 32 // padding from parent container (px-4 = 16px on each side)
-                    const gapSize = 16 // gap-4 = 16px between cards
-                    const totalGaps = (cardCount - 1) * gapSize
-                    // Use fixed width based on standard container widths for better control
-                    const baseWidth = typeof window !== "undefined" ? window.innerWidth - containerPadding : 1200
-                    const cardWidth = Math.floor((baseWidth - totalGaps) / cardCount)
-
-                    return (
-                      <motion.div
-                        key={service.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        style={{
-                          width: `${cardWidth}px`,
-                          flexShrink: 0,
+                <div className="flex gap-6" style={{ width: "max-content" }}>
+                  {services?.map((service) => (
+                    <motion.div
+                      key={service.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      className="w-[300px] sm:w-[350px]"
+                    >
+                      <Card
+                        className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
+                        onClick={() => {
+                          window.location.href = `/services/${service.id}`
                         }}
                       >
-                        <Card
-                          className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
-                          onClick={() => {
-                            window.location.href = `/services/${service.id}`
-                          }}
-                        >
-                          <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-4 flex flex-col flex-1 p-4 sm:p-6">
-                            {service.image_url ? (
-                              <div className="w-full aspect-square relative rounded-lg overflow-hidden">
-                                <Image
-                                  src={service.image_url || "/placeholder.svg"}
-                                  alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-4xl sm:text-6xl">
-                                {service.icon || "🏥"}
-                              </div>
+                        <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-4 flex flex-col flex-1 p-4 sm:p-6">
+                          {service.image_url ? (
+                            <div className="w-full aspect-square relative rounded-lg overflow-hidden">
+                              <Image
+                                src={service.image_url || "/placeholder.svg"}
+                                alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-muted flex items-center justify-center text-4xl sm:text-6xl">
+                              {service.icon || "🏥"}
+                            </div>
+                          )}
+                          <h3 className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2">
+                            {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                          </h3>
+                          <p className="text-muted-foreground leading-relaxed line-clamp-2 text-center text-xs sm:text-sm flex-1">
+                            {renderFormattedText(
+                              language === "ar"
+                                ? service.description_ar
+                                : service.description_en || service.description_ar,
                             )}
-                            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2">
-                              {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
-                            </h3>
-                            <p className="text-muted-foreground leading-relaxed line-clamp-2 text-center text-xs sm:text-sm flex-1">
-                              {renderFormattedText(
-                                language === "ar"
-                                  ? service.description_ar
-                                  : service.description_en || service.description_ar,
-                              )}
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                            <button
+                              className="flex-1 py-2 px-4 text-xs sm:text-sm rounded-md transition-colors border"
+                              style={{
+                                backgroundColor: getColor("card_details_button_bg_color", "#f3f4f6"),
+                                color: getColor("card_details_button_text_color", "#1f2937"),
+                                borderColor: getColor("card_details_button_text_color", "#1f2937"),
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = getColor(
+                                  "card_details_button_hover_bg_color",
+                                  "#e5e7eb",
+                                )
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = getColor(
+                                  "card_details_button_bg_color",
+                                  "#f3f4f6",
+                                )
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                window.location.href = `/services/${service.id}`
+                              }}
+                            >
+                              {language === "ar" ? "التفاصيل" : "Details"}
+                            </button>
+                            <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                               <button
-                                className="flex-1 py-2 px-4 text-xs sm:text-sm rounded-md transition-colors border"
+                                className="w-full py-2 px-4 text-xs sm:text-sm rounded-md transition-colors relative overflow-hidden group"
                                 style={{
-                                  backgroundColor: getColor("card_details_button_bg_color", "#f3f4f6"),
-                                  color: getColor("card_details_button_text_color", "#1f2937"),
-                                  borderColor: getColor("card_details_button_text_color", "#1f2937"),
+                                  backgroundColor: getColor("card_book_button_bg_color", "#ec4899"),
+                                  color: getColor("card_book_button_text_color", "#ffffff"),
                                 }}
                                 onMouseEnter={(e) => {
                                   e.currentTarget.style.backgroundColor = getColor(
-                                    "card_details_button_hover_bg_color",
-                                    "#e5e7eb",
+                                    "card_book_button_hover_bg_color",
+                                    "#db2777",
                                   )
                                 }}
                                 onMouseLeave={(e) => {
                                   e.currentTarget.style.backgroundColor = getColor(
-                                    "card_details_button_bg_color",
-                                    "#f3f4f6",
+                                    "card_book_button_bg_color",
+                                    "#ec4899",
                                   )
                                 }}
                                 onClick={(e) => {
+                                  e.preventDefault()
                                   e.stopPropagation()
-                                  window.location.href = `/services/${service.id}`
+                                  window.location.href = mainBookingFormId
+                                    ? `/booking/${mainBookingFormId}`
+                                    : "/booking"
                                 }}
                               >
-                                {language === "ar" ? "التفاصيل" : "Details"}
+                                <motion.span
+                                  className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
+                                  animate={{
+                                    x: ["-100%", "100%"],
+                                  }}
+                                  transition={{
+                                    duration: 2,
+                                    repeat: Number.POSITIVE_INFINITY,
+                                    ease: "linear",
+                                  }}
+                                />
+                                <span className="relative z-10">
+                                  {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                                </span>
                               </button>
-                              <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <button
-                                  className="w-full py-2 px-4 text-xs sm:text-sm rounded-md transition-colors relative overflow-hidden group"
-                                  style={{
-                                    backgroundColor: getColor("card_book_button_bg_color", "#ec4899"),
-                                    color: getColor("card_book_button_text_color", "#ffffff"),
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = getColor(
-                                      "card_book_button_hover_bg_color",
-                                      "#db2777",
-                                    )
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = getColor(
-                                      "card_book_button_bg_color",
-                                      "#ec4899",
-                                    )
-                                  }}
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    window.location.href = mainBookingFormId
-                                      ? `/booking/${mainBookingFormId}`
-                                      : "/booking"
-                                  }}
-                                >
-                                  <motion.span
-                                    className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
-                                    animate={{
-                                      x: ["-100%", "100%"],
-                                    }}
-                                    transition={{
-                                      duration: 2,
-                                      repeat: Number.POSITIVE_INFINITY,
-                                      ease: "linear",
-                                    }}
-                                  />
-                                  <span className="relative z-10">
-                                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
-                                  </span>
-                                </button>
-                              </motion.div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    )
-                  })}
+                            </motion.div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -840,137 +821,123 @@ export default function HomePage() {
                   onTouchStart={() => handleUserScroll(setIsDoctorsAutoScrollPaused)}
                   onWheel={() => handleUserScroll(setIsDoctorsAutoScrollPaused)}
                 >
-                  {/* CHANGE: Update doctors section to use dynamic card width based on itemsPerView */}
-                  <div className="flex gap-4" style={{ width: "max-content" }}>
-                    {doctors.map((doctor) => {
-                      const doctorsSettings = getDoctorsCarouselSettings()
-                      const cardCount = doctorsSettings.itemsPerView
-                      const gapSize = 16
-                      const totalGaps = (cardCount - 1) * gapSize
-                      const cardWidth = `calc((100% - ${totalGaps}px) / ${cardCount})`
-
-                      return (
-                        <motion.div
-                          key={doctor.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
+                  <div className="flex gap-6" style={{ width: "max-content" }}>
+                    {doctors.map((doctor) => (
+                      <motion.div
+                        key={doctor.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="w-[300px] sm:w-[350px]"
+                      >
+                        <Card
                           style={{
-                            width: cardWidth,
-                            flexShrink: 0,
+                            backgroundColor: getColor("card_background_color", "#ffffff"),
+                            borderColor: getColor("card_border_color", "#e5e7eb"),
                           }}
-                          className="px-2"
+                          className="overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer h-full flex flex-col"
+                          onClick={() => (window.location.href = `/doctors/${doctor.id}`)}
                         >
-                          <Card
-                            style={{
-                              backgroundColor: getColor("card_background_color", "#ffffff"),
-                              borderColor: getColor("card_border_color", "#e5e7eb"),
-                            }}
-                            className="overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer h-full flex flex-col"
-                            onClick={() => (window.location.href = `/doctors/${doctor.id}`)}
-                          >
-                            <CardContent className="p-0 flex flex-col h-full">
-                              {/* Doctor Image */}
-                              <div className="relative h-[320px] overflow-hidden">
-                                <Image
-                                  src={doctor.image_url || "/placeholder.svg"}
-                                  alt={language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
-                                  fill
-                                  className="object-cover group-hover:scale-110 transition-transform duration-500"
-                                />
-                              </div>
+                          <CardContent className="p-0 flex flex-col h-full">
+                            {/* Doctor Image */}
+                            <div className="relative h-[320px] overflow-hidden">
+                              <Image
+                                src={doctor.image_url || "/placeholder.svg"}
+                                alt={language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                            </div>
 
-                              {/* Doctor Info */}
-                              <div className="p-6 flex flex-col flex-1">
-                                <h3
-                                  className="text-xl font-bold mb-2 line-clamp-1"
-                                  style={{ color: getColor("card_title_color", "#1f2937") }}
-                                >
-                                  {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
-                                </h3>
+                            {/* Doctor Info */}
+                            <div className="p-6 flex flex-col flex-1">
+                              <h3
+                                className="text-xl font-bold mb-2 line-clamp-1"
+                                style={{ color: getColor("card_title_color", "#1f2937") }}
+                              >
+                                {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
+                              </h3>
+                              <p
+                                className="text-sm mb-4 line-clamp-1"
+                                style={{ color: getColor("card_text_color", "#6b7280") }}
+                              >
+                                {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
+                              </p>
+
+                              {/* Bio excerpt */}
+                              {doctor.bio_ar && (
                                 <p
-                                  className="text-sm mb-4 line-clamp-1"
+                                  className="text-sm mb-4 line-clamp-2 flex-1"
                                   style={{ color: getColor("card_text_color", "#6b7280") }}
                                 >
-                                  {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
+                                  {language === "ar"
+                                    ? doctor.bio_ar.replace(/<[^>]*>/g, "").substring(0, 80) + "..."
+                                    : (doctor.bio_en || doctor.bio_ar).replace(/<[^>]*>/g, "").substring(0, 80) + "..."}
                                 </p>
+                              )}
 
-                                {/* Bio excerpt */}
-                                {doctor.bio_ar && (
-                                  <p
-                                    className="text-sm mb-4 line-clamp-2 flex-1"
-                                    style={{ color: getColor("card_text_color", "#6b7280") }}
-                                  >
-                                    {language === "ar"
-                                      ? doctor.bio_ar.replace(/<[^>]*>/g, "").substring(0, 80) + "..."
-                                      : (doctor.bio_en || doctor.bio_ar).replace(/<[^>]*>/g, "").substring(0, 80) +
-                                        "..."}
-                                  </p>
-                                )}
-
-                                {/* Action Buttons */}
-                                <div className="flex gap-3 mt-auto pt-4">
-                                  <button
-                                    className="flex-1 py-2 px-4 text-sm rounded-md transition-colors border"
-                                    style={{
-                                      backgroundColor: getColor("card_details_button_bg_color", "#f3f4f6"),
-                                      color: getColor("card_details_button_text_color", "#1f2937"),
-                                      borderColor: getColor("card_details_button_text_color", "#1f2937"),
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = getColor(
-                                        "card_details_button_hover_bg_color",
-                                        "#e5e7eb",
-                                      )
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = getColor(
-                                        "card_details_button_bg_color",
-                                        "#f3f4f6",
-                                      )
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      window.location.href = `/doctors/${doctor.id}`
-                                    }}
-                                  >
-                                    {language === "ar" ? "عرض التفاصيل" : "View Details"}
-                                  </button>
-                                  <button
-                                    className="flex-1 py-2 px-4 text-sm rounded-md transition-colors"
-                                    style={{
-                                      backgroundColor: getColor("card_book_button_bg_color", "#ec4899"),
-                                      color: getColor("card_book_button_text_color", "#ffffff"),
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = getColor(
-                                        "card_book_button_hover_bg_color",
-                                        "#db2777",
-                                      )
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = getColor(
-                                        "card_book_button_bg_color",
-                                        "#ec4899",
-                                      )
-                                    }}
-                                    onClick={(e) => {
-                                      e.preventDefault()
-                                      e.stopPropagation()
-                                      window.location.href = mainBookingFormId
-                                        ? `/booking/${mainBookingFormId}`
-                                        : "/booking"
-                                    }}
-                                  >
-                                    {language === "ar" ? "احجز الآن" : "Book Now"}
-                                  </button>
-                                </div>
+                              {/* Action Buttons */}
+                              <div className="flex gap-3 mt-auto pt-4">
+                                <button
+                                  className="flex-1 py-2 px-4 text-sm rounded-md transition-colors border"
+                                  style={{
+                                    backgroundColor: getColor("card_details_button_bg_color", "#f3f4f6"),
+                                    color: getColor("card_details_button_text_color", "#1f2937"),
+                                    borderColor: getColor("card_details_button_text_color", "#1f2937"),
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = getColor(
+                                      "card_details_button_hover_bg_color",
+                                      "#e5e7eb",
+                                    )
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = getColor(
+                                      "card_details_button_bg_color",
+                                      "#f3f4f6",
+                                    )
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    window.location.href = `/doctors/${doctor.id}`
+                                  }}
+                                >
+                                  {language === "ar" ? "عرض التفاصيل" : "View Details"}
+                                </button>
+                                <button
+                                  className="flex-1 py-2 px-4 text-sm rounded-md transition-colors"
+                                  style={{
+                                    backgroundColor: getColor("card_book_button_bg_color", "#ec4899"),
+                                    color: getColor("card_book_button_text_color", "#ffffff"),
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = getColor(
+                                      "card_book_button_hover_bg_color",
+                                      "#db2777",
+                                    )
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = getColor(
+                                      "card_book_button_bg_color",
+                                      "#ec4899",
+                                    )
+                                  }}
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    window.location.href = mainBookingFormId
+                                      ? `/booking/${mainBookingFormId}`
+                                      : "/booking"
+                                  }}
+                                >
+                                  {language === "ar" ? "احجز الآن" : "Book Now"}
+                                </button>
                               </div>
-                            </CardContent>
-                          </Card>
-                        </motion.div>
-                      )
-                    })}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1078,107 +1045,92 @@ export default function HomePage() {
                   onTouchStart={() => handleUserScroll(setIsOffersAutoScrollPaused)}
                   onWheel={() => handleUserScroll(setIsOffersAutoScrollPaused)}
                 >
-                  {/* CHANGE: Update offers section to use dynamic card width based on itemsPerView */}
-                  <div className="flex gap-4" style={{ width: "max-content" }}>
-                    {filteredOffers.map((offer) => {
-                      const offersSettings = getOffersCarouselSettings()
-                      const cardCount = offersSettings.itemsPerView
-                      const gapSize = 16
-                      const totalGaps = (cardCount - 1) * gapSize
-                      const cardWidth = `calc((100% - ${totalGaps}px) / ${cardCount})`
-
-                      return (
-                        <motion.div
-                          key={offer.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
+                  <div className="flex gap-6" style={{ width: "max-content" }}>
+                    {filteredOffers.map((offer) => (
+                      <motion.div
+                        key={offer.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="w-[300px] sm:w-[350px]"
+                      >
+                        <div
+                          className="rounded-lg border hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer overflow-hidden"
                           style={{
-                            width: cardWidth,
-                            flexShrink: 0,
+                            backgroundColor: getColor("card_background_color", "#ffffff"),
+                            borderColor: getColor("card_border_color", "#e5e7eb"),
                           }}
-                          className="px-2"
+                          onClick={() => {
+                            window.location.href = `/offers/${offer.id}`
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = getColor("card_hover_border_color", "#ec4899")
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = getColor("card_border_color", "#e5e7eb")
+                          }}
                         >
-                          <div
-                            className="rounded-lg border hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer overflow-hidden"
-                            style={{
-                              backgroundColor: getColor("card_background_color", "#ffffff"),
-                              borderColor: getColor("card_border_color", "#e5e7eb"),
-                            }}
-                            onClick={() => {
-                              window.location.href = `/offers/${offer.id}`
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor = getColor("card_hover_border_color", "#ec4899")
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = getColor("card_border_color", "#e5e7eb")
-                            }}
-                          >
-                            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 flex flex-col flex-1">
-                              {offer.image_url && (
-                                <div className="w-full aspect-video relative rounded-lg overflow-hidden">
-                                  <Image
-                                    src={offer.image_url || "/placeholder.svg"}
-                                    alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
+                          <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 flex flex-col flex-1">
+                            {offer.image_url && (
+                              <div className="w-full aspect-video relative rounded-lg overflow-hidden">
+                                <Image
+                                  src={offer.image_url || "/placeholder.svg"}
+                                  alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+                            <h3
+                              className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2"
+                              style={{ color: getColor("card_title_color", "#1f2937") }}
+                            >
+                              {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
+                            </h3>
+                            <p
+                              className="text-center text-xs sm:text-sm line-clamp-2 flex-1"
+                              style={{ color: getColor("card_text_color", "#4b5563") }}
+                            >
+                              {renderFormattedText(
+                                language === "ar" ? offer.description_ar : offer.description_en || offer.description_ar,
                               )}
-                              <h3
-                                className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2"
-                                style={{ color: getColor("card_title_color", "#1f2937") }}
-                              >
-                                {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
-                              </h3>
-                              <p
-                                className="text-center text-xs sm:text-sm line-clamp-2 flex-1"
-                                style={{ color: getColor("card_text_color", "#4b5563") }}
-                              >
-                                {renderFormattedText(
-                                  language === "ar"
-                                    ? offer.description_ar
-                                    : offer.description_en || offer.description_ar,
-                                )}
+                            </p>
+                            {offer.end_date && new Date(offer.end_date) >= new Date() && (
+                              <p className="text-xs text-center text-muted-foreground">
+                                {language === "ar" ? "ينتهي في" : "Ends on"}:{" "}
+                                {new Date(offer.end_date).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US")}
                               </p>
-                              {offer.end_date && new Date(offer.end_date) >= new Date() && (
-                                <p className="text-xs text-center text-muted-foreground">
-                                  {language === "ar" ? "ينتهي في" : "Ends on"}:{" "}
-                                  {new Date(offer.end_date).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US")}
-                                </p>
-                              )}
-                              <button
-                                className="w-full py-2 px-4 text-xs sm:text-sm rounded-md transition-colors border"
-                                style={{
-                                  backgroundColor: getColor("card_details_button_bg_color", "#f3f4f6"),
-                                  color: getColor("card_details_button_text_color", "#1f2937"),
-                                  borderColor: getColor("card_details_button_text_color", "#1f2937"),
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = getColor(
-                                    "card_details_button_hover_bg_color",
-                                    "#e5e7eb",
-                                  )
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = getColor(
-                                    "card_details_button_bg_color",
-                                    "#f3f4f6",
-                                  )
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  window.location.href = `/offers/${offer.id}`
-                                }}
-                              >
-                                {language === "ar" ? "التفاصيل" : "Details"}
-                              </button>
-                            </div>
+                            )}
+                            <button
+                              className="w-full py-2 px-4 text-xs sm:text-sm rounded-md transition-colors border"
+                              style={{
+                                backgroundColor: getColor("card_details_button_bg_color", "#f3f4f6"),
+                                color: getColor("card_details_button_text_color", "#1f2937"),
+                                borderColor: getColor("card_details_button_text_color", "#1f2937"),
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = getColor(
+                                  "card_details_button_hover_bg_color",
+                                  "#e5e7eb",
+                                )
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = getColor(
+                                  "card_details_button_bg_color",
+                                  "#f3f4f6",
+                                )
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                window.location.href = `/offers/${offer.id}`
+                              }}
+                            >
+                              {language === "ar" ? "التفاصيل" : "Details"}
+                            </button>
                           </div>
-                        </motion.div>
-                      )
-                    })}
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1281,71 +1233,58 @@ export default function HomePage() {
                   onTouchStart={() => handleUserScroll(setIsArticlesAutoScrollPaused)}
                   onWheel={() => handleUserScroll(setIsArticlesAutoScrollPaused)}
                 >
-                  {/* CHANGE: Update articles section to use dynamic card width based on itemsPerView */}
-                  <div className="flex gap-4" style={{ width: "max-content" }}>
-                    {articles.map((article) => {
-                      const articlesSettings = getArticlesCarouselSettings()
-                      const cardCount = articlesSettings.itemsPerView
-                      const gapSize = 16
-                      const totalGaps = (cardCount - 1) * gapSize
-                      const cardWidth = `calc((100% - ${totalGaps}px) / ${cardCount})`
-
-                      return (
-                        <motion.div
-                          key={article.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          style={{
-                            width: cardWidth,
-                            flexShrink: 0,
+                  <div className="flex gap-6" style={{ width: "max-content" }}>
+                    {articles.map((article) => (
+                      <motion.div
+                        key={article.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="w-[300px] sm:w-[350px]"
+                      >
+                        <Card
+                          className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
+                          onClick={() => {
+                            window.location.href = `/articles/${article.id}`
                           }}
-                          className="px-2"
                         >
-                          <Card
-                            className="hover:shadow-lg transition-all hover:scale-105 h-full flex flex-col cursor-pointer"
-                            onClick={() => {
-                              window.location.href = `/articles/${article.id}`
-                            }}
-                          >
-                            <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
-                              {article.image_url && (
-                                <div className="w-full aspect-video relative rounded-lg overflow-hidden">
-                                  <Image
-                                    src={article.image_url || "/placeholder.svg"}
-                                    alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
+                          <CardContent className="pt-6 space-y-4 flex flex-col flex-1">
+                            {article.image_url && (
+                              <div className="w-full aspect-video relative rounded-lg overflow-hidden">
+                                <Image
+                                  src={article.image_url || "/placeholder.svg"}
+                                  alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+                            <h3 className="text-xl font-semibold line-clamp-2">
+                              {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                            </h3>
+                            <p className="text-muted-foreground leading-relaxed line-clamp-2 text-sm">
+                              {renderFormattedText(
+                                (language === "ar"
+                                  ? article.content_ar?.substring(0, 120)
+                                  : article.content_en?.substring(0, 120) || article.content_ar?.substring(0, 120)) +
+                                  "...",
                               )}
-                              <h3 className="text-xl font-semibold line-clamp-2">
-                                {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
-                              </h3>
-                              <p className="text-muted-foreground leading-relaxed line-clamp-2 text-sm">
-                                {renderFormattedText(
-                                  (language === "ar"
-                                    ? article.content_ar?.substring(0, 120)
-                                    : article.content_en?.substring(0, 120) || article.content_ar?.substring(0, 120)) +
-                                    "...",
-                                )}
-                              </p>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full bg-transparent"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  window.location.href = `/articles/${article.id}`
-                                }}
-                              >
-                                {language === "ar" ? "اقرأ المزيد" : "Read More"}
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        </motion.div>
-                      )
-                    })}
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full bg-transparent"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                window.location.href = `/articles/${article.id}`
+                              }}
+                            >
+                              {language === "ar" ? "اقرأ المزيد" : "Read More"}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
               </div>

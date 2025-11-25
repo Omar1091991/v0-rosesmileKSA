@@ -5,18 +5,67 @@ import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Tag } from "lucide-react"
-import { query } from "@/lib/db"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
-export const dynamic = "force-dynamic"
+interface Offer {
+  id: number
+  title_ar: string
+  title_en: string
+  description_ar: string
+  description_en: string
+  price_before?: number
+  price_after?: number
+  original_price?: number
+  discounted_price?: number
+  discount_percentage?: number
+  valid_from?: string
+  valid_until?: string
+  image_url?: string
+  is_active?: boolean
+  order_index?: number
+}
 
-export default async function OffersPage() {
-  let offers = []
-  try {
-    const result = await query("SELECT * FROM offers WHERE is_active = true ORDER BY order_index")
-    offers = result.rows || []
-  } catch (error) {
-    console.error("[v0] Error fetching offers:", error)
+export default function OffersPage() {
+  const [offers, setOffers] = useState<Offer[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchOffers() {
+      try {
+        console.log("[v0] Fetching offers from API...")
+        const res = await fetch("/api/offers")
+        const data = await res.json()
+        console.log("[v0] Offers response:", data)
+
+        if (Array.isArray(data)) {
+          setOffers(data.filter((offer) => offer.is_active !== false))
+        } else if (data.offers) {
+          setOffers(data.offers.filter((offer) => offer.is_active !== false))
+        } else {
+          setOffers([])
+        }
+      } catch (error) {
+        console.error("[v0] Error fetching offers:", error)
+        setOffers([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchOffers()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-muted-foreground">جاري التحميل...</p>
+        </main>
+        <SiteFooter />
+      </div>
+    )
   }
 
   return (
@@ -40,64 +89,71 @@ export default async function OffersPage() {
         <section className="py-16 md:py-24">
           <div className="container">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-              {offers?.map((offer) => (
-                <Card key={offer.id} className="hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden">
-                  {offer.image_url && (
-                    <div className="w-full aspect-video overflow-hidden bg-muted">
-                      <img
-                        src={offer.image_url || "/placeholder.svg"}
-                        alt={offer.title_ar}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <h3 className="text-2xl font-bold flex-1">{offer.title_ar}</h3>
-                      {offer.discount_percentage && (
-                        <Badge className="bg-primary text-primary-foreground text-lg px-3 py-1">
-                          خصم {offer.discount_percentage}%
-                        </Badge>
-                      )}
-                    </div>
+              {offers?.map((offer) => {
+                const priceAfter = offer.price_after || offer.discounted_price
+                const priceBefore = offer.price_before || offer.original_price
 
-                    <p className="text-muted-foreground leading-relaxed">{offer.description_ar}</p>
+                return (
+                  <Card key={offer.id} className="hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden">
+                    {offer.image_url && (
+                      <div className="w-full aspect-video overflow-hidden bg-muted">
+                        <img
+                          src={offer.image_url || "/placeholder.svg"}
+                          alt={offer.title_ar}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <CardContent className="pt-6 space-y-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <h3 className="text-2xl font-bold flex-1">{offer.title_ar}</h3>
+                        {offer.discount_percentage && (
+                          <Badge className="bg-primary text-primary-foreground text-lg px-3 py-1">
+                            خصم {offer.discount_percentage}%
+                          </Badge>
+                        )}
+                      </div>
 
-                    {offer.price_before && offer.price_after && (
-                      <div className="flex items-center gap-4 py-4 border-y border-border">
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-5 w-5 text-primary" />
-                          <div>
-                            <div className="text-3xl font-bold text-primary">{offer.price_after} ريال</div>
-                            <div className="text-sm text-muted-foreground line-through">{offer.price_before} ريال</div>
+                      <p className="text-muted-foreground leading-relaxed">{offer.description_ar}</p>
+
+                      {priceBefore && priceAfter && (
+                        <div className="flex items-center gap-4 py-4 border-y border-border">
+                          <div className="flex items-center gap-2">
+                            <Tag className="h-5 w-5 text-primary" />
+                            <div>
+                              <div className="text-3xl font-bold text-primary">{priceAfter} ريال</div>
+                              <div className="text-sm text-muted-foreground line-through">{priceBefore} ريال</div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {(offer.valid_from || offer.valid_until) && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        <span>
-                          العرض ساري حتى:{" "}
-                          {offer.valid_until ? new Date(offer.valid_until).toLocaleDateString("ar-SA") : "نهاية الشهر"}
-                        </span>
-                      </div>
-                    )}
+                      {(offer.valid_from || offer.valid_until) && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            العرض ساري حتى:{" "}
+                            {offer.valid_until
+                              ? new Date(offer.valid_until).toLocaleDateString("ar-SA")
+                              : "نهاية الشهر"}
+                          </span>
+                        </div>
+                      )}
 
-                    <Link href="/booking/1">
-                      <button
-                        className="w-full py-3 px-4 text-white rounded-md transition-colors font-semibold"
-                        style={{ backgroundColor: "#1a4f8b" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
-                      >
-                        احجز الآن واستفد من العرض
-                      </button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
+                      <Link href="/booking/1">
+                        <button
+                          className="w-full py-3 px-4 text-white rounded-md transition-colors font-semibold"
+                          style={{ backgroundColor: "#1a4f8b" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
+                        >
+                          احجز الآن واستفد من العرض
+                        </button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
 
             {(!offers || offers.length === 0) && (
