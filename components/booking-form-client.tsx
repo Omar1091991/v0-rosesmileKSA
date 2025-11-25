@@ -131,23 +131,28 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
       <CardContent className="pt-8 pb-8 px-6 sm:px-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="full_name" className="text-base font-semibold text-gray-700">
-              الاسم الكامل *
-            </Label>
+            <div className="px-4 py-3 rounded-lg inline-block shadow-md" style={{ backgroundColor: "#063465" }}>
+              <Label htmlFor="full_name" className="text-base font-bold text-white">
+                الاسم الكامل *
+              </Label>
+            </div>
             <Input
               id="full_name"
               value={formData.full_name}
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               required
               placeholder="أدخل اسمك الكامل"
-              className="h-12 text-base border-2 border-gray-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 transition-all duration-200"
+              className="h-12 text-base border-2 transition-all duration-200"
+              style={{ borderColor: "#063465" }}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone" className="text-base font-semibold text-gray-700">
-              رقم الجوال *
-            </Label>
+            <div className="px-4 py-3 rounded-lg inline-block shadow-md" style={{ backgroundColor: "#063465" }}>
+              <Label htmlFor="phone" className="text-base font-bold text-white">
+                رقم الجوال *
+              </Label>
+            </div>
             <Input
               id="phone"
               value={formData.phone}
@@ -156,7 +161,8 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
               type="tel"
               placeholder="05xxxxxxxx"
               dir="ltr"
-              className="h-12 text-base border-2 border-gray-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 transition-all duration-200"
+              className="h-12 text-base border-2 transition-all duration-200"
+              style={{ borderColor: "#063465" }}
             />
           </div>
 
@@ -177,24 +183,20 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
                       ? "border-pink-400 shadow-lg scale-[1.02]"
                       : "border-gray-200 hover:border-blue-300 hover:shadow-md"
                   }`}
-                  onClick={() => setFormData({ ...formData, service_id: service.id })}
                 >
-                  <div
-                    className={`flex-1 px-5 py-4 transition-all duration-300`}
+                  <Label
+                    htmlFor={service.id}
+                    className="flex-1 px-5 py-4 cursor-pointer font-bold text-white text-lg leading-relaxed transition-all duration-300"
                     style={{
                       background:
                         formData.service_id === service.id
                           ? "linear-gradient(to right, #f5479e, #ff6bb5)"
                           : "linear-gradient(to right, #063465, #0a4a8f)",
                     }}
+                    onClick={() => setFormData({ ...formData, service_id: service.id })}
                   >
-                    <Label
-                      htmlFor={service.id}
-                      className="cursor-pointer font-bold text-white text-lg leading-relaxed block text-right"
-                    >
-                      {service.title_ar}
-                    </Label>
-                  </div>
+                    {service.title_ar}
+                  </Label>
                   <div className="px-4">
                     <RadioGroupItem value={service.id} id={service.id} className="shrink-0" />
                   </div>
@@ -219,7 +221,8 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
 
           <Button
             type="submit"
-            className="w-full text-lg py-7 font-bold bg-gradient-to-r from-pink-500 via-pink-600 to-blue-600 hover:from-pink-600 hover:via-pink-700 hover:to-blue-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full text-lg py-7 font-bold text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+            style={{ backgroundColor: "#063465" }}
             disabled={loading}
           >
             {loading ? (
