@@ -8,24 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, FileText, Star, X, RefreshCw, Settings } from 'lucide-react'
+import { Plus, FileText, Star, X } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import { ImagePicker } from "@/components/image-picker"
 import { TextFormatter } from "@/components/text-formatter"
 import { toast } from "@/hooks/use-toast"
 import { BookingFormActions } from "@/components/booking-form-actions"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import Link from "next/link"
 
 interface Service {
   id: string
@@ -111,7 +100,7 @@ export default function BookingFormsPage() {
       const response = await fetch("/api/services")
       if (response.ok) {
         const data = await response.json()
-        setServices(data.filter((s: any) => s.is_active))
+        setServices(data.services?.filter((s: any) => s.is_active) || [])
       }
     } catch (error) {
       console.error("[v0] Error fetching services:", error)
