@@ -167,7 +167,9 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
           </div>
 
           <div className="space-y-3">
-            <Label className="text-base font-semibold text-gray-700 text-right block">الخدمة المطلوبة *</Label>
+            <div className="px-4 py-3 rounded-lg inline-block shadow-md" style={{ backgroundColor: "#063465" }}>
+              <Label className="text-base font-bold text-white">الخدمة المطلوبة *</Label>
+            </div>
             <RadioGroup
               value={formData.service_id}
               onValueChange={(value) => setFormData({ ...formData, service_id: value })}
@@ -206,16 +208,19 @@ export function BookingFormClient({ formId, services }: BookingFormClientProps) 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes" className="text-base font-semibold text-gray-700">
-              ملاحظات إضافية
-            </Label>
+            <div className="px-4 py-3 rounded-lg inline-block shadow-md" style={{ backgroundColor: "#063465" }}>
+              <Label htmlFor="notes" className="text-base font-bold text-white">
+                ملاحظات إضافية
+              </Label>
+            </div>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="أي ملاحظات أو استفسارات..."
               rows={4}
-              className="text-base border-2 border-gray-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 transition-all duration-200 resize-none"
+              className="text-base border-2 transition-all duration-200 resize-none"
+              style={{ borderColor: "#063465" }}
             />
           </div>
 
