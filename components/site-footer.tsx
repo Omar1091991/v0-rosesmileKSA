@@ -150,16 +150,16 @@ export function SiteFooter() {
           color: ${footerHeadingColor || "#ffffff"};
         }
         .footer-text {
-          color: ${footerTextColor || "hsl(var(--muted-foreground))"};
+          color: ${footerTextColor || "rgba(255, 255, 255, 0.8)"};
         }
         .footer-link {
-          color: ${footerLinkColor || "hsl(var(--muted-foreground))"};
+          color: ${footerLinkColor || "#ffffff"};
         }
         .footer-link:hover {
-          color: ${footerLinkHoverColor || "hsl(var(--primary))"};
+          color: ${footerLinkHoverColor || "#ec4899"};
         }
         .footer-copyright {
-          color: ${footerCopyrightColor || "hsl(var(--muted-foreground))"};
+          color: ${footerCopyrightColor || "rgba(255, 255, 255, 0.7)"};
         }
       `}</style>
 
