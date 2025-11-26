@@ -6,12 +6,14 @@ import { Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { useLanguage } from "@/components/language-switcher"
 
 export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mainBookingFormId, setMainBookingFormId] = useState<string>("")
   const [logoUrl, setLogoUrl] = useState<string>("/images/untitled-2.png")
   const [siteName, setSiteName] = useState<string>("ابتسامة الورود")
+  const language = useLanguage()
 
   useEffect(() => {
     async function fetchData() {
@@ -29,13 +31,16 @@ export function SiteHeader() {
           const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
 
           const logoSetting = settings.find((s: any) => s.key === "site_logo_url")
-          const nameSetting = settings.find((s: any) => s.key === "site_name_ar")
+          const nameKey = language === "ar" ? "site_name_ar" : "site_name_en"
+          const nameSetting = settings.find((s: any) => s.key === nameKey)
 
           if (logoSetting?.value_ar) {
             setLogoUrl(logoSetting.value_ar)
           }
-          if (nameSetting?.value_ar) {
-            setSiteName(nameSetting.value_ar)
+          if (language === "ar") {
+            setSiteName(nameSetting?.value_ar || "ابتسامة الورود")
+          } else {
+            setSiteName(nameSetting?.value_en || "Rose Smile Clinic")
           }
         }
       } catch (error) {
@@ -43,9 +48,19 @@ export function SiteHeader() {
       }
     }
     fetchData()
-  }, [])
+  }, [language])
 
   const bookingLink = mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"
+
+  const t = {
+    home: language === "ar" ? "الرئيسية" : "Home",
+    services: language === "ar" ? "الخدمات" : "Services",
+    doctors: language === "ar" ? "الأطباء" : "Doctors",
+    departments: language === "ar" ? "الأقسام" : "Departments",
+    offers: language === "ar" ? "العروض" : "Offers",
+    articles: language === "ar" ? "المقالات" : "Articles",
+    bookAppointment: language === "ar" ? "احجز موعد" : "Book Appointment",
+  }
 
   return (
     <header
@@ -82,7 +97,7 @@ export function SiteHeader() {
               color: "var(--header-nav-text-color, #ffffff)",
             }}
           >
-            الرئيسية
+            {t.home}
           </Link>
           <Link
             href="/services"
@@ -91,7 +106,7 @@ export function SiteHeader() {
               color: "var(--header-nav-text-color, #ffffff)",
             }}
           >
-            الخدمات
+            {t.services}
           </Link>
           <Link
             href="/doctors"
@@ -100,7 +115,7 @@ export function SiteHeader() {
               color: "var(--header-nav-text-color, #ffffff)",
             }}
           >
-            الأطباء
+            {t.doctors}
           </Link>
           <Link
             href="/departments"
@@ -109,7 +124,7 @@ export function SiteHeader() {
               color: "var(--header-nav-text-color, #ffffff)",
             }}
           >
-            الأقسام
+            {t.departments}
           </Link>
           <Link
             href="/offers"
@@ -118,7 +133,7 @@ export function SiteHeader() {
               color: "var(--header-nav-text-color, #ffffff)",
             }}
           >
-            العروض
+            {t.offers}
           </Link>
           <Link
             href="/articles"
@@ -127,7 +142,7 @@ export function SiteHeader() {
               color: "var(--header-nav-text-color, #ffffff)",
             }}
           >
-            المقالات
+            {t.articles}
           </Link>
         </nav>
 
@@ -152,7 +167,7 @@ export function SiteHeader() {
               target.style.backgroundColor = "var(--book-appointment-button-bg-color, #ec4899)"
             }}
           >
-            <Link href={bookingLink}>احجز موعد</Link>
+            <Link href={bookingLink}>{t.bookAppointment}</Link>
           </Button>
         </div>
 
@@ -178,7 +193,7 @@ export function SiteHeader() {
                 color: "var(--header-nav-text-color, #ffffff)",
               }}
             >
-              الرئيسية
+              {t.home}
             </Link>
             <Link
               href="/services"
@@ -188,7 +203,7 @@ export function SiteHeader() {
                 color: "var(--header-nav-text-color, #ffffff)",
               }}
             >
-              الخدمات
+              {t.services}
             </Link>
             <Link
               href="/doctors"
@@ -198,7 +213,7 @@ export function SiteHeader() {
                 color: "var(--header-nav-text-color, #ffffff)",
               }}
             >
-              الأطباء
+              {t.doctors}
             </Link>
             <Link
               href="/departments"
@@ -208,7 +223,7 @@ export function SiteHeader() {
                 color: "var(--header-nav-text-color, #ffffff)",
               }}
             >
-              الأقسام
+              {t.departments}
             </Link>
             <Link
               href="/offers"
@@ -218,7 +233,7 @@ export function SiteHeader() {
                 color: "var(--header-nav-text-color, #ffffff)",
               }}
             >
-              العروض
+              {t.offers}
             </Link>
             <Link
               href="/articles"
@@ -228,7 +243,7 @@ export function SiteHeader() {
                 color: "var(--header-nav-text-color, #ffffff)",
               }}
             >
-              المقالات
+              {t.articles}
             </Link>
             <div className="flex flex-col gap-2 pt-2">
               <LanguageSwitcher />
@@ -242,7 +257,7 @@ export function SiteHeader() {
                   color: "var(--book-appointment-button-text-color, #ffffff)",
                 }}
               >
-                <Link href={bookingLink}>احجز موعد</Link>
+                <Link href={bookingLink}>{t.bookAppointment}</Link>
               </Button>
             </div>
           </nav>

@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { AnimatedSection } from "@/components/animated-section"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useLanguage } from "@/components/language-switcher"
 
 function stripHtmlTags(html: string): string {
   if (!html) return ""
@@ -26,6 +27,7 @@ function getExcerpt(text: string, maxLength = 100): string {
 
 export default function DoctorsClientPage() {
   const [doctors, setDoctors] = useState([])
+  const language = useLanguage()
   const [colors, setColors] = useState({
     cardDetailsButtonBg: "#f3f4f6",
     cardDetailsButtonText: "#1f2937",
@@ -39,7 +41,6 @@ export default function DoctorsClientPage() {
     fetch("/api/doctors")
       .then((res) => res.json())
       .then((data) => {
-        // Handle both array and object formats
         const doctorsData = Array.isArray(data) ? data : data.doctors || []
         console.log("[v0] Loaded doctors:", doctorsData.length)
         setDoctors(doctorsData)
@@ -84,9 +85,13 @@ export default function DoctorsClientPage() {
           <section className="bg-gradient-to-b from-muted/50 to-background py-12 sm:py-16 md:py-24">
             <div className="container px-4 sm:px-6 lg:px-8">
               <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-balance">أطباؤنا المتميزون</h1>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-balance">
+                  {language === "ar" ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"}
+                </h1>
                 <p className="text-base sm:text-lg text-muted-foreground text-balance leading-relaxed">
-                  فريق طبي متخصص من أفضل الأطباء والاستشاريين بخبرات عالمية
+                  {language === "ar"
+                    ? "فريق طبي متخصص من أفضل الأطباء والاستشاريين بخبرات عالمية"
+                    : "A specialized medical team of the best doctors and consultants with global expertise"}
                 </p>
               </div>
             </div>
@@ -105,7 +110,7 @@ export default function DoctorsClientPage() {
                           <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity">
                             <img
                               src={doctor.image_url || "/placeholder.svg"}
-                              alt={doctor.name_ar}
+                              alt={language === "ar" ? doctor.name_ar : doctor.name_en}
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -119,16 +124,16 @@ export default function DoctorsClientPage() {
                       <div className="space-y-1 flex-1 flex flex-col">
                         <div>
                           <h3 className="text-sm sm:text-base md:text-lg font-bold leading-tight line-clamp-2">
-                            {doctor.name_ar}
+                            {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
                           </h3>
                           <p className="text-primary font-medium text-xs sm:text-sm mt-0.5 line-clamp-1">
-                            {doctor.specialty_ar}
+                            {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
                           </p>
                         </div>
 
-                        {doctor.bio_ar && (
+                        {(language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar) && (
                           <p className="text-muted-foreground leading-relaxed text-xs line-clamp-2 hidden sm:block">
-                            {getExcerpt(doctor.bio_ar, 60)}
+                            {getExcerpt(language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar, 60)}
                           </p>
                         )}
                       </div>
@@ -148,7 +153,7 @@ export default function DoctorsClientPage() {
                               e.currentTarget.style.backgroundColor = colors.cardDetailsButtonBg
                             }}
                           >
-                            التفاصيل
+                            {language === "ar" ? "التفاصيل" : "Details"}
                           </button>
                         </Link>
                         <Link href="/booking/1" className="flex-1">
@@ -165,7 +170,7 @@ export default function DoctorsClientPage() {
                               e.currentTarget.style.backgroundColor = colors.cardBookButtonBg
                             }}
                           >
-                            احجز
+                            {language === "ar" ? "احجز" : "Book"}
                           </button>
                         </Link>
                       </div>
@@ -177,7 +182,9 @@ export default function DoctorsClientPage() {
 
             {(!doctors || doctors.length === 0) && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground text-base sm:text-lg">لا يوجد أطباء متاحون حالياً</p>
+                <p className="text-muted-foreground text-base sm:text-lg">
+                  {language === "ar" ? "لا يوجد أطباء متاحون حالياً" : "No doctors available at the moment"}
+                </p>
               </div>
             )}
           </div>
@@ -187,8 +194,12 @@ export default function DoctorsClientPage() {
           <section className="py-12 sm:py-16 md:py-24 bg-muted/30">
             <div className="container px-4 sm:px-6 lg:px-8">
               <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">احجز موعدك مع أفضل الأطباء</h2>
-                <p className="text-base sm:text-lg text-muted-foreground">نحن هنا لخدمتك على مدار الساعة</p>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+                  {language === "ar" ? "احجز موعدك مع أفضل الأطباء" : "Book Your Appointment with the Best Doctors"}
+                </h2>
+                <p className="text-base sm:text-lg text-muted-foreground">
+                  {language === "ar" ? "نحن هنا لخدمتك على مدار الساعة" : "We are here to serve you 24/7"}
+                </p>
                 <Link href="/booking/1">
                   <button
                     className="py-3 px-6 sm:px-8 text-white rounded-lg transition-colors text-base sm:text-lg font-semibold"
@@ -196,7 +207,7 @@ export default function DoctorsClientPage() {
                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
                   >
-                    احجز موعد
+                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
                   </button>
                 </Link>
               </div>

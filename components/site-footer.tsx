@@ -1,9 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { Phone, MapPin } from "lucide-react"
+import { Phone, MapPin, Clock } from "lucide-react"
 import { SocialMediaLinks } from "@/components/social-media-links"
 import { useEffect, useState } from "react"
+import { useLanguage } from "@/components/language-switcher"
 
 export function SiteFooter() {
   const [footerBgColor, setFooterBgColor] = useState<string>("")
@@ -17,6 +18,13 @@ export function SiteFooter() {
   const [footerLinkColor, setFooterLinkColor] = useState<string>("")
   const [footerLinkHoverColor, setFooterLinkHoverColor] = useState<string>("")
   const [footerCopyrightColor, setFooterCopyrightColor] = useState<string>("")
+  const [workingHoursStart, setWorkingHoursStart] = useState<string>("9 صباحاً")
+  const [workingHoursEnd, setWorkingHoursEnd] = useState<string>("10 مساءً")
+  const [workingDays, setWorkingDays] = useState<string>("السبت - الخميس")
+  const [closedDay, setClosedDay] = useState<string>("الجمعة: مغلق")
+  const [siteName, setSiteName] = useState<string>("ابتسامة الورود")
+
+  const language = useLanguage()
 
   useEffect(() => {
     async function fetchSettings() {
@@ -25,56 +33,63 @@ export function SiteFooter() {
         const settingsData = await response.json()
         const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
 
-        const footerColorSetting = settings.find((s: any) => s.key === "footer_background_color")
-        if (footerColorSetting?.value_ar) {
-          setFooterBgColor(footerColorSetting.value_ar)
+        const getValue = (key: string, defaultValue = "") => {
+          const langKey = language === "ar" ? `${key}_ar` : `${key}_en`
+          const setting = settings.find((s: any) => s.key === langKey || s.key === key)
+          if (setting) {
+            return language === "ar"
+              ? setting.value_ar || defaultValue
+              : setting.value_en || setting.value_ar || defaultValue
+          }
+          return defaultValue
         }
 
-        const phoneSetting = settings.find((s: any) => s.key === "footer_phone")
-        if (phoneSetting?.value_ar) {
-          setFooterPhone(phoneSetting.value_ar)
-        }
+        setFooterBgColor(getValue("footer_background_color"))
+        setFooterPhone(getValue("footer_phone", "+966 12 345 6789"))
+        setFooterEmail(getValue("footer_email", "info@rosesmileksa.com"))
+        setFooterNote(
+          getValue(
+            "footer_note",
+            language === "ar"
+              ? "عيادات طبية متخصصة في مكة المكرمة نقدم أفضل الخدمات الطبية بأحدث التقنيات"
+              : "Specialized medical clinic in Makkah providing the best medical services with latest technologies",
+          ),
+        )
+        setFooterHeadingColor(getValue("footer_heading_color"))
+        setFooterTextColor(getValue("footer_text_color"))
+        setFooterLinkColor(getValue("footer_link_color"))
+        setFooterLinkHoverColor(getValue("footer_link_hover_color"))
+        setFooterCopyrightColor(getValue("footer_copyright_color"))
 
-        const emailSetting = settings.find((s: any) => s.key === "footer_email")
-        if (emailSetting?.value_ar) {
-          setFooterEmail(emailSetting.value_ar)
-        }
-
-        const noteSetting = settings.find((s: any) => s.key === "footer_note")
-        if (noteSetting?.value_ar) {
-          setFooterNote(noteSetting.value_ar)
-        }
-
-        const headingColorSetting = settings.find((s: any) => s.key === "footer_heading_color")
-        if (headingColorSetting?.value_ar) {
-          setFooterHeadingColor(headingColorSetting.value_ar)
-        }
-
-        const textColorSetting = settings.find((s: any) => s.key === "footer_text_color")
-        if (textColorSetting?.value_ar) {
-          setFooterTextColor(textColorSetting.value_ar)
-        }
-
-        const linkColorSetting = settings.find((s: any) => s.key === "footer_link_color")
-        if (linkColorSetting?.value_ar) {
-          setFooterLinkColor(linkColorSetting.value_ar)
-        }
-
-        const linkHoverColorSetting = settings.find((s: any) => s.key === "footer_link_hover_color")
-        if (linkHoverColorSetting?.value_ar) {
-          setFooterLinkHoverColor(linkHoverColorSetting.value_ar)
-        }
-
-        const copyrightColorSetting = settings.find((s: any) => s.key === "footer_copyright_color")
-        if (copyrightColorSetting?.value_ar) {
-          setFooterCopyrightColor(copyrightColorSetting.value_ar)
-        }
+        setWorkingHoursStart(getValue("working_hours_start", language === "ar" ? "9 صباحاً" : "9 AM"))
+        setWorkingHoursEnd(getValue("working_hours_end", language === "ar" ? "10 مساءً" : "10 PM"))
+        setWorkingDays(getValue("working_days", language === "ar" ? "السبت - الخميس" : "Saturday - Thursday"))
+        setClosedDay(getValue("closed_day", language === "ar" ? "الجمعة: مغلق" : "Friday: Closed"))
+        setSiteName(getValue("site_name", language === "ar" ? "ابتسامة الورود" : "Rose Smile Clinic"))
       } catch (error) {
         console.error("Error fetching footer settings:", error)
       }
     }
     fetchSettings()
-  }, [])
+  }, [language])
+
+  const t = {
+    siteName: siteName,
+    quickLinks: language === "ar" ? "روابط سريعة" : "Quick Links",
+    services: language === "ar" ? "الخدمات" : "Services",
+    doctors: language === "ar" ? "الأطباء" : "Doctors",
+    departments: language === "ar" ? "الأقسام" : "Departments",
+    offers: language === "ar" ? "العروض" : "Offers",
+    privacyPolicy: language === "ar" ? "سياسة الخصوصية" : "Privacy Policy",
+    termsConditions: language === "ar" ? "الشروط والأحكام" : "Terms & Conditions",
+    contactUs: language === "ar" ? "تواصل معنا" : "Contact Us",
+    workingHours: language === "ar" ? "ساعات العمل" : "Working Hours",
+    address: language === "ar" ? "مكة المكرمة، المملكة العربية السعودية" : "Makkah, Saudi Arabia",
+    copyright:
+      language === "ar"
+        ? `© ${new Date().getFullYear()} عيادات ${siteName}. جميع الحقوق محفوظة.`
+        : `© ${new Date().getFullYear()} ${siteName} Clinic. All rights reserved.`,
+  }
 
   return (
     <>
@@ -106,38 +121,38 @@ export function SiteFooter() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {/* About */}
             <div className="space-y-3 sm:space-y-4">
-              <h3 className="text-base sm:text-lg font-bold footer-heading">ابتسامة الورود</h3>
+              <h3 className="text-base sm:text-lg font-bold footer-heading">{t.siteName}</h3>
               <p className="text-xs sm:text-sm footer-text leading-relaxed">{footerNote}</p>
             </div>
 
             {/* Quick Links */}
             <div className="space-y-3 sm:space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold footer-heading">روابط سريعة</h3>
+              <h3 className="text-base sm:text-lg font-semibold footer-heading">{t.quickLinks}</h3>
               <nav className="flex flex-col gap-2">
                 <Link href="/services" className="text-xs sm:text-sm footer-link transition-colors">
-                  الخدمات
+                  {t.services}
                 </Link>
                 <Link href="/doctors" className="text-xs sm:text-sm footer-link transition-colors">
-                  الأطباء
+                  {t.doctors}
                 </Link>
                 <Link href="/departments" className="text-xs sm:text-sm footer-link transition-colors">
-                  الأقسام
+                  {t.departments}
                 </Link>
                 <Link href="/offers" className="text-xs sm:text-sm footer-link transition-colors">
-                  العروض
+                  {t.offers}
                 </Link>
                 <Link href="/privacy-policy" className="text-xs sm:text-sm footer-link transition-colors">
-                  سياسة الخصوصية
+                  {t.privacyPolicy}
                 </Link>
                 <Link href="/terms-conditions" className="text-xs sm:text-sm footer-link transition-colors">
-                  الشروط والأحكام
+                  {t.termsConditions}
                 </Link>
               </nav>
             </div>
 
             {/* Contact */}
             <div className="space-y-3 sm:space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold footer-heading">تواصل معنا</h3>
+              <h3 className="text-base sm:text-lg font-semibold footer-heading">{t.contactUs}</h3>
               <div className="flex flex-col gap-2 sm:gap-3">
                 <div className="flex items-center gap-2 text-xs sm:text-sm footer-text">
                   <Phone
@@ -151,20 +166,28 @@ export function SiteFooter() {
                     className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 mt-0.5"
                     style={{ color: footerHeadingColor || "#ec4899" }}
                   />
-                  <span>مكة المكرمة، المملكة العربية السعودية</span>
+                  <span>{t.address}</span>
                 </div>
               </div>
             </div>
 
             {/* Working Hours */}
             <div className="space-y-3 sm:space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold footer-heading">ساعات العمل</h3>
+              <h3 className="text-base sm:text-lg font-semibold footer-heading">{t.workingHours}</h3>
               <div className="text-xs sm:text-sm footer-text space-y-2">
-                <p>السبت - الخميس</p>
-                <p className="font-medium" style={{ color: footerHeadingColor || "#ffffff" }}>
-                  9 صباحاً - 10 مساءً
-                </p>
-                <p className="text-xs mt-4">الجمعة: مغلق</p>
+                <div className="flex items-start gap-2">
+                  <Clock
+                    className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 mt-0.5"
+                    style={{ color: footerHeadingColor || "#ec4899" }}
+                  />
+                  <div>
+                    <p>{workingDays}</p>
+                    <p className="font-medium mt-1" style={{ color: footerHeadingColor || "#ffffff" }}>
+                      {workingHoursStart} - {workingHoursEnd}
+                    </p>
+                    <p className="text-xs mt-3">{closedDay}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -175,7 +198,7 @@ export function SiteFooter() {
           </div>
 
           <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-border/40 text-center text-xs sm:text-sm footer-copyright">
-            <p>© 2025 عيادات ابتسامة الورود. جميع الحقوق محفوظة.</p>
+            <p>{t.copyright}</p>
           </div>
         </div>
       </footer>

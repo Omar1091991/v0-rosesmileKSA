@@ -240,6 +240,28 @@ const CONTENT_SECTIONS = [
       },
     ],
   },
+  // Add working hours section
+  {
+    section: "working_hours",
+    title: "ساعات العمل",
+    fields: [
+      { key: "working_hours_title_ar", label: "عنوان ساعات العمل (عربي)", type: "text", defaultValue: "ساعات العمل" },
+      {
+        key: "working_hours_title_en",
+        label: "عنوان ساعات العمل (إنجليزي)",
+        type: "text",
+        defaultValue: "Working Hours",
+      },
+      { key: "working_hours_from_ar", label: "من (عربي)", type: "text", defaultValue: "9:00 صباحاً" },
+      { key: "working_hours_from_en", label: "من (إنجليزي)", type: "text", defaultValue: "9:00 AM" },
+      { key: "working_hours_to_ar", label: "إلى (عربي)", type: "text", defaultValue: "9:00 مساءً" },
+      { key: "working_hours_to_en", label: "إلى (إنجليزي)", type: "text", defaultValue: "9:00 PM" },
+      { key: "working_days_ar", label: "أيام العمل (عربي)", type: "text", defaultValue: "السبت - الخميس" },
+      { key: "working_days_en", label: "أيام العمل (إنجليزي)", type: "text", defaultValue: "Saturday - Thursday" },
+      { key: "weekend_ar", label: "أيام الإجازة (عربي)", type: "text", defaultValue: "الجمعة" },
+      { key: "weekend_en", label: "أيام الإجازة (إنجليزي)", type: "text", defaultValue: "Friday" },
+    ],
+  },
 ]
 
 const GENERAL_SECTIONS = [
