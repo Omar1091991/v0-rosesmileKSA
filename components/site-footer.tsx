@@ -18,10 +18,24 @@ export function SiteFooter() {
   const [footerLinkColor, setFooterLinkColor] = useState<string>("")
   const [footerLinkHoverColor, setFooterLinkHoverColor] = useState<string>("")
   const [footerCopyrightColor, setFooterCopyrightColor] = useState<string>("")
-  const [workingHoursStart, setWorkingHoursStart] = useState<string>("9 صباحاً")
-  const [workingHoursEnd, setWorkingHoursEnd] = useState<string>("10 مساءً")
-  const [workingDays, setWorkingDays] = useState<string>("السبت - الخميس")
-  const [closedDay, setClosedDay] = useState<string>("الجمعة: مغلق")
+  const [workingHours, setWorkingHours] = useState<{
+    saturday: { hours: string; closed: boolean }
+    sunday: { hours: string; closed: boolean }
+    monday: { hours: string; closed: boolean }
+    tuesday: { hours: string; closed: boolean }
+    wednesday: { hours: string; closed: boolean }
+    thursday: { hours: string; closed: boolean }
+    friday: { hours: string; closed: boolean }
+  }>({
+    saturday: { hours: "+966 12 345 6789", closed: false },
+    sunday: { hours: "+966 12 345 6789", closed: false },
+    monday: { hours: "+966 12 345 6789", closed: false },
+    tuesday: { hours: "+966 12 345 6789", closed: false },
+    wednesday: { hours: "+966 12 345 6789", closed: false },
+    thursday: { hours: "+966 12 345 6789", closed: false },
+    friday: { hours: "+966 12 345 6789", closed: true },
+  })
+  const [workingHoursTitle, setWorkingHoursTitle] = useState<string>("ساعات العمل")
   const [siteName, setSiteName] = useState<string>("ابتسامة الورود")
 
   const language = useLanguage()
@@ -61,10 +75,38 @@ export function SiteFooter() {
         setFooterLinkHoverColor(getValue("footer_link_hover_color"))
         setFooterCopyrightColor(getValue("footer_copyright_color"))
 
-        setWorkingHoursStart(getValue("working_hours_start", language === "ar" ? "9 صباحاً" : "9 AM"))
-        setWorkingHoursEnd(getValue("working_hours_end", language === "ar" ? "10 مساءً" : "10 PM"))
-        setWorkingDays(getValue("working_days", language === "ar" ? "السبت - الخميس" : "Saturday - Thursday"))
-        setClosedDay(getValue("closed_day", language === "ar" ? "الجمعة: مغلق" : "Friday: Closed"))
+        setWorkingHoursTitle(getValue("working_hours_title", language === "ar" ? "ساعات العمل" : "Working Hours"))
+
+        setWorkingHours({
+          saturday: {
+            hours: getValue("saturday_hours", language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
+            closed: getValue("saturday_closed", "false") === "true",
+          },
+          sunday: {
+            hours: getValue("sunday_hours", language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
+            closed: getValue("sunday_closed", "false") === "true",
+          },
+          monday: {
+            hours: getValue("monday_hours", language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
+            closed: getValue("monday_closed", "false") === "true",
+          },
+          tuesday: {
+            hours: getValue("tuesday_hours", language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
+            closed: getValue("tuesday_closed", "false") === "true",
+          },
+          wednesday: {
+            hours: getValue("wednesday_hours", language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
+            closed: getValue("wednesday_closed", "false") === "true",
+          },
+          thursday: {
+            hours: getValue("thursday_hours", language === "ar" ? "2 م - 8 م" : "2 PM - 8 PM"),
+            closed: getValue("thursday_closed", "false") === "true",
+          },
+          friday: {
+            hours: getValue("friday_hours", language === "ar" ? "مغلق" : "Closed"),
+            closed: getValue("friday_closed", "true") === "true",
+          },
+        })
         setSiteName(getValue("site_name", language === "ar" ? "ابتسامة الورود" : "Rose Smile Clinic"))
       } catch (error) {
         console.error("Error fetching footer settings:", error)
@@ -83,12 +125,22 @@ export function SiteFooter() {
     privacyPolicy: language === "ar" ? "سياسة الخصوصية" : "Privacy Policy",
     termsConditions: language === "ar" ? "الشروط والأحكام" : "Terms & Conditions",
     contactUs: language === "ar" ? "تواصل معنا" : "Contact Us",
-    workingHours: language === "ar" ? "ساعات العمل" : "Working Hours",
+    workingHours: workingHoursTitle,
     address: language === "ar" ? "مكة المكرمة، المملكة العربية السعودية" : "Makkah, Saudi Arabia",
     copyright:
       language === "ar"
         ? `© ${new Date().getFullYear()} عيادات ${siteName}. جميع الحقوق محفوظة.`
         : `© ${new Date().getFullYear()} ${siteName} Clinic. All rights reserved.`,
+    days: {
+      saturday: language === "ar" ? "السبت" : "Saturday",
+      sunday: language === "ar" ? "الأحد" : "Sunday",
+      monday: language === "ar" ? "الاثنين" : "Monday",
+      tuesday: language === "ar" ? "الثلاثاء" : "Tuesday",
+      wednesday: language === "ar" ? "الأربعاء" : "Wednesday",
+      thursday: language === "ar" ? "الخميس" : "Thursday",
+      friday: language === "ar" ? "الجمعة" : "Friday",
+    },
+    closed: language === "ar" ? "مغلق" : "Closed",
   }
 
   return (
@@ -180,12 +232,15 @@ export function SiteFooter() {
                     className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 mt-0.5"
                     style={{ color: footerHeadingColor || "#ec4899" }}
                   />
-                  <div>
-                    <p>{workingDays}</p>
-                    <p className="font-medium mt-1" style={{ color: footerHeadingColor || "#ffffff" }}>
-                      {workingHoursStart} - {workingHoursEnd}
-                    </p>
-                    <p className="text-xs mt-3">{closedDay}</p>
+                  <div className="space-y-1">
+                    {Object.entries(workingHours).map(([day, { hours, closed }]) => (
+                      <div key={day} className={closed ? "opacity-60" : ""}>
+                        <span className="font-medium" style={{ color: footerHeadingColor || "#ffffff" }}>
+                          {t.days[day as keyof typeof t.days]}:{" "}
+                        </span>
+                        <span>{closed ? t.closed : hours}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

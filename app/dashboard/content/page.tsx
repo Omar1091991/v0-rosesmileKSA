@@ -252,14 +252,124 @@ const CONTENT_SECTIONS = [
         type: "text",
         defaultValue: "Working Hours",
       },
-      { key: "working_hours_from_ar", label: "من (عربي)", type: "text", defaultValue: "9:00 صباحاً" },
-      { key: "working_hours_from_en", label: "من (إنجليزي)", type: "text", defaultValue: "9:00 AM" },
-      { key: "working_hours_to_ar", label: "إلى (عربي)", type: "text", defaultValue: "9:00 مساءً" },
-      { key: "working_hours_to_en", label: "إلى (إنجليزي)", type: "text", defaultValue: "9:00 PM" },
-      { key: "working_days_ar", label: "أيام العمل (عربي)", type: "text", defaultValue: "السبت - الخميس" },
-      { key: "working_days_en", label: "أيام العمل (إنجليزي)", type: "text", defaultValue: "Saturday - Thursday" },
-      { key: "weekend_ar", label: "أيام الإجازة (عربي)", type: "text", defaultValue: "الجمعة" },
-      { key: "weekend_en", label: "أيام الإجازة (إنجليزي)", type: "text", defaultValue: "Friday" },
+
+      // Saturday
+      { key: "saturday_hours_ar", label: "السبت - ساعات العمل (عربي)", type: "text", defaultValue: "1 م - 9 م" },
+      {
+        key: "saturday_hours_en",
+        label: "Saturday - Working Hours (English)",
+        type: "text",
+        defaultValue: "1 PM - 9 PM",
+      },
+      {
+        key: "saturday_closed",
+        label: "السبت مغلق",
+        type: "select",
+        options: [
+          { value: "false", label: "نعم، مفتوح" },
+          { value: "true", label: "لا، مغلق" },
+        ],
+        defaultValue: "false",
+      },
+
+      // Sunday
+      { key: "sunday_hours_ar", label: "الأحد - ساعات العمل (عربي)", type: "text", defaultValue: "1 م - 9 م" },
+      { key: "sunday_hours_en", label: "Sunday - Working Hours (English)", type: "text", defaultValue: "1 PM - 9 PM" },
+      {
+        key: "sunday_closed",
+        label: "الأحد مغلق",
+        type: "select",
+        options: [
+          { value: "false", label: "نعم، مفتوح" },
+          { value: "true", label: "لا، مغلق" },
+        ],
+        defaultValue: "false",
+      },
+
+      // Monday
+      { key: "monday_hours_ar", label: "الاثنين - ساعات العمل (عربي)", type: "text", defaultValue: "1 م - 9 م" },
+      { key: "monday_hours_en", label: "Monday - Working Hours (English)", type: "text", defaultValue: "1 PM - 9 PM" },
+      {
+        key: "monday_closed",
+        label: "الاثنين مغلق",
+        type: "select",
+        options: [
+          { value: "false", label: "نعم، مفتوح" },
+          { value: "true", label: "لا، مغلق" },
+        ],
+        defaultValue: "false",
+      },
+
+      // Tuesday
+      { key: "tuesday_hours_ar", label: "الثلاثاء - ساعات العمل (عربي)", type: "text", defaultValue: "1 م - 9 م" },
+      {
+        key: "tuesday_hours_en",
+        label: "Tuesday - Working Hours (English)",
+        type: "text",
+        defaultValue: "1 PM - 9 PM",
+      },
+      {
+        key: "tuesday_closed",
+        label: "الثلاثاء مغلق",
+        type: "select",
+        options: [
+          { value: "false", label: "نعم، مفتوح" },
+          { value: "true", label: "لا، مغلق" },
+        ],
+        defaultValue: "false",
+      },
+
+      // Wednesday
+      { key: "wednesday_hours_ar", label: "الأربعاء - ساعات العمل (عربي)", type: "text", defaultValue: "1 م - 9 م" },
+      {
+        key: "wednesday_hours_en",
+        label: "Wednesday - Working Hours (English)",
+        type: "text",
+        defaultValue: "1 PM - 9 PM",
+      },
+      {
+        key: "wednesday_closed",
+        label: "الأربعاء مغلق",
+        type: "select",
+        options: [
+          { value: "false", label: "نعم، مفتوح" },
+          { value: "true", label: "لا، مغلق" },
+        ],
+        defaultValue: "false",
+      },
+
+      // Thursday
+      { key: "thursday_hours_ar", label: "الخميس - ساعات العمل (عربي)", type: "text", defaultValue: "2 م - 8 م" },
+      {
+        key: "thursday_hours_en",
+        label: "Thursday - Working Hours (English)",
+        type: "text",
+        defaultValue: "2 PM - 8 PM",
+      },
+      {
+        key: "thursday_closed",
+        label: "الخميس مغلق",
+        type: "select",
+        options: [
+          { value: "false", label: "نعم، مفتوح" },
+          { value: "true", label: "لا، مغلق" },
+        ],
+        defaultValue: "false",
+      },
+
+      // Friday
+      { key: "friday_hours_ar", label: "الجمعة - ساعات العمل (عربي)", type: "text", defaultValue: "مغلق" },
+      { key: "friday_hours_en", label: "Friday - Working Hours (English)", type: "text", defaultValue: "Closed" },
+      {
+        key: "friday_closed",
+        label: "الجمعة مغلق",
+        type: "select",
+        options: [
+          { value: "false", label: "نعم، مفتوح" },
+          { value: "true", label: "لا، مغلق" },
+        ],
+        defaultValue: "true",
+      },
     ],
   },
 ]
@@ -1099,6 +1209,44 @@ export default function ContentManagementPage() {
       ]
 
       for (const defaultSetting of buttonColorDefaults) {
+        if (!settingsMap[defaultSetting.key]) {
+          settingsMap[defaultSetting.key] = {
+            id: null,
+            key: defaultSetting.key,
+            value_ar: defaultSetting.value,
+            value_en: defaultSetting.value,
+            type: defaultSetting.type,
+            category: defaultSetting.category,
+          }
+        }
+      }
+
+      // Add default values for working hours if they don't exist
+      const workingHoursDefaults = [
+        { key: "saturday_hours_ar", value: "1 م - 9 م", type: "text", category: "working_hours" },
+        { key: "saturday_hours_en", value: "1 PM - 9 PM", type: "text", category: "working_hours" },
+        { key: "saturday_closed", value: "false", type: "select", category: "working_hours" },
+        { key: "sunday_hours_ar", value: "1 م - 9 م", type: "text", category: "working_hours" },
+        { key: "sunday_hours_en", value: "1 PM - 9 PM", type: "text", category: "working_hours" },
+        { key: "sunday_closed", value: "false", type: "select", category: "working_hours" },
+        { key: "monday_hours_ar", value: "1 م - 9 م", type: "text", category: "working_hours" },
+        { key: "monday_hours_en", value: "1 PM - 9 PM", type: "text", category: "working_hours" },
+        { key: "monday_closed", value: "false", type: "select", category: "working_hours" },
+        { key: "tuesday_hours_ar", value: "1 م - 9 م", type: "text", category: "working_hours" },
+        { key: "tuesday_hours_en", value: "1 PM - 9 PM", type: "text", category: "working_hours" },
+        { key: "tuesday_closed", value: "false", type: "select", category: "working_hours" },
+        { key: "wednesday_hours_ar", value: "1 م - 9 م", type: "text", category: "working_hours" },
+        { key: "wednesday_hours_en", value: "1 PM - 9 PM", type: "text", category: "working_hours" },
+        { key: "wednesday_closed", value: "false", type: "select", category: "working_hours" },
+        { key: "thursday_hours_ar", value: "2 م - 8 م", type: "text", category: "working_hours" },
+        { key: "thursday_hours_en", value: "2 PM - 8 PM", type: "text", category: "working_hours" },
+        { key: "thursday_closed", value: "false", type: "select", category: "working_hours" },
+        { key: "friday_hours_ar", value: "مغلق", type: "text", category: "working_hours" },
+        { key: "friday_hours_en", value: "Closed", type: "text", category: "working_hours" },
+        { key: "friday_closed", value: "true", type: "select", category: "working_hours" },
+      ]
+
+      for (const defaultSetting of workingHoursDefaults) {
         if (!settingsMap[defaultSetting.key]) {
           settingsMap[defaultSetting.key] = {
             id: null,
