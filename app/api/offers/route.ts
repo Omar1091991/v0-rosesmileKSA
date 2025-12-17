@@ -1,6 +1,13 @@
 import { query } from "@/lib/db"
 import { NextResponse } from "next/server"
 
+function sanitizeDate(value: any): string | null {
+  if (value === "" || value === undefined || value === null) {
+    return null
+  }
+  return value
+}
+
 export async function GET() {
   try {
     const result = await query("SELECT * FROM offers ORDER BY created_at DESC")
@@ -26,8 +33,8 @@ export async function POST(request: Request) {
         body.original_price || body.price_before, // دعم كلا الاسمين للتوافق
         body.discounted_price || body.price_after,
         body.discount_percentage,
-        body.valid_from,
-        body.valid_until,
+        sanitizeDate(body.valid_from), // Sanitize date values to convert empty strings to null
+        sanitizeDate(body.valid_until),
         body.image_url,
         body.is_active ?? true,
       ],
@@ -58,8 +65,8 @@ export async function PATCH(request: Request) {
         body.original_price || body.price_before, // دعم كلا الاسمين للتوافق
         body.discounted_price || body.price_after,
         body.discount_percentage,
-        body.valid_from,
-        body.valid_until,
+        sanitizeDate(body.valid_from), // Sanitize date values to convert empty strings to null
+        sanitizeDate(body.valid_until),
         body.image_url,
         body.is_active,
         body.id,

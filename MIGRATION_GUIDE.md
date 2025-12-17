@@ -4,20 +4,20 @@
 
 ### 1. إنشاء البنية في Supabase
 قم بتشغيل السكريبت التالي في Supabase SQL Editor:
-\`\`\`bash
+```bash
 scripts/002_create_supabase_schema.sql
-\`\`\`
+```
 
 ### 2. نقل البيانات تلقائياً
 قم بتشغيل سكريبت النقل:
-\`\`\`bash
+```bash
 npm run migrate
-\`\`\`
+```
 
 أو يدوياً:
-\`\`\`bash
+```bash
 node scripts/003_migrate_data.mjs
-\`\`\`
+```
 
 ### 3. التحقق من النقل
 - تحقق من أن جميع الجداول تم إنشاؤها بنجاح

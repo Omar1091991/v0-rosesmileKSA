@@ -46,9 +46,9 @@
 ⚠️ **للإنتاج (Production):**
 
 1. **غير المفتاح السري** في ملف `app/auth/admin-signup/page.tsx`:
-   \`\`\`typescript
+   ```typescript
    if (secretKey !== 'YOUR_SECURE_SECRET_KEY') {
-   \`\`\`
+   ```
 
 2. **احذف أو أخفِ صفحة التسجيل** بعد إنشاء حساب المسؤول الأول
 

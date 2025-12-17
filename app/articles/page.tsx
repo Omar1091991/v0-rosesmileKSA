@@ -28,7 +28,7 @@ function ArticlesSkeleton() {
 }
 
 export default function ArticlesPage() {
-  const { language } = useLanguage()
+  const language = useLanguage()
   const [articles, setArticles] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -52,9 +52,11 @@ export default function ArticlesPage() {
       <main className="flex-1">
         <div className="container mx-auto px-4 py-16">
           <div className="mb-12 text-center">
-            <h1 className="mb-4 text-4xl font-bold">{language === "ar" ? "المقالات الطبية" : "Medical Articles"}</h1>
+            <h1 className="mb-4 text-4xl font-bold">
+              {language.language === "ar" ? "المقالات الطبية" : "Medical Articles"}
+            </h1>
             <p className="text-lg text-muted-foreground">
-              {language === "ar"
+              {language.language === "ar"
                 ? "اكتشف أحدث المقالات والنصائح الطبية من خبرائنا"
                 : "Discover the latest articles and medical advice from our experts"}
             </p>
@@ -65,10 +67,12 @@ export default function ArticlesPage() {
           ) : articles.length === 0 ? (
             <div className="flex min-h-[400px] flex-col items-center justify-center text-center">
               <h2 className="text-2xl font-bold">
-                {language === "ar" ? "لا توجد مقالات حالياً" : "No articles available"}
+                {language.language === "ar" ? "لا توجد مقالات حالياً" : "No articles available"}
               </h2>
               <p className="mt-2 text-muted-foreground">
-                {language === "ar" ? "تحقق مرة أخرى قريباً للحصول على محتوى جديد" : "Check back soon for new content"}
+                {language.language === "ar"
+                  ? "تحقق مرة أخرى قريباً للحصول على محتوى جديد"
+                  : "Check back soon for new content"}
               </p>
             </div>
           ) : (
@@ -79,20 +83,20 @@ export default function ArticlesPage() {
                     <div className="relative h-32 sm:h-40 md:h-48 w-full overflow-hidden">
                       <img
                         src={article.image_url || "/placeholder.svg"}
-                        alt={language === "ar" ? article.title_ar : article.title_en}
+                        alt={language.language === "ar" ? article.title_ar : article.title_en}
                         className="h-full w-full object-cover"
                       />
                     </div>
                   )}
                   <CardHeader className="p-3 sm:p-4 flex-1">
                     <CardTitle className="line-clamp-2 text-sm sm:text-base md:text-lg">
-                      {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                      {language.language === "ar" ? article.title_ar : article.title_en || article.title_ar}
                     </CardTitle>
                     <CardDescription
                       className="line-clamp-2 text-xs sm:text-sm whitespace-pre-line hidden sm:block"
                       dangerouslySetInnerHTML={{
                         __html:
-                          (language === "ar"
+                          (language.language === "ar"
                             ? article.excerpt_ar || article.content_ar?.substring(0, 100)
                             : article.excerpt_en || article.content_en?.substring(0, 100) || article.excerpt_ar) +
                           "...",
@@ -104,19 +108,21 @@ export default function ArticlesPage() {
                       <div className="flex items-center gap-2">
                         <User className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span className="truncate">
-                          {language === "ar" ? article.author_ar : article.author_en || article.author_ar}
+                          {language.language === "ar" ? article.author_ar : article.author_en || article.author_ar}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span className="text-xs">
-                          {new Date(article.created_at).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US")}
+                          {new Date(article.created_at).toLocaleDateString(
+                            language.language === "ar" ? "ar-SA" : "en-US",
+                          )}
                         </span>
                       </div>
                     </div>
                     <Button asChild className="w-full h-8 sm:h-9 text-xs sm:text-sm">
                       <Link href={`/articles/${article.id}`}>
-                        {language === "ar" ? "قراءة المزيد" : "Read More"}
+                        {language.language === "ar" ? "قراءة المزيد" : "Read More"}
                         <ArrowRight className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                       </Link>
                     </Button>
@@ -130,7 +136,7 @@ export default function ArticlesPage() {
             <Button asChild variant="outline" size="lg">
               <Link href="/">
                 <ArrowRight className="ml-2 h-5 w-5 rotate-180" />
-                {language === "ar" ? "العودة للرئيسية" : "Back to Home"}
+                {language.language === "ar" ? "العودة للرئيسية" : "Back to Home"}
               </Link>
             </Button>
           </div>

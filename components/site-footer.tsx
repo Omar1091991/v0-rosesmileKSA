@@ -48,10 +48,10 @@ export function SiteFooter() {
         const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
 
         const getValue = (key: string, defaultValue = "") => {
-          const langKey = language === "ar" ? `${key}_ar` : `${key}_en`
+          const langKey = language.language === "ar" ? `${key}_ar` : `${key}_en`
           const setting = settings.find((s: any) => s.key === langKey || s.key === key)
           if (setting) {
-            return language === "ar"
+            return language.language === "ar"
               ? setting.value_ar || defaultValue
               : setting.value_en || setting.value_ar || defaultValue
           }
@@ -64,7 +64,7 @@ export function SiteFooter() {
         setFooterNote(
           getValue(
             "footer_note",
-            language === "ar"
+            language.language === "ar"
               ? "عيادات طبية متخصصة في مكة المكرمة نقدم أفضل الخدمات الطبية بأحدث التقنيات"
               : "Specialized medical clinic in Makkah providing the best medical services with latest technologies",
           ),
@@ -75,39 +75,41 @@ export function SiteFooter() {
         setFooterLinkHoverColor(getValue("footer_link_hover_color"))
         setFooterCopyrightColor(getValue("footer_copyright_color"))
 
-        setWorkingHoursTitle(getValue("working_hours_title", language === "ar" ? "ساعات العمل" : "Working Hours"))
+        setWorkingHoursTitle(
+          getValue("working_hours_title", language.language === "ar" ? "ساعات العمل" : "Working Hours"),
+        )
 
         setWorkingHours({
           saturday: {
-            hours: getValue("saturday_hours", language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
+            hours: getValue("saturday_hours", language.language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
             closed: getValue("saturday_closed", "false") === "true",
           },
           sunday: {
-            hours: getValue("sunday_hours", language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
+            hours: getValue("sunday_hours", language.language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
             closed: getValue("sunday_closed", "false") === "true",
           },
           monday: {
-            hours: getValue("monday_hours", language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
+            hours: getValue("monday_hours", language.language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
             closed: getValue("monday_closed", "false") === "true",
           },
           tuesday: {
-            hours: getValue("tuesday_hours", language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
+            hours: getValue("tuesday_hours", language.language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
             closed: getValue("tuesday_closed", "false") === "true",
           },
           wednesday: {
-            hours: getValue("wednesday_hours", language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
+            hours: getValue("wednesday_hours", language.language === "ar" ? "1 م - 9 م" : "1 PM - 9 PM"),
             closed: getValue("wednesday_closed", "false") === "true",
           },
           thursday: {
-            hours: getValue("thursday_hours", language === "ar" ? "2 م - 8 م" : "2 PM - 8 PM"),
+            hours: getValue("thursday_hours", language.language === "ar" ? "2 م - 8 م" : "2 PM - 8 PM"),
             closed: getValue("thursday_closed", "false") === "true",
           },
           friday: {
-            hours: getValue("friday_hours", language === "ar" ? "مغلق" : "Closed"),
+            hours: getValue("friday_hours", language.language === "ar" ? "مغلق" : "Closed"),
             closed: getValue("friday_closed", "true") === "true",
           },
         })
-        setSiteName(getValue("site_name", language === "ar" ? "ابتسامة الورود" : "Rose Smile Clinic"))
+        setSiteName(getValue("site_name", language.language === "ar" ? "ابتسامة الورود" : "Rose Smile Clinic"))
       } catch (error) {
         console.error("Error fetching footer settings:", error)
       }
@@ -117,30 +119,30 @@ export function SiteFooter() {
 
   const t = {
     siteName: siteName,
-    quickLinks: language === "ar" ? "روابط سريعة" : "Quick Links",
-    services: language === "ar" ? "الخدمات" : "Services",
-    doctors: language === "ar" ? "الأطباء" : "Doctors",
-    departments: language === "ar" ? "الأقسام" : "Departments",
-    offers: language === "ar" ? "العروض" : "Offers",
-    privacyPolicy: language === "ar" ? "سياسة الخصوصية" : "Privacy Policy",
-    termsConditions: language === "ar" ? "الشروط والأحكام" : "Terms & Conditions",
-    contactUs: language === "ar" ? "تواصل معنا" : "Contact Us",
+    quickLinks: language.language === "ar" ? "روابط سريعة" : "Quick Links",
+    services: language.language === "ar" ? "الخدمات" : "Services",
+    doctors: language.language === "ar" ? "الأطباء" : "Doctors",
+    departments: language.language === "ar" ? "الأقسام" : "Departments",
+    offers: language.language === "ar" ? "العروض" : "Offers",
+    privacyPolicy: language.language === "ar" ? "سياسة الخصوصية" : "Privacy Policy",
+    termsConditions: language.language === "ar" ? "الشروط والأحكام" : "Terms & Conditions",
+    contactUs: language.language === "ar" ? "تواصل معنا" : "Contact Us",
     workingHours: workingHoursTitle,
-    address: language === "ar" ? "مكة المكرمة، المملكة العربية السعودية" : "Makkah, Saudi Arabia",
+    address: language.language === "ar" ? "مكة المكرمة، المملكة العربية السعودية" : "Makkah, Saudi Arabia",
     copyright:
-      language === "ar"
+      language.language === "ar"
         ? `© ${new Date().getFullYear()} عيادات ${siteName}. جميع الحقوق محفوظة.`
         : `© ${new Date().getFullYear()} ${siteName} Clinic. All rights reserved.`,
     days: {
-      saturday: language === "ar" ? "السبت" : "Saturday",
-      sunday: language === "ar" ? "الأحد" : "Sunday",
-      monday: language === "ar" ? "الاثنين" : "Monday",
-      tuesday: language === "ar" ? "الثلاثاء" : "Tuesday",
-      wednesday: language === "ar" ? "الأربعاء" : "Wednesday",
-      thursday: language === "ar" ? "الخميس" : "Thursday",
-      friday: language === "ar" ? "الجمعة" : "Friday",
+      saturday: language.language === "ar" ? "السبت" : "Saturday",
+      sunday: language.language === "ar" ? "الأحد" : "Sunday",
+      monday: language.language === "ar" ? "الاثنين" : "Monday",
+      tuesday: language.language === "ar" ? "الثلاثاء" : "Tuesday",
+      wednesday: language.language === "ar" ? "الأربعاء" : "Wednesday",
+      thursday: language.language === "ar" ? "الخميس" : "Thursday",
+      friday: language.language === "ar" ? "الجمعة" : "Friday",
     },
-    closed: language === "ar" ? "مغلق" : "Closed",
+    closed: language.language === "ar" ? "مغلق" : "Closed",
   }
 
   return (

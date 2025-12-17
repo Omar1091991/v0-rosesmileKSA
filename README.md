@@ -46,14 +46,14 @@ Continue building your app on:
 
 #### 1. إنشاء الجداول في Supabase
 قم بتشغيل السكريبت في Supabase SQL Editor:
-\`\`\`bash
+```bash
 scripts/002_create_supabase_schema.sql
-\`\`\`
+```
 
 #### 2. نقل البيانات تلقائياً
-\`\`\`bash
+```bash
 npm run migrate
-\`\`\`
+```
 
 #### 3. تحديث متغيرات البيئة في Vercel
 تأكد من إضافة المتغيرات التالية:

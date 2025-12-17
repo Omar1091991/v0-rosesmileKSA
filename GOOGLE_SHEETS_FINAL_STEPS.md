@@ -10,9 +10,9 @@
 
 ### 1. مشاركة Google Sheet مع Service Account
 افتح Google Sheet الخاص بك وشارك الملف مع البريد الإلكتروني:
-\`\`\`
+```
 rosesmile-vercel@rosesmile-vercel.iam.gserviceaccount.com
-\`\`\`
+```
 
 **كيفية المشاركة:**
 1. افتح Google Sheet: https://docs.google.com/spreadsheets/d/1aULNHz7f3WC33mWYWMCzt8BL2Mc0O3NR00tpFRaIFBU/edit
@@ -26,21 +26,21 @@ rosesmile-vercel@rosesmile-vercel.iam.gserviceaccount.com
 تأكد أن المتغيرات الثلاثة موجودة في Vercel:
 
 **GOOGLE_SERVICE_ACCOUNT_EMAIL:**
-\`\`\`
+```
 rosesmile-vercel@rosesmile-vercel.iam.gserviceaccount.com
-\`\`\`
+```
 
 **GOOGLE_SHEET_ID:**
-\`\`\`
+```
 1aULNHz7f3WC33mWYWMCzt8BL2Mc0O3NR00tpFRaIFBU
-\`\`\`
+```
 
 **GOOGLE_PRIVATE_KEY:**
-\`\`\`
+```
 -----BEGIN PRIVATE KEY-----
 [المفتاح الخاص الكامل من ملف JSON]
 -----END PRIVATE KEY-----
-\`\`\`
+```
 
 ⚠️ **مهم جداً:** عند إضافة GOOGLE_PRIVATE_KEY في Vercel:
 - انسخ المفتاح كاملاً من ملف JSON (من `private_key`)

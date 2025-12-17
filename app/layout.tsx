@@ -1,7 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Cairo } from "next/font/google"
-import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css"
@@ -157,7 +156,7 @@ export default function RootLayout({
       <head>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       </head>
-      <body className={`font-sans ${cairo.variable} ${GeistMono.variable}`}>
+      <body className={`font-sans ${cairo.variable}`}>
         <DynamicColors />
         <Suspense fallback={<div>Loading...</div>}>
           {children}

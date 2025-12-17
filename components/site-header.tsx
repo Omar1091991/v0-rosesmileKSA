@@ -31,13 +31,13 @@ export function SiteHeader() {
           const settings = Array.isArray(settingsData) ? settingsData : settingsData.settings || []
 
           const logoSetting = settings.find((s: any) => s.key === "site_logo_url")
-          const nameKey = language === "ar" ? "site_name_ar" : "site_name_en"
+          const nameKey = language.language === "ar" ? "site_name_ar" : "site_name_en"
           const nameSetting = settings.find((s: any) => s.key === nameKey)
 
           if (logoSetting?.value_ar) {
             setLogoUrl(logoSetting.value_ar)
           }
-          if (language === "ar") {
+          if (language.language === "ar") {
             setSiteName(nameSetting?.value_ar || "ابتسامة الورود")
           } else {
             setSiteName(nameSetting?.value_en || "Rose Smile Clinic")
@@ -53,13 +53,13 @@ export function SiteHeader() {
   const bookingLink = mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"
 
   const t = {
-    home: language === "ar" ? "الرئيسية" : "Home",
-    services: language === "ar" ? "الخدمات" : "Services",
-    doctors: language === "ar" ? "الأطباء" : "Doctors",
-    departments: language === "ar" ? "الأقسام" : "Departments",
-    offers: language === "ar" ? "العروض" : "Offers",
-    articles: language === "ar" ? "المقالات" : "Articles",
-    bookAppointment: language === "ar" ? "احجز موعد" : "Book Appointment",
+    home: language.language === "ar" ? "الرئيسية" : "Home",
+    services: language.language === "ar" ? "الخدمات" : "Services",
+    doctors: language.language === "ar" ? "الأطباء" : "Doctors",
+    departments: language.language === "ar" ? "الأقسام" : "Departments",
+    offers: language.language === "ar" ? "العروض" : "Offers",
+    articles: language.language === "ar" ? "المقالات" : "Articles",
+    bookAppointment: language.language === "ar" ? "احجز موعد" : "Book Appointment",
   }
 
   return (
@@ -160,107 +160,44 @@ export function SiteHeader() {
             }}
             onMouseEnter={(e) => {
               const target = e.currentTarget
-              target.style.backgroundColor = "var(--book-appointment-button-hover-bg-color, #db2777)"
             }}
             onMouseLeave={(e) => {
               const target = e.currentTarget
-              target.style.backgroundColor = "var(--book-appointment-button-bg-color, #ec4899)"
             }}
           >
             <Link href={bookingLink}>{t.bookAppointment}</Link>
           </Button>
         </div>
 
-        <button
-          className="md:hidden p-3"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          style={{
-            color: "var(--header-nav-text-color, #ffffff)",
-          }}
-        >
-          {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <Button variant="ghost" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          {isMenuOpen ? <X /> : <Menu />}
+        </Button>
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden border-t border-border/40 bg-background">
-          <nav className="container flex flex-col gap-4 py-4 px-6">
-            <Link
-              href="/"
-              className="text-sm font-medium transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-              style={{
-                color: "var(--header-nav-text-color, #ffffff)",
-              }}
-            >
-              {t.home}
-            </Link>
-            <Link
-              href="/services"
-              className="text-sm font-medium transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-              style={{
-                color: "var(--header-nav-text-color, #ffffff)",
-              }}
-            >
-              {t.services}
-            </Link>
-            <Link
-              href="/doctors"
-              className="text-sm font-medium transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-              style={{
-                color: "var(--header-nav-text-color, #ffffff)",
-              }}
-            >
-              {t.doctors}
-            </Link>
-            <Link
-              href="/departments"
-              className="text-sm font-medium transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-              style={{
-                color: "var(--header-nav-text-color, #ffffff)",
-              }}
-            >
-              {t.departments}
-            </Link>
-            <Link
-              href="/offers"
-              className="text-sm font-medium transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-              style={{
-                color: "var(--header-nav-text-color, #ffffff)",
-              }}
-            >
-              {t.offers}
-            </Link>
-            <Link
-              href="/articles"
-              className="text-sm font-medium transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-              style={{
-                color: "var(--header-nav-text-color, #ffffff)",
-              }}
-            >
-              {t.articles}
-            </Link>
-            <div className="flex flex-col gap-2 pt-2">
-              <LanguageSwitcher />
-
-              <Button
-                size="sm"
-                asChild
-                onClick={() => setIsMenuOpen(false)}
-                style={{
-                  backgroundColor: "var(--book-appointment-button-bg-color, #ec4899)",
-                  color: "var(--book-appointment-button-text-color, #ffffff)",
-                }}
-              >
-                <Link href={bookingLink}>{t.bookAppointment}</Link>
-              </Button>
-            </div>
-          </nav>
+        <div className="md:hidden flex flex-col gap-4 p-4 bg-background/80 backdrop-blur">
+          <Link href="/" className="text-sm font-medium transition-colors">
+            {t.home}
+          </Link>
+          <Link href="/services" className="text-sm font-medium transition-colors">
+            {t.services}
+          </Link>
+          <Link href="/doctors" className="text-sm font-medium transition-colors">
+            {t.doctors}
+          </Link>
+          <Link href="/departments" className="text-sm font-medium transition-colors">
+            {t.departments}
+          </Link>
+          <Link href="/offers" className="text-sm font-medium transition-colors">
+            {t.offers}
+          </Link>
+          <Link href="/articles" className="text-sm font-medium transition-colors">
+            {t.articles}
+          </Link>
+          <Link href={bookingLink} className="text-sm font-medium transition-colors">
+            {t.bookAppointment}
+          </Link>
+          <LanguageSwitcher />
         </div>
       )}
     </header>

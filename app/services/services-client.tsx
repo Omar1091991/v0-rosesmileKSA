@@ -63,10 +63,10 @@ export function ServicesClient() {
             <div className="container px-4 sm:px-6 lg:px-8">
               <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-balance">
-                  {language === "ar" ? "خدماتنا الطبية" : "Our Medical Services"}
+                  {language.language === "ar" ? "خدماتنا الطبية" : "Our Medical Services"}
                 </h1>
                 <p className="text-base sm:text-lg text-muted-foreground text-balance leading-relaxed">
-                  {language === "ar"
+                  {language.language === "ar"
                     ? "نقدم مجموعة شاملة من الخدمات الطبية المتخصصة بأحدث التقنيات وأعلى معايير الجودة"
                     : "We offer a comprehensive range of specialized medical services with the latest technologies and highest quality standards"}
                 </p>
@@ -87,7 +87,7 @@ export function ServicesClient() {
                           <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity">
                             <img
                               src={service.image_url || "/placeholder.svg"}
-                              alt={language === "ar" ? service.title_ar : service.title_en}
+                              alt={language.language === "ar" ? service.title_ar : service.title_en}
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -100,11 +100,15 @@ export function ServicesClient() {
 
                       <div className="space-y-1 flex-1">
                         <h3 className="text-sm sm:text-base md:text-lg font-bold line-clamp-2">
-                          {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                          {language.language === "ar" ? service.title_ar : service.title_en || service.title_ar}
                         </h3>
-                        {(language === "ar" ? service.subtitle_ar : service.subtitle_en || service.subtitle_ar) && (
+                        {(language.language === "ar"
+                          ? service.subtitle_ar
+                          : service.subtitle_en || service.subtitle_ar) && (
                           <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm line-clamp-2 hidden sm:block">
-                            {language === "ar" ? service.subtitle_ar : service.subtitle_en || service.subtitle_ar}
+                            {language.language === "ar"
+                              ? service.subtitle_ar
+                              : service.subtitle_en || service.subtitle_ar}
                           </p>
                         )}
                       </div>
@@ -125,7 +129,7 @@ export function ServicesClient() {
                               e.currentTarget.style.backgroundColor = colors.cardDetailsButtonBg
                             }}
                           >
-                            {language === "ar" ? "التفاصيل" : "Details"}
+                            {language.language === "ar" ? "التفاصيل" : "Details"}
                           </button>
                         </Link>
                         <Link href="/booking/1">
@@ -142,7 +146,7 @@ export function ServicesClient() {
                               e.currentTarget.style.backgroundColor = colors.cardBookButtonBg
                             }}
                           >
-                            {language === "ar" ? "احجز" : "Book"}
+                            {language.language === "ar" ? "احجز" : "Book"}
                           </button>
                         </Link>
                       </div>
@@ -155,7 +159,7 @@ export function ServicesClient() {
             {(!services || services.length === 0) && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground text-base sm:text-lg">
-                  {language === "ar" ? "لا توجد خدمات متاحة حالياً" : "No services available at the moment"}
+                  {language.language === "ar" ? "لا توجد خدمات متاحة حالياً" : "No services available at the moment"}
                 </p>
               </div>
             )}
@@ -167,10 +171,10 @@ export function ServicesClient() {
             <div className="container px-4 sm:px-6 lg:px-8">
               <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                  {language === "ar" ? "هل تحتاج لاستشارة طبية؟" : "Need a Medical Consultation?"}
+                  {language.language === "ar" ? "هل تحتاج لاستشارة طبية؟" : "Need a Medical Consultation?"}
                 </h2>
                 <p className="text-base sm:text-lg text-muted-foreground">
-                  {language === "ar"
+                  {language.language === "ar"
                     ? "احجز موعدك الآن واحصل على استشارة مجانية"
                     : "Book your appointment now and get a free consultation"}
                 </p>
@@ -181,7 +185,7 @@ export function ServicesClient() {
                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
                   >
-                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                    {language.language === "ar" ? "احجز موعد" : "Book Appointment"}
                   </button>
                 </Link>
               </div>

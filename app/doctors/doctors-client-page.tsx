@@ -86,10 +86,10 @@ export default function DoctorsClientPage() {
             <div className="container px-4 sm:px-6 lg:px-8">
               <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-balance">
-                  {language === "ar" ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"}
+                  {language.language === "ar" ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"}
                 </h1>
                 <p className="text-base sm:text-lg text-muted-foreground text-balance leading-relaxed">
-                  {language === "ar"
+                  {language.language === "ar"
                     ? "فريق طبي متخصص من أفضل الأطباء والاستشاريين بخبرات عالمية"
                     : "A specialized medical team of the best doctors and consultants with global expertise"}
                 </p>
@@ -110,7 +110,7 @@ export default function DoctorsClientPage() {
                           <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer hover:opacity-90 transition-opacity">
                             <img
                               src={doctor.image_url || "/placeholder.svg"}
-                              alt={language === "ar" ? doctor.name_ar : doctor.name_en}
+                              alt={language.language === "ar" ? doctor.name_ar : doctor.name_en}
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -124,16 +124,21 @@ export default function DoctorsClientPage() {
                       <div className="space-y-1 flex-1 flex flex-col">
                         <div>
                           <h3 className="text-sm sm:text-base md:text-lg font-bold leading-tight line-clamp-2">
-                            {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
+                            {language.language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
                           </h3>
                           <p className="text-primary font-medium text-xs sm:text-sm mt-0.5 line-clamp-1">
-                            {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
+                            {language.language === "ar"
+                              ? doctor.specialty_ar
+                              : doctor.specialty_en || doctor.specialty_ar}
                           </p>
                         </div>
 
-                        {(language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar) && (
+                        {(language.language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar) && (
                           <p className="text-muted-foreground leading-relaxed text-xs line-clamp-2 hidden sm:block">
-                            {getExcerpt(language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar, 60)}
+                            {getExcerpt(
+                              language.language === "ar" ? doctor.bio_ar : doctor.bio_en || doctor.bio_ar,
+                              60,
+                            )}
                           </p>
                         )}
                       </div>
@@ -153,7 +158,7 @@ export default function DoctorsClientPage() {
                               e.currentTarget.style.backgroundColor = colors.cardDetailsButtonBg
                             }}
                           >
-                            {language === "ar" ? "التفاصيل" : "Details"}
+                            {language.language === "ar" ? "التفاصيل" : "Details"}
                           </button>
                         </Link>
                         <Link href="/booking/1" className="flex-1">
@@ -170,7 +175,7 @@ export default function DoctorsClientPage() {
                               e.currentTarget.style.backgroundColor = colors.cardBookButtonBg
                             }}
                           >
-                            {language === "ar" ? "احجز" : "Book"}
+                            {language.language === "ar" ? "احجز" : "Book"}
                           </button>
                         </Link>
                       </div>
@@ -183,7 +188,7 @@ export default function DoctorsClientPage() {
             {(!doctors || doctors.length === 0) && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground text-base sm:text-lg">
-                  {language === "ar" ? "لا يوجد أطباء متاحون حالياً" : "No doctors available at the moment"}
+                  {language.language === "ar" ? "لا يوجد أطباء متاحون حالياً" : "No doctors available at the moment"}
                 </p>
               </div>
             )}
@@ -195,10 +200,12 @@ export default function DoctorsClientPage() {
             <div className="container px-4 sm:px-6 lg:px-8">
               <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                  {language === "ar" ? "احجز موعدك مع أفضل الأطباء" : "Book Your Appointment with the Best Doctors"}
+                  {language.language === "ar"
+                    ? "احجز موعدك مع أفضل الأطباء"
+                    : "Book Your Appointment with the Best Doctors"}
                 </h2>
                 <p className="text-base sm:text-lg text-muted-foreground">
-                  {language === "ar" ? "نحن هنا لخدمتك على مدار الساعة" : "We are here to serve you 24/7"}
+                  {language.language === "ar" ? "نحن هنا لخدمتك على مدار الساعة" : "We are here to serve you 24/7"}
                 </p>
                 <Link href="/booking/1">
                   <button
@@ -207,7 +214,7 @@ export default function DoctorsClientPage() {
                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
                   >
-                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                    {language.language === "ar" ? "احجز موعد" : "Book Appointment"}
                   </button>
                 </Link>
               </div>

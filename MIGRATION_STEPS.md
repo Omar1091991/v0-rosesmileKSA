@@ -21,14 +21,14 @@
 
 ### الطريقة الأولى: استخدام سكريبت النقل التلقائي
 
-\`\`\`bash
+```bash
 # تأكد من وجود متغيرات البيئة
 export STORAGE_DATABASE_URL="your_neon_connection_string"
 export SUPABASE_POSTGRES_URL="your_supabase_connection_string"
 
 # تشغيل سكريبت النقل
 node scripts/003_migrate_data.mjs
-\`\`\`
+```
 
 ### الطريقة الثانية: استخدام صفحة النقل في الموقع
 
@@ -40,7 +40,7 @@ node scripts/003_migrate_data.mjs
 
 بعد نقل البيانات بنجاح، يجب تحديث `lib/db.tsx` ليستخدم Supabase:
 
-\`\`\`typescript
+```typescript
 import { Pool } from '@neondatabase/serverless'
 
 const connectionString = process.env.SUPABASE_POSTGRES_URL
@@ -59,7 +59,7 @@ export async function query(text: string, params?: any[]) {
   console.log('[v0] المدة:', duration, 'ms')
   return res
 }
-\`\`\`
+```
 
 ## الخطوة 5: التحقق من النقل
 

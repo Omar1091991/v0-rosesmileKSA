@@ -14,13 +14,13 @@
 
 ### الخطوة 2: تنسيق المفتاح
 المفتاح يجب أن يكون على هذا الشكل:
-\`\`\`
+```
 -----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC...
 (عدة أسطر من الأحرف والأرقام)
 ...xyz123
 -----END PRIVATE KEY-----
-\`\`\`
+```
 
 **مهم جداً:**
 - يجب أن يحتوي على `\n` (backslash + n) بين كل سطر
@@ -42,9 +42,9 @@ MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC...
 - `"privateKeyLength"` حوالي 1700-1800 حرف (وليس 31974!)
 
 ### مثال على المفتاح الصحيح في Vercel
-\`\`\`
+```
 -----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASC...\n...xyz\n-----END PRIVATE KEY-----\n
-\`\`\`
+```
 
 ## ملاحظات
 - طول المفتاح الطبيعي: 1700-1800 حرف

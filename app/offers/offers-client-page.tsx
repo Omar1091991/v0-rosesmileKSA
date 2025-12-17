@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Tag } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { useLanguage } from "@/components/language-switcher"
 
 interface Offer {
   id: number
@@ -30,8 +29,16 @@ interface Offer {
 export default function OffersClientPage() {
   const [offers, setOffers] = useState<Offer[]>([])
   const [loading, setLoading] = useState(true)
-  const { language } = useLanguage()
-  const isArabic = language === "ar"
+  const [currentLanguage, setCurrentLanguage] = useState<"ar" | "en">("ar")
+
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem("language") as "ar" | "en" | null
+    if (savedLanguage) {
+      setCurrentLanguage(savedLanguage)
+    }
+  }, [])
+
+  const isArabic = currentLanguage === "ar"
 
   useEffect(() => {
     async function fetchOffers() {

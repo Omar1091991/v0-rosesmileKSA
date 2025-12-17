@@ -57,7 +57,7 @@ export default async function BookingPage({ params }: { params: { id: string } }
         <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
             {form.image_url && (
-              <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-6 shadow-lg">
+              <div className="relative w-full max-w-md mx-auto aspect-square rounded-xl overflow-hidden mb-6 shadow-lg">
                 <Image
                   src={form.image_url || "/placeholder.svg"}
                   alt={form.title_ar}

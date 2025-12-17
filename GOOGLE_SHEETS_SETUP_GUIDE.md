@@ -15,24 +15,24 @@
 
 1. افتح Google Sheet الذي أنشأته
 2. انظر إلى عنوان URL في المتصفح، سيكون بهذا الشكل:
-   \`\`\`
+   ```
    https://docs.google.com/spreadsheets/d/[SPREADSHEET_ID]/edit
-   \`\`\`
+   ```
 3. انسخ الجزء الموجود بين `/d/` و `/edit` - هذا هو الـ Spreadsheet ID
 
 **مثال:**
-\`\`\`
+```
 https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-\`\`\`
+```
 الـ ID هو: `1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms`
 
 ## الخطوة 3: مشاركة الجدول مع Service Account
 
 1. في Google Sheet، اضغط على زر "مشاركة" (Share) في الأعلى
 2. أضف البريد الإلكتروني التالي:
-   \`\`\`
+   ```
    v0-rosesmile-vercel@v0-rosesmile-vercel.iam.gserviceaccount.com
-   \`\`\`
+   ```
 3. اختر صلاحية "محرر" (Editor)
 4. اضغط "إرسال" (Send)
 
@@ -41,12 +41,12 @@ https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2u
 الآن تحتاج إلى إضافة 3 متغيرات بيئة في Vercel:
 
 ### 1. GOOGLE_SHEETS_CLIENT_EMAIL
-\`\`\`
+```
 v0-rosesmile-vercel@v0-rosesmile-vercel.iam.gserviceaccount.com
-\`\`\`
+```
 
 ### 2. GOOGLE_SHEETS_PRIVATE_KEY
-\`\`\`
+```
 -----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCvzwRUgI1+meh1
 VdEz6JrFe/DhADWmW6JmQKy42pcMXPE16g0/1T46vrKp6g3+BZg2062ZAInCIJ9h
@@ -75,16 +75,16 @@ tHmVsPLVUJ3LW6oxRuNgHQTmoUoMnWq2QzEMsWQNAoGAIyjGEVguE+2QWOy9b7Sv
 JSGcR4H6y4y3RiwWGB1zRvnWfPp/O9OTau9zLVdL776DkIWwNIQ3szrA4RbxW90P
 JmrPms64gLMlsO/pAPeDrwI=
 -----END PRIVATE KEY-----
-\`\`\`
+```
 
 **⚠️ مهم جداً:** عند إضافة GOOGLE_SHEETS_PRIVATE_KEY في Vercel:
 - انسخ المفتاح كاملاً بما في ذلك `-----BEGIN PRIVATE KEY-----` و `-----END PRIVATE KEY-----`
 - تأكد من عدم وجود مسافات إضافية في البداية أو النهاية
 
 ### 3. GOOGLE_SHEETS_SPREADSHEET_ID
-\`\`\`
+```
 [ضع هنا معرف الجدول الذي نسخته من الخطوة 2]
-\`\`\`
+```
 
 ## كيفية إضافة المتغيرات في Vercel:
 

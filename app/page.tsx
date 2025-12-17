@@ -270,7 +270,7 @@ export default function HomePage() {
   }
 
   const getText = (key: string, defaultValue?: string) => {
-    const langKey = `${key}_${language}`
+    const langKey = `${key}_${language.language}`
     const value = siteSettings[langKey] || siteSettings[`${key}_ar`] || defaultValue || ""
     return value
   }
@@ -390,7 +390,9 @@ export default function HomePage() {
                   >
                     {renderFormattedText(
                       getText("hero_title") ||
-                        (language === "ar" ? "ابتسامة الورود ابتسامتك بتعود" : "Rose Smile - Your Smile Returns"),
+                        (language.language === "ar"
+                          ? "ابتسامة الورود ابتسامتك بتعود"
+                          : "Rose Smile - Your Smile Returns"),
                     )}
                   </motion.h1>
                   <motion.p
@@ -400,7 +402,7 @@ export default function HomePage() {
                   >
                     {renderFormattedText(
                       getText("hero_description") ||
-                        (language === "ar"
+                        (language.language === "ar"
                           ? "نقدم أفضل الخدمات الطبية بأحدث التقنيات في مكة المكرمة"
                           : "We provide the best medical services with the latest technologies in Makkah"),
                     )}
@@ -419,7 +421,7 @@ export default function HomePage() {
                       }}
                     >
                       <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
-                        {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                        {language.language === "ar" ? "احجز موعد" : "Book Appointment"}
                       </Link>
                     </Button>
                     <Button
@@ -434,7 +436,7 @@ export default function HomePage() {
                       }}
                     >
                       <Link href="/services">
-                        {language === "ar" ? "تصفح خدماتنا" : "Explore Our Services"}
+                        {language.language === "ar" ? "تصفح خدماتنا" : "Explore Our Services"}
                         <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                       </Link>
                     </Button>
@@ -473,28 +475,33 @@ export default function HomePage() {
             >
               {[
                 {
-                  title: getText("feature_1_title") || (language === "ar" ? "أطباء متخصصون" : "Specialized Doctors"),
+                  title:
+                    getText("feature_1_title") ||
+                    (language.language === "ar" ? "أطباء متخصصون" : "Specialized Doctors"),
                   description:
                     getText("feature_1_description") ||
-                    (language === "ar"
+                    (language.language === "ar"
                       ? "فريق طبي متميز من أفضل الأطباء والاستشاريين في مختلف التخصصات"
                       : "Distinguished medical team of the best doctors and consultants in various specialties"),
                   gradient: "from-primary/5 to-secondary/5",
                 },
                 {
-                  title: getText("feature_2_title") || (language === "ar" ? "أحدث التقنيات" : "Latest Technologies"),
+                  title:
+                    getText("feature_2_title") ||
+                    (language.language === "ar" ? "أحدث التقنيات" : "Latest Technologies"),
                   description:
                     getText("feature_2_description") ||
-                    (language === "ar"
+                    (language.language === "ar"
                       ? "نستخدم أحدث الأجهزة والتقنيات الطبية لضمان أفضل النتائج"
                       : "We use the latest medical devices and technologies to ensure the best results"),
                   gradient: "from-secondary/5 to-primary/5",
                 },
                 {
-                  title: getText("feature_3_title") || (language === "ar" ? "رعاية شاملة" : "Comprehensive Care"),
+                  title:
+                    getText("feature_3_title") || (language.language === "ar" ? "رعاية شاملة" : "Comprehensive Care"),
                   description:
                     getText("feature_3_description") ||
-                    (language === "ar"
+                    (language.language === "ar"
                       ? "نقدم رعاية طبية شاملة ومتابعة مستمرة لضمان راحتك وصحتك"
                       : "We provide comprehensive medical care and continuous follow-up to ensure your comfort and health"),
                   gradient: "from-primary/5 to-secondary/5",
@@ -547,7 +554,8 @@ export default function HomePage() {
                   style={{ color: getColor("services_title_color", "#1f2937") }}
                 >
                   {renderFormattedText(
-                    getText("services_title") || (language === "ar" ? "خدماتنا الطبية" : "Our Medical Services"),
+                    getText("services_title") ||
+                      (language.language === "ar" ? "خدماتنا الطبية" : "Our Medical Services"),
                   )}
                 </h2>
               </Link>
@@ -557,7 +565,7 @@ export default function HomePage() {
               >
                 {renderFormattedText(
                   getText("services_description") ||
-                    (language === "ar"
+                    (language.language === "ar"
                       ? "نقدم مجموعة شاملة من الخدمات الطبية المتخصصة"
                       : "We provide a comprehensive range of specialized medical services"),
                 )}
@@ -619,7 +627,9 @@ export default function HomePage() {
                             <div className="w-full aspect-square relative rounded-lg overflow-hidden">
                               <Image
                                 src={service.image_url || "/placeholder.svg"}
-                                alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                                alt={
+                                  language.language === "ar" ? service.title_ar : service.title_en || service.title_ar
+                                }
                                 fill
                                 className="object-cover"
                               />
@@ -630,11 +640,11 @@ export default function HomePage() {
                             </div>
                           )}
                           <h3 className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2">
-                            {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                            {language.language === "ar" ? service.title_ar : service.title_en || service.title_ar}
                           </h3>
                           <p className="text-muted-foreground leading-relaxed line-clamp-2 text-center text-xs sm:text-sm flex-1">
                             {renderFormattedText(
-                              language === "ar"
+                              language.language === "ar"
                                 ? service.description_ar
                                 : service.description_en || service.description_ar,
                             )}
@@ -664,7 +674,7 @@ export default function HomePage() {
                                 window.location.href = `/services/${service.id}`
                               }}
                             >
-                              {language === "ar" ? "التفاصيل" : "Details"}
+                              {language.language === "ar" ? "التفاصيل" : "Details"}
                             </button>
                             <motion.div className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                               <button
@@ -705,7 +715,7 @@ export default function HomePage() {
                                   }}
                                 />
                                 <span className="relative z-10">
-                                  {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                                  {language.language === "ar" ? "احجز موعد" : "Book Appointment"}
                                 </span>
                               </button>
                             </motion.div>
@@ -737,7 +747,7 @@ export default function HomePage() {
                 }}
               >
                 <Link href="/services">
-                  {language === "ar" ? "عرض جميع الخدمات" : "View All Services"}
+                  {language.language === "ar" ? "عرض جميع الخدمات" : "View All Services"}
                   <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Link>
               </Button>
@@ -768,7 +778,7 @@ export default function HomePage() {
                   >
                     {renderFormattedText(
                       getText("doctors_title") ||
-                        (language === "ar" ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"),
+                        (language.language === "ar" ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"),
                     )}
                   </h2>
                 </Link>
@@ -778,7 +788,7 @@ export default function HomePage() {
                 >
                   {renderFormattedText(
                     getText("doctors_description") ||
-                      (language === "ar"
+                      (language.language === "ar"
                         ? "فريق طبي متخصص بخبرات عالمية"
                         : "A team of specialized doctors with international experience"),
                   )}
@@ -843,7 +853,7 @@ export default function HomePage() {
                             <div className="relative h-[320px] overflow-hidden">
                               <Image
                                 src={doctor.image_url || "/placeholder.svg"}
-                                alt={language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
+                                alt={language.language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
                                 fill
                                 className="object-cover group-hover:scale-110 transition-transform duration-500"
                               />
@@ -855,13 +865,15 @@ export default function HomePage() {
                                 className="text-xl font-bold mb-2 line-clamp-1"
                                 style={{ color: getColor("card_title_color", "#1f2937") }}
                               >
-                                {language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
+                                {language.language === "ar" ? doctor.name_ar : doctor.name_en || doctor.name_ar}
                               </h3>
                               <p
                                 className="text-sm mb-4 line-clamp-1"
                                 style={{ color: getColor("card_text_color", "#6b7280") }}
                               >
-                                {language === "ar" ? doctor.specialty_ar : doctor.specialty_en || doctor.specialty_ar}
+                                {language.language === "ar"
+                                  ? doctor.specialty_ar
+                                  : doctor.specialty_en || doctor.specialty_ar}
                               </p>
 
                               {/* Bio excerpt */}
@@ -870,7 +882,7 @@ export default function HomePage() {
                                   className="text-sm mb-4 line-clamp-2 flex-1"
                                   style={{ color: getColor("card_text_color", "#6b7280") }}
                                 >
-                                  {language === "ar"
+                                  {language.language === "ar"
                                     ? doctor.bio_ar.replace(/<[^>]*>/g, "").substring(0, 80) + "..."
                                     : (doctor.bio_en || doctor.bio_ar).replace(/<[^>]*>/g, "").substring(0, 80) + "..."}
                                 </p>
@@ -902,7 +914,7 @@ export default function HomePage() {
                                     window.location.href = `/doctors/${doctor.id}`
                                   }}
                                 >
-                                  {language === "ar" ? "عرض التفاصيل" : "View Details"}
+                                  {language.language === "ar" ? "عرض التفاصيل" : "View Details"}
                                 </button>
                                 <button
                                   className="flex-1 py-2 px-4 text-sm rounded-md transition-colors"
@@ -930,7 +942,7 @@ export default function HomePage() {
                                       : "/booking"
                                   }}
                                 >
-                                  {language === "ar" ? "احجز الآن" : "Book Now"}
+                                  {language.language === "ar" ? "احجز الآن" : "Book Now"}
                                 </button>
                               </div>
                             </div>
@@ -963,7 +975,7 @@ export default function HomePage() {
                   }}
                   onClick={() => (window.location.href = "/doctors")}
                 >
-                  {language === "ar"
+                  {language.language === "ar"
                     ? getText("doctors_section_button_text_ar", "تعرف على جميع الأطباء")
                     : getText("doctors_section_button_text_en", "Meet All Our Doctors")}
                   <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -995,7 +1007,7 @@ export default function HomePage() {
                     style={{ color: getColor("offers_title_color", "#1f2937") }}
                   >
                     {renderFormattedText(
-                      getText("offers_title") || (language === "ar" ? "عروضنا الخاصة" : "Our Special Offers"),
+                      getText("offers_title") || (language.language === "ar" ? "عروضنا الخاصة" : "Our Special Offers"),
                     )}
                   </h2>
                 </Link>
@@ -1005,7 +1017,7 @@ export default function HomePage() {
                 >
                   {renderFormattedText(
                     getText("offers_description") ||
-                      (language === "ar"
+                      (language.language === "ar"
                         ? "استفد من عروضنا الطبية المميزة والمصممة خصيصاً لتلبية احتياجاتك"
                         : "Take advantage of our special medical offers designed specifically for your needs"),
                   )}
@@ -1075,7 +1087,7 @@ export default function HomePage() {
                               <div className="w-full aspect-video relative rounded-lg overflow-hidden">
                                 <Image
                                   src={offer.image_url || "/placeholder.svg"}
-                                  alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
+                                  alt={language.language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
                                   fill
                                   className="object-cover"
                                 />
@@ -1085,20 +1097,24 @@ export default function HomePage() {
                               className="text-base sm:text-lg md:text-xl font-semibold text-center line-clamp-2"
                               style={{ color: getColor("card_title_color", "#1f2937") }}
                             >
-                              {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
+                              {language.language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
                             </h3>
                             <p
                               className="text-center text-xs sm:text-sm line-clamp-2 flex-1"
                               style={{ color: getColor("card_text_color", "#4b5563") }}
                             >
                               {renderFormattedText(
-                                language === "ar" ? offer.description_ar : offer.description_en || offer.description_ar,
+                                language.language === "ar"
+                                  ? offer.description_ar
+                                  : offer.description_en || offer.description_ar,
                               )}
                             </p>
                             {offer.end_date && new Date(offer.end_date) >= new Date() && (
                               <p className="text-xs text-center text-muted-foreground">
-                                {language === "ar" ? "ينتهي في" : "Ends on"}:{" "}
-                                {new Date(offer.end_date).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US")}
+                                {language.language === "ar" ? "ينتهي في" : "Ends on"}:{" "}
+                                {new Date(offer.end_date).toLocaleDateString(
+                                  language.language === "ar" ? "ar-SA" : "en-US",
+                                )}
                               </p>
                             )}
                             <button
@@ -1125,7 +1141,7 @@ export default function HomePage() {
                                 window.location.href = `/offers/${offer.id}`
                               }}
                             >
-                              {language === "ar" ? "التفاصيل" : "Details"}
+                              {language.language === "ar" ? "التفاصيل" : "Details"}
                             </button>
                           </div>
                         </div>
@@ -1154,7 +1170,7 @@ export default function HomePage() {
                   }}
                 >
                   <Link href="/offers">
-                    {language === "ar" ? "عرض جميع العروض" : "View All Offers"}
+                    {language.language === "ar" ? "عرض جميع العروض" : "View All Offers"}
                     <ArrowLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   </Link>
                 </Button>
@@ -1180,7 +1196,8 @@ export default function HomePage() {
                     style={{ color: getColor("articles_title_color", "#1f2937") }}
                   >
                     {renderFormattedText(
-                      getText("articles_title") || (language === "ar" ? "مقالاتنا الطبية" : "Our Medical Articles"),
+                      getText("articles_title") ||
+                        (language.language === "ar" ? "مقالاتنا الطبية" : "Our Medical Articles"),
                     )}
                   </h2>
                 </Link>
@@ -1190,7 +1207,7 @@ export default function HomePage() {
                 >
                   {renderFormattedText(
                     getText("articles_description") ||
-                      (language === "ar"
+                      (language.language === "ar"
                         ? "اقرأ أحدث المقالات والنصائح الطبية"
                         : "Read the latest medical articles and tips"),
                   )}
@@ -1253,18 +1270,20 @@ export default function HomePage() {
                               <div className="w-full aspect-video relative rounded-lg overflow-hidden">
                                 <Image
                                   src={article.image_url || "/placeholder.svg"}
-                                  alt={language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                                  alt={
+                                    language.language === "ar" ? article.title_ar : article.title_en || article.title_ar
+                                  }
                                   fill
                                   className="object-cover"
                                 />
                               </div>
                             )}
                             <h3 className="text-xl font-semibold line-clamp-2">
-                              {language === "ar" ? article.title_ar : article.title_en || article.title_ar}
+                              {language.language === "ar" ? article.title_ar : article.title_en || article.title_ar}
                             </h3>
                             <p className="text-muted-foreground leading-relaxed line-clamp-2 text-sm">
                               {renderFormattedText(
-                                (language === "ar"
+                                (language.language === "ar"
                                   ? article.content_ar?.substring(0, 120)
                                   : article.content_en?.substring(0, 120) || article.content_ar?.substring(0, 120)) +
                                   "...",
@@ -1279,7 +1298,7 @@ export default function HomePage() {
                                 window.location.href = `/articles/${article.id}`
                               }}
                             >
-                              {language === "ar" ? "اقرأ المزيد" : "Read More"}
+                              {language.language === "ar" ? "اقرأ المزيد" : "Read More"}
                             </Button>
                           </CardContent>
                         </Card>
@@ -1314,7 +1333,7 @@ export default function HomePage() {
                   }}
                   onClick={() => (window.location.href = "/articles")}
                 >
-                  {language === "ar"
+                  {language.language === "ar"
                     ? getText("articles_section_button_text_ar", "عرض جميع المقالات")
                     : getText("articles_section_button_text_en", "View All Articles")}
                   <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -1338,13 +1357,13 @@ export default function HomePage() {
                 className="text-2xl sm:text-3xl md:text-4xl font-bold"
                 style={{ color: getColor("social_media_section_title_color", "#1f2937") }}
               >
-                {language === "ar" ? "تابعنا على وسائل التواصل الاجتماعي" : "Follow Us on Social Media"}
+                {language.language === "ar" ? "تابعنا على وسائل التواصل الاجتماعي" : "Follow Us on Social Media"}
               </h2>
               <p
                 className="text-base sm:text-lg max-w-2xl mx-auto"
                 style={{ color: getColor("social_media_section_text_color", "#6b7280") }}
               >
-                {language === "ar"
+                {language.language === "ar"
                   ? "ابقَ على اطلاع بآخر الأخبار والعروض والنصائح الطبية"
                   : "Stay updated with the latest news, offers, and medical tips"}
               </p>
@@ -1376,7 +1395,9 @@ export default function HomePage() {
               >
                 {renderFormattedText(
                   getText("why_choose_us_title") ||
-                    (language === "ar" ? "لماذا تختار عيادات ابتسامة الورود؟" : "Why Choose Rose Smile Clinics?"),
+                    (language.language === "ar"
+                      ? "لماذا تختار عيادات ابتسامة الورود؟"
+                      : "Why Choose Rose Smile Clinics?"),
                 )}
               </h2>
             </motion.div>
@@ -1389,12 +1410,14 @@ export default function HomePage() {
               variants={staggerContainer}
             >
               {[
-                language === "ar" ? "فريق طبي متخصص ومؤهل" : "Specialized and Qualified Medical Team",
-                language === "ar" ? "أحدث التقنيات والأجهزة الطبية" : "Latest Medical Technologies and Devices",
-                language === "ar" ? "بيئة نظيفة ومعقمة" : "Clean and Modern Environment",
-                language === "ar" ? "أسعار تنافسية وعروض مميزة" : "Competitive Prices and Special Offers",
-                language === "ar" ? "مواعيد مرنة تناسب الجميع" : "Flexible Appointments for Everyone",
-                language === "ar" ? "خدمة عملاء متميزة" : "Distinguished Customer Service",
+                language.language === "ar" ? "فريق طبي متخصص ومؤهل" : "Specialized and Qualified Medical Team",
+                language.language === "ar"
+                  ? "أحدث التقنيات والأجهزة الطبية"
+                  : "Latest Medical Technologies and Devices",
+                language.language === "ar" ? "بيئة نظيفة ومعقمة" : "Clean and Modern Environment",
+                language.language === "ar" ? "أسعار تنافسية وعروض مميزة" : "Competitive Prices and Special Offers",
+                language.language === "ar" ? "مواعيد مرنة تناسب الجميع" : "Flexible Appointments for Everyone",
+                language.language === "ar" ? "خدمة عملاء متميزة" : "Distinguished Customer Service",
               ].map((item, index) => (
                 <motion.div key={index} className="flex items-center gap-3" variants={fadeInUp}>
                   <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
@@ -1423,20 +1446,20 @@ export default function HomePage() {
                   className="text-2xl sm:text-3xl md:text-4xl font-bold"
                   style={{ color: getColor("location_section_title_color", "#1f2937") }}
                 >
-                  {language === "ar" ? "موقعنا" : "Our Location"}
+                  {language.language === "ar" ? "موقعنا" : "Our Location"}
                 </h2>
                 <div className="space-y-2">
                   <h3
                     className="text-xl sm:text-2xl font-semibold"
                     style={{ color: getColor("location_section_subtitle_color", "#ec4899") }}
                   >
-                    {language === "ar" ? "ابتسامة الورود لطب الأسنان" : "Rose Smile Dental Clinic"}
+                    {language.language === "ar" ? "ابتسامة الورود لطب الأسنان" : "Rose Smile Dental Clinic"}
                   </h3>
                   <p
                     className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
                     style={{ color: getColor("location_section_text_color", "#6b7280") }}
                   >
-                    {language === "ar"
+                    {language.language === "ar"
                       ? "مكة المكرمة - حي العوالي - شارع ابراهيم الجفالي - أعلى صيدلية الدواء"
                       : "Makkah - Al-Awali District - Ibrahim Al-Jafali Street - Above Al-Dawa Pharmacy"}
                   </p>
@@ -1456,7 +1479,7 @@ export default function HomePage() {
                         allowFullScreen
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
-                        title={language === "ar" ? "موقع العيادة" : "Clinic Location"}
+                        title={language.language === "ar" ? "موقع العيادة" : "Clinic Location"}
                       />
                     </div>
                   </CardContent>
@@ -1480,7 +1503,7 @@ export default function HomePage() {
                     }}
                   >
                     <MapPin className="h-5 w-5" />
-                    {language === "ar" ? "اضغط للحصول على الاتجاهات" : "Get Directions"}
+                    {language.language === "ar" ? "اضغط للحصول على الاتجاهات" : "Get Directions"}
                   </Button>
                 </div>
               </motion.div>
@@ -1510,7 +1533,7 @@ export default function HomePage() {
               >
                 {renderFormattedText(
                   getText("cta_title") ||
-                    (language === "ar"
+                    (language.language === "ar"
                       ? "هل أنت مستعد لبدء رحلتك نحو صحة أفضل؟"
                       : "Are You Ready to Start Your Journey Towards Better Health?"),
                 )}
@@ -1522,7 +1545,7 @@ export default function HomePage() {
               >
                 {renderFormattedText(
                   getText("cta_description") ||
-                    (language === "ar"
+                    (language.language === "ar"
                       ? "احجز موعدك الآن واحصل على استشارة طبية مجانية"
                       : "Book Your Appointment Now and Get a Free Medical Consultation"),
                 )}
@@ -1561,7 +1584,7 @@ from-white/20 to-transparent"
                         }}
                       />
                       <span className="relative z-10">
-                        {language === "ar" ? "احجز موعدك الآن" : "Book Your Appointment Now"}
+                        {language.language === "ar" ? "احجز موعدك الآن" : "Book Your Appointment Now"}
                       </span>
                     </Link>
                   </Button>
@@ -1578,7 +1601,7 @@ from-white/20 to-transparent"
                     }}
                   >
                     <Link href="/contact">
-                      {language === "ar" ? "اتصل بنا" : "Contact Us"}
+                      {language.language === "ar" ? "اتصل بنا" : "Contact Us"}
                       <Phone className="h-4 w-4 ml-2" />
                     </Link>
                   </Button>
