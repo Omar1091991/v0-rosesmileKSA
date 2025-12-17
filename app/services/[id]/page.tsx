@@ -10,7 +10,7 @@ import { useLanguage } from "@/components/language-switcher"
 import { useEffect, useState } from "react"
 
 export default function ServiceDetailPage({ params }: { params: { id: string } }) {
-  const language = useLanguage()
+  const { language, isArabic } = useLanguage()
   const [service, setService] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
@@ -46,7 +46,11 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
   }
 
   if (!service) {
-    return <div className="flex min-h-screen items-center justify-center">الخدمة غير موجودة</div>
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        {isArabic ? "الخدمة غير موجودة" : "Service not found"}
+      </div>
+    )
   }
 
   return (
@@ -62,7 +66,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                 className="inline-flex items-center gap-2 text-primary hover:underline mb-6 sm:mb-8"
               >
                 <ArrowRight className="h-4 w-4" />
-                {language === "ar" ? "العودة إلى الخدمات" : "Back to Services"}
+                {isArabic ? "العودة إلى الخدمات" : "Back to Services"}
               </Link>
 
               <div className="grid md:grid-cols-2 gap-8 sm:gap-12 items-start max-w-6xl">
@@ -71,7 +75,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                     {service.image_url ? (
                       <img
                         src={service.image_url || "/placeholder.svg"}
-                        alt={language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                        alt={isArabic ? service.title_ar : service.title_en || service.title_ar}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -86,20 +90,19 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                   <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
                     <div>
                       <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
-                        {language === "ar" ? service.title_ar : service.title_en || service.title_ar}
+                        {isArabic ? service.title_ar : service.title_en || service.title_ar}
                       </h1>
                     </div>
 
-                    {((language === "ar" && service.description_ar) ||
-                      (language === "en" && service.description_en)) && (
+                    {((isArabic && service.description_ar) || (!isArabic && service.description_en)) && (
                       <div className="space-y-2">
                         <h2 className="text-lg sm:text-xl font-semibold">
-                          {language === "ar" ? "وصف الخدمة" : "Service Description"}
+                          {isArabic ? "وصف الخدمة" : "Service Description"}
                         </h2>
                         <div
                           className="text-muted-foreground leading-relaxed text-base sm:text-lg prose prose-lg max-w-none whitespace-pre-line"
                           dangerouslySetInnerHTML={{
-                            __html: (language === "ar"
+                            __html: (isArabic
                               ? service.description_ar
                               : service.description_en || service.description_ar
                             ).replace(/<(?!\/?(?:strong|em|s|b|i|del|span)\b)[^>]*>/gi, ""),
@@ -110,7 +113,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
 
                     <Link href="/booking/1">
                       <button className="w-full py-3 px-4 sm:px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-base sm:text-lg font-semibold">
-                        {language === "ar"
+                        {isArabic
                           ? `احجز موعد لـ ${service.title_ar}`
                           : `Book for ${service.title_en || service.title_ar}`}
                       </button>
@@ -127,10 +130,10 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
             <div className="container px-4 sm:px-6 lg:px-8">
               <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                  {language === "ar" ? "احجز موعدك الآن" : "Book Your Appointment Now"}
+                  {isArabic ? "احجز موعدك الآن" : "Book Your Appointment Now"}
                 </h2>
                 <p className="text-base sm:text-lg text-muted-foreground">
-                  {language === "ar" ? "نحن هنا لخدمتك على مدار الساعة" : "We are here to serve you 24/7"}
+                  {isArabic ? "نحن هنا لخدمتك على مدار الساعة" : "We are here to serve you 24/7"}
                 </p>
                 <Link href="/booking/1">
                   <button
@@ -139,7 +142,7 @@ export default function ServiceDetailPage({ params }: { params: { id: string } }
                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
                   >
-                    {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                    {isArabic ? "احجز موعد" : "Book Appointment"}
                   </button>
                 </Link>
               </div>

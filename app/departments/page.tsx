@@ -9,7 +9,7 @@ import { useLanguage } from "@/components/language-switcher"
 
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState([])
-  const language = useLanguage()
+  const { language, isArabic } = useLanguage()
 
   useEffect(() => {
     fetch("/api/departments")
@@ -30,10 +30,10 @@ export default function DepartmentsPage() {
           <div className="container">
             <div className="max-w-3xl mx-auto text-center space-y-6">
               <h1 className="text-4xl md:text-5xl font-bold text-balance">
-                {language === "ar" ? "أقسامنا الطبية" : "Our Medical Departments"}
+                {isArabic ? "أقسامنا الطبية" : "Our Medical Departments"}
               </h1>
               <p className="text-lg text-muted-foreground text-balance leading-relaxed">
-                {language === "ar"
+                {isArabic
                   ? "أقسام طبية متخصصة مجهزة بأحدث التقنيات لتقديم أفضل رعاية صحية"
                   : "Specialized medical departments equipped with the latest technologies to provide the best healthcare"}
               </p>
@@ -52,7 +52,7 @@ export default function DepartmentsPage() {
                       <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted">
                         <img
                           src={department.image_url || "/placeholder.svg"}
-                          alt={language === "ar" ? department.name_ar : department.name_en}
+                          alt={isArabic ? department.name_ar : department.name_en}
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -63,17 +63,15 @@ export default function DepartmentsPage() {
                     )}
                     <div className="space-y-1 flex-1">
                       <h3 className="text-sm sm:text-base md:text-lg font-bold line-clamp-2">
-                        {language === "ar" ? department.name_ar : department.name_en || department.name_ar}
+                        {isArabic ? department.name_ar : department.name_en || department.name_ar}
                       </h3>
                       <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm line-clamp-2 hidden sm:block">
-                        {language === "ar"
-                          ? department.description_ar
-                          : department.description_en || department.description_ar}
+                        {isArabic ? department.description_ar : department.description_en || department.description_ar}
                       </p>
                     </div>
                     <Link href="/booking/1">
                       <button className="w-full py-1.5 sm:py-2 px-2 sm:px-3 bg-primary text-primary-foreground text-xs sm:text-sm rounded-md hover:bg-primary/90 transition-colors mt-auto">
-                        {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                        {isArabic ? "احجز موعد" : "Book Appointment"}
                       </button>
                     </Link>
                   </CardContent>
@@ -84,7 +82,7 @@ export default function DepartmentsPage() {
             {(!departments || departments.length === 0) && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground text-lg">
-                  {language === "ar" ? "لا توجد أقسام متاحة حالياً" : "No departments available at the moment"}
+                  {isArabic ? "لا توجد أقسام متاحة حالياً" : "No departments available at the moment"}
                 </p>
               </div>
             )}
@@ -96,10 +94,10 @@ export default function DepartmentsPage() {
           <div className="container">
             <div className="max-w-3xl mx-auto text-center space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold">
-                {language === "ar" ? "نحن هنا لخدمتك" : "We Are Here to Serve You"}
+                {isArabic ? "نحن هنا لخدمتك" : "We Are Here to Serve You"}
               </h2>
               <p className="text-lg text-muted-foreground">
-                {language === "ar" ? "احجز موعدك في القسم المناسب لك" : "Book your appointment in the right department"}
+                {isArabic ? "احجز موعدك في القسم المناسب لك" : "Book your appointment in the right department"}
               </p>
               <Link href="/booking/1">
                 <button
@@ -108,7 +106,7 @@ export default function DepartmentsPage() {
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#153d6f")}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#1a4f8b")}
                 >
-                  {language === "ar" ? "احجز موعد" : "Book Appointment"}
+                  {isArabic ? "احجز موعد" : "Book Appointment"}
                 </button>
               </Link>
             </div>
