@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileCheck,
+  CheckSquare,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
@@ -37,6 +38,7 @@ import jsPDF from "jspdf"
 import * as XLSX from "xlsx"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PermissionGuard } from "@/components/permission-guard"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface Booking {
   id: string
@@ -75,6 +77,8 @@ export default function BookingsPage() {
   const [filterContacted, setFilterContacted] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
+
+  const [selectedBookings, setSelectedBookings] = useState<Set<string>>(new Set())
 
   const { toast } = useToast()
 
@@ -117,12 +121,44 @@ export default function BookingsPage() {
 
     setFilteredBookings(filtered)
     setCurrentPage(1)
+    setSelectedBookings(new Set())
   }, [bookings, dateFrom, dateTo, filterBookingForm, filterStatus, filterContacted])
 
   const totalPages = Math.ceil(filteredBookings.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const currentBookings = filteredBookings.slice(startIndex, endIndex)
+
+  const isAllSelected = filteredBookings.length > 0 && filteredBookings.every((b) => selectedBookings.has(b.id))
+  const isPartiallySelected = selectedBookings.size > 0 && !isAllSelected
+  const selectedCount = selectedBookings.size
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedBookings(new Set())
+    } else {
+      setSelectedBookings(new Set(filteredBookings.map((b) => b.id)))
+    }
+  }
+
+  const toggleSelectBooking = (id: string) => {
+    const newSelected = new Set(selectedBookings)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedBookings(newSelected)
+  }
+
+  const getDataToExport = () => {
+    // If there are selected bookings, export only those
+    if (selectedBookings.size > 0) {
+      return filteredBookings.filter((b) => selectedBookings.has(b.id))
+    }
+    // Otherwise export filtered bookings
+    return filteredBookings
+  }
 
   const fetchBookings = async () => {
     try {
@@ -276,7 +312,7 @@ export default function BookingsPage() {
   }
 
   const exportToCSV = () => {
-    const dataToExport = dateFrom || dateTo ? filteredBookings : bookings
+    const dataToExport = getDataToExport()
 
     const headers = [
       "الاسم",
@@ -309,9 +345,9 @@ export default function BookingsPage() {
     link.href = URL.createObjectURL(blob)
 
     const fileName =
-      dateFrom || dateTo
-        ? `bookings_filtered_${new Date().toISOString().split("T")[0]}.csv`
-        : `bookings_all_${new Date().toISOString().split("T")[0]}.csv`
+      selectedBookings.size > 0
+        ? `bookings_selected_${new Date().toISOString().split("T")[0]}.csv`
+        : `bookings_${new Date().toISOString().split("T")[0]}.csv`
 
     link.download = fileName
     link.click()
@@ -323,7 +359,7 @@ export default function BookingsPage() {
   }
 
   const exportToPDF = () => {
-    const dataToExport = dateFrom || dateTo ? filteredBookings : bookings
+    const dataToExport = getDataToExport()
 
     const doc = new jsPDF()
 
@@ -334,7 +370,9 @@ export default function BookingsPage() {
     doc.setFontSize(10)
     doc.text(`Generated: ${format(new Date(), "yyyy-MM-dd HH:mm")}`, 105, 22, { align: "center" })
 
-    if (dateFrom || dateTo) {
+    if (selectedBookings.size > 0) {
+      doc.text(`Selected: ${dataToExport.length} bookings`, 105, 28, { align: "center" })
+    } else if (dateFrom || dateTo) {
       const dateRange = `Period: ${dateFrom ? format(dateFrom, "yyyy-MM-dd") : "Start"} to ${dateTo ? format(dateTo, "yyyy-MM-dd") : "End"}`
       doc.text(dateRange, 105, 28, { align: "center" })
     }
@@ -351,7 +389,6 @@ export default function BookingsPage() {
     doc.text("Status", 120, yPosition + 5)
     doc.text("Contacted", 145, yPosition + 5)
     doc.text("Booking Form", 170, yPosition + 5)
-    doc.text("Date", 195, yPosition + 5)
 
     yPosition += 10
     doc.setTextColor(0, 0, 0)
@@ -372,8 +409,11 @@ export default function BookingsPage() {
       doc.text((booking.service_name || "-").substring(0, 12), 85, yPosition)
       doc.text(booking.status, 120, yPosition)
       doc.text(booking.contacted ? "Yes" : "No", 145, yPosition)
-      doc.text(booking.booking_form_name || getBookingFormName(booking.booking_form_id), 170, yPosition)
-      doc.text(format(new Date(booking.created_at), "yyyy-MM-dd"), 195, yPosition)
+      doc.text(
+        (booking.booking_form_name || getBookingFormName(booking.booking_form_id)).substring(0, 15),
+        170,
+        yPosition,
+      )
 
       yPosition += 8
     })
@@ -388,9 +428,9 @@ export default function BookingsPage() {
     }
 
     const fileName =
-      dateFrom || dateTo
-        ? `bookings_filtered_${new Date().toISOString().split("T")[0]}.pdf`
-        : `bookings_all_${new Date().toISOString().split("T")[0]}.pdf`
+      selectedBookings.size > 0
+        ? `bookings_selected_${new Date().toISOString().split("T")[0]}.pdf`
+        : `bookings_${new Date().toISOString().split("T")[0]}.pdf`
 
     doc.save(fileName)
 
@@ -401,7 +441,7 @@ export default function BookingsPage() {
   }
 
   const exportToExcel = () => {
-    const dataToExport = dateFrom || dateTo ? filteredBookings : bookings
+    const dataToExport = getDataToExport()
 
     const worksheetData = [
       [
@@ -458,11 +498,20 @@ export default function BookingsPage() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "الحجوزات")
 
     const fileName =
-      dateFrom || dateTo
-        ? `bookings_filtered_${new Date().toISOString().split("T")[0]}.xlsx`
-        : `bookings_all_${new Date().toISOString().split("T")[0]}.xlsx`
+      selectedBookings.size > 0
+        ? `bookings_selected_${new Date().toISOString().split("T")[0]}.xlsx`
+        : `bookings_${new Date().toISOString().split("T")[0]}.xlsx`
 
-    XLSX.writeFile(workbook, fileName)
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
+    const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
 
     toast({
       title: "نجح",
@@ -476,6 +525,7 @@ export default function BookingsPage() {
     setFilterBookingForm("all")
     setFilterStatus("all")
     setFilterContacted("all")
+    setSelectedBookings(new Set())
   }
 
   const handleDelete = async (id: string) => {
@@ -537,6 +587,21 @@ export default function BookingsPage() {
             </p>
           </div>
           <div className="flex gap-2 flex-wrap">
+            {selectedCount > 0 && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
+                <CheckSquare className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">{selectedCount} محدد</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedBookings(new Set())}
+                  className="h-6 px-2 text-xs"
+                >
+                  إلغاء التحديد
+                </Button>
+              </div>
+            )}
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline">
@@ -583,10 +648,20 @@ export default function BookingsPage() {
                 <Button variant="outline">
                   <Download className="ml-2 h-4 w-4" />
                   تصدير
+                  {selectedCount > 0 && (
+                    <Badge className="mr-2" variant="secondary">
+                      {selectedCount}
+                    </Badge>
+                  )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-48" align="end">
+              <PopoverContent className="w-56" align="end">
                 <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground px-2 pb-2 border-b">
+                    {selectedCount > 0
+                      ? `سيتم تصدير ${selectedCount} حجز محدد`
+                      : `سيتم تصدير ${filteredBookings.length} حجز`}
+                  </p>
                   <Button variant="ghost" className="w-full justify-start" onClick={exportToExcel}>
                     <FileSpreadsheet className="ml-2 h-4 w-4 text-green-600" />
                     تصدير Excel
@@ -670,12 +745,53 @@ export default function BookingsPage() {
           </CardContent>
         </Card>
 
+        {filteredBookings.length > 0 && (
+          <Card>
+            <CardContent className="py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="select-all"
+                    checked={isAllSelected}
+                    onCheckedChange={toggleSelectAll}
+                    className="h-5 w-5"
+                  />
+                  <Label htmlFor="select-all" className="cursor-pointer text-sm font-medium">
+                    {isAllSelected ? "إلغاء تحديد الكل" : "تحديد الكل"}
+                  </Label>
+                  {isPartiallySelected && (
+                    <span className="text-xs text-muted-foreground">
+                      ({selectedCount} من {filteredBookings.length})
+                    </span>
+                  )}
+                </div>
+                {selectedCount > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={exportToExcel} className="gap-1 bg-transparent">
+                      <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                      تصدير المحدد
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 gap-4">
           {currentBookings.map((booking) => (
-            <Card key={booking.id} className="hover:shadow-lg transition-shadow">
+            <Card
+              key={booking.id}
+              className={`hover:shadow-lg transition-shadow ${selectedBookings.has(booking.id) ? "ring-2 ring-primary bg-primary/5" : ""}`}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-4 flex-wrap">
+                    <Checkbox
+                      checked={selectedBookings.has(booking.id)}
+                      onCheckedChange={() => toggleSelectBooking(booking.id)}
+                      className="h-5 w-5"
+                    />
                     <span className="text-lg">{booking.full_name}</span>
                     {getStatusBadge(booking.status)}
                     {booking.contacted && (
@@ -788,6 +904,7 @@ export default function BookingsPage() {
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="text-sm text-muted-foreground">
                   عرض {startIndex + 1} - {Math.min(endIndex, filteredBookings.length)} من {filteredBookings.length} حجز
+                  {selectedCount > 0 && <span className="mr-2 text-primary font-medium">({selectedCount} محدد)</span>}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -800,17 +917,29 @@ export default function BookingsPage() {
                     السابق
                   </Button>
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                        className="min-w-[2.5rem]"
-                      >
-                        {page}
-                      </Button>
-                    ))}
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      let page: number
+                      if (totalPages <= 5) {
+                        page = i + 1
+                      } else if (currentPage <= 3) {
+                        page = i + 1
+                      } else if (currentPage >= totalPages - 2) {
+                        page = totalPages - 4 + i
+                      } else {
+                        page = currentPage - 2 + i
+                      }
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          className="min-w-[2.5rem]"
+                        >
+                          {page}
+                        </Button>
+                      )
+                    })}
                   </div>
                   <Button
                     variant="outline"
