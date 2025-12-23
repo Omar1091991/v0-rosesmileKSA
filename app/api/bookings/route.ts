@@ -1,6 +1,9 @@
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
 
+const APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbztWf9GvFqtZITkuc_5UeLO8GS8S3uW-fQFnDCu22_4gacrHTPtIk-5rsOnwiqOLM469w/exec"
+
 export async function GET() {
   try {
     console.log("[v0] Fetching bookings...")
@@ -161,10 +164,10 @@ export async function POST(request: Request) {
           body.contact_attempts || 0,
         ],
       )
-      console.log("[v0] ✅ Created booking with new schema")
+      console.log("[v0] Created booking with new schema")
     } catch (error: any) {
       if (error.message?.includes("does not exist") || error.code === "42703") {
-        console.log("[v0] ⚠️ New columns not found, using old schema for insert")
+        console.log("[v0] New columns not found, using old schema for insert")
         result = await db.query(
           `INSERT INTO bookings (
             patient_name, 
@@ -201,33 +204,52 @@ export async function POST(request: Request) {
     console.log("[v0] Created booking:", booking)
 
     if (body.booking_form_id) {
-      try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-            ? `https://${process.env.VERCEL_URL}`
-            : "http://localhost:3000"
+      console.log("[v0] Checking for Google Sheet link for form:", body.booking_form_id)
 
-        await fetch(`${baseUrl}/api/google-sheets/sync`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bookingId: booking.id,
-            formId: body.booking_form_id,
-            bookingData: {
-              bookingNumber: booking.id,
+      try {
+        // Get sheet ID from booking form
+        const formResult = await db.query("SELECT google_sheet_id, google_sheet_url FROM booking_forms WHERE id = $1", [
+          body.booking_form_id,
+        ])
+
+        console.log("[v0] Form result:", formResult.rows)
+
+        if (formResult.rows.length > 0 && formResult.rows[0].google_sheet_id) {
+          const sheetId = formResult.rows[0].google_sheet_id
+          console.log("[v0] Found linked Google Sheet:", sheetId)
+          console.log("[v0] Sending booking to Apps Script...")
+
+          // Send directly to Apps Script
+          const sheetResponse = await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              type: "new_booking",
+              sheetId: sheetId,
               name: booking.patient_name,
               phone: booking.phone,
               service: body.service_name || body.service || "",
-              status: "جديد",
-              bookingDate: body.preferred_date || "",
-              notes: body.notes || "",
-              source: "الموقع",
-            },
-          }),
-        })
-        console.log("[v0] ✅ Synced booking to Google Sheet")
-      } catch (sheetError) {
-        console.error("[v0] ⚠️ Failed to sync to Google Sheet:", sheetError)
+              date: body.preferred_date || new Date().toLocaleDateString("ar-SA"),
+            }),
+          })
+
+          console.log("[v0] Apps Script response status:", sheetResponse.status)
+
+          const responseText = await sheetResponse.text()
+          console.log("[v0] Apps Script response:", responseText)
+
+          if (sheetResponse.ok) {
+            console.log("[v0] Successfully synced booking to Google Sheet")
+          } else {
+            console.error("[v0] Failed to sync to Google Sheet:", responseText)
+          }
+        } else {
+          console.log("[v0] No Google Sheet linked to this form")
+        }
+      } catch (sheetError: any) {
+        console.error("[v0] Error syncing to Google Sheet:", sheetError.message)
         // Don't fail the booking if sheet sync fails
       }
     }
