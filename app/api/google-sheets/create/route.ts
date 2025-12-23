@@ -1,23 +1,17 @@
 import { NextResponse } from "next/server"
-import { google } from "googleapis"
 import { db } from "@/lib/db"
 
-const SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive.file"]
+const APPS_SCRIPT_URL =
+  process.env.GOOGLE_APPS_SCRIPT_URL ||
+  "https://script.google.com/macros/s/AKfycbztWf9GvFqtZITkuc_5UeLO8GS8S3uW-fQFnDCu22_4gacrHTPtIk-5rsOnwiqOLM469w/exec"
 
-async function getGoogleAuth() {
-  const credentials = process.env.GOOGLE_SERVICE_ACCOUNT
-    ? JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT)
-    : {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      }
-
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: SCOPES,
+export async function GET() {
+  return NextResponse.json({
+    status: "ok",
+    message: "Google Sheets Create API جاهز",
+    appsScriptUrl: APPS_SCRIPT_URL ? "مُعد" : "غير مُعد",
+    usage: "استخدم POST مع body يحتوي على formId و formName",
   })
-
-  return auth
 }
 
 export async function POST(request: Request) {
@@ -47,136 +41,45 @@ export async function POST(request: Request) {
       })
     }
 
-    const auth = await getGoogleAuth()
-    const sheets = google.sheets({ version: "v4", auth })
-    const drive = google.drive({ version: "v3", auth })
+    console.log("[v0] Creating Google Sheet via Apps Script for form:", formName)
 
-    // إنشاء شيت جديد
-    const spreadsheet = await sheets.spreadsheets.create({
-      requestBody: {
-        properties: {
-          title: `حجوزات - ${formName}`,
-          locale: "ar",
-        },
-        sheets: [
-          {
-            properties: {
-              title: "الحجوزات",
-              gridProperties: {
-                frozenRowCount: 1,
-              },
-              rightToLeft: true,
-            },
-          },
-        ],
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        type: "create_form",
+        formName: formName,
+      }),
     })
 
-    const spreadsheetId = spreadsheet.data.spreadsheetId!
-    const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error("[v0] Apps Script error:", errorText)
+      throw new Error("فشل في إنشاء الشيت عبر Apps Script")
+    }
 
-    // إضافة العناوين
-    await sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: "الحجوزات!A1:J1",
-      valueInputOption: "RAW",
-      requestBody: {
-        values: [
-          [
-            "رقم الحجز",
-            "الاسم",
-            "رقم الهاتف",
-            "الخدمة",
-            "الحالة",
-            "تاريخ الحجز",
-            "وقت الإنشاء",
-            "ملاحظات",
-            "مصدر الحجز",
-            "تم التواصل",
-          ],
-        ],
-      },
-    })
+    const data = await response.json()
+    console.log("[v0] Apps Script response:", data)
 
-    // تنسيق الصف الأول (العناوين)
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      requestBody: {
-        requests: [
-          {
-            repeatCell: {
-              range: {
-                sheetId: 0,
-                startRowIndex: 0,
-                endRowIndex: 1,
-              },
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 0.2, green: 0.4, blue: 0.6 },
-                  textFormat: {
-                    foregroundColor: { red: 1, green: 1, blue: 1 },
-                    bold: true,
-                    fontSize: 11,
-                  },
-                  horizontalAlignment: "CENTER",
-                  verticalAlignment: "MIDDLE",
-                },
-              },
-              fields: "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)",
-            },
-          },
-          {
-            updateDimensionProperties: {
-              range: {
-                sheetId: 0,
-                dimension: "ROWS",
-                startIndex: 0,
-                endIndex: 1,
-              },
-              properties: {
-                pixelSize: 40,
-              },
-              fields: "pixelSize",
-            },
-          },
-          {
-            updateDimensionProperties: {
-              range: {
-                sheetId: 0,
-                dimension: "COLUMNS",
-                startIndex: 0,
-                endIndex: 10,
-              },
-              properties: {
-                pixelSize: 130,
-              },
-              fields: "pixelSize",
-            },
-          },
-        ],
-      },
-    })
-
-    // نقل الشيت للمجلد المحدد إذا وجد
-    if (process.env.GOOGLE_FOLDER_ID) {
-      await drive.files.update({
-        fileId: spreadsheetId,
-        addParents: process.env.GOOGLE_FOLDER_ID,
-        fields: "id, parents",
-      })
+    if (!data.sheetId || !data.sheetUrl) {
+      throw new Error("لم يتم إرجاع معرف الشيت من Apps Script")
     }
 
     // تحديث النموذج بمعرف الشيت
     await db.query("UPDATE booking_forms SET google_sheet_id = $1, google_sheet_url = $2 WHERE id = $3", [
-      spreadsheetId,
-      spreadsheetUrl,
+      data.sheetId,
+      data.sheetUrl,
       formId,
     ])
 
+    console.log("[v0] ✅ Google Sheet created and linked successfully")
+
     return NextResponse.json({
       success: true,
-      sheetId: spreadsheetId,
-      sheetUrl: spreadsheetUrl,
+      sheetId: data.sheetId,
+      sheetUrl: data.sheetUrl,
       message: "تم إنشاء وربط الشيت بنجاح",
     })
   } catch (error: any) {

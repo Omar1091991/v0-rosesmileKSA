@@ -1,21 +1,17 @@
 import { NextResponse } from "next/server"
-import { google } from "googleapis"
 import { db } from "@/lib/db"
 
-async function getGoogleAuth() {
-  const credentials = process.env.GOOGLE_SERVICE_ACCOUNT
-    ? JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT)
-    : {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      }
+const APPS_SCRIPT_URL =
+  process.env.GOOGLE_APPS_SCRIPT_URL ||
+  "https://script.google.com/macros/s/AKfycbztWf9GvFqtZITkuc_5UeLO8GS8S3uW-fQFnDCu22_4gacrHTPtIk-5rsOnwiqOLM469w/exec"
 
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+export async function GET() {
+  return NextResponse.json({
+    status: "ok",
+    message: "Google Sheets Sync API جاهز",
+    appsScriptUrl: APPS_SCRIPT_URL ? "مُعد" : "غير مُعد",
+    usage: "استخدم POST مع body يحتوي على bookingId و formId و bookingData",
   })
-
-  return auth
 }
 
 export async function POST(request: Request) {
@@ -29,33 +25,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: "لا يوجد شيت مرتبط بهذا النموذج" }, { status: 200 })
     }
 
-    const spreadsheetId = formResult.rows[0].google_sheet_id
-    const auth = await getGoogleAuth()
-    const sheets = google.sheets({ version: "v4", auth })
+    const sheetId = formResult.rows[0].google_sheet_id
 
-    // إضافة الحجز الجديد للشيت
-    await sheets.spreadsheets.values.append({
-      spreadsheetId,
-      range: "الحجوزات!A:J",
-      valueInputOption: "RAW",
-      insertDataOption: "INSERT_ROWS",
-      requestBody: {
-        values: [
-          [
-            bookingData.bookingNumber || bookingId,
-            bookingData.name || "",
-            bookingData.phone || "",
-            bookingData.service || "",
-            bookingData.status || "جديد",
-            bookingData.bookingDate || "",
-            new Date().toLocaleString("ar-SA"),
-            bookingData.notes || "",
-            bookingData.source || "الموقع",
-            "لا",
-          ],
-        ],
+    console.log("[v0] Syncing booking to Google Sheet via Apps Script:", bookingId)
+
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        type: "new_booking",
+        sheetId: sheetId,
+        name: bookingData.name || "",
+        phone: bookingData.phone || "",
+        service: bookingData.service || "",
+        date: bookingData.bookingDate || "",
+      }),
     })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error("[v0] Apps Script sync error:", errorText)
+      throw new Error("فشل في إضافة الحجز للشيت")
+    }
+
+    const data = await response.json()
+    console.log("[v0] Apps Script sync response:", data)
 
     return NextResponse.json({
       success: true,

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -21,6 +20,7 @@ import {
   AlertTriangle,
   Copy,
   Check,
+  Code2,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -34,17 +34,19 @@ interface BookingForm {
 }
 
 interface GoogleSheetsConfig {
-  serviceAccountEmail: string
+  appsScriptUrl: string
   isConfigured: boolean
   folderId: string | null
+  serviceAccountEmail: string
 }
 
 export default function GoogleSheetsPage() {
   const [bookingForms, setBookingForms] = useState<BookingForm[]>([])
   const [config, setConfig] = useState<GoogleSheetsConfig>({
-    serviceAccountEmail: "",
+    appsScriptUrl: "",
     isConfigured: false,
     folderId: null,
+    serviceAccountEmail: "",
   })
   const [loading, setLoading] = useState(true)
   const [creatingSheet, setCreatingSheet] = useState<string | null>(null)
@@ -58,14 +60,12 @@ export default function GoogleSheetsPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch booking forms
       const formsResponse = await fetch("/api/booking-forms")
       if (formsResponse.ok) {
         const formsData = await formsResponse.json()
         setBookingForms(formsData)
       }
 
-      // Check Google Sheets configuration
       const configResponse = await fetch("/api/google-sheets/config")
       if (configResponse.ok) {
         const configData = await configResponse.json()
@@ -84,7 +84,7 @@ export default function GoogleSheetsPage() {
       const response = await fetch("/api/google-sheets/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingFormId: formId, title: formTitle }),
+        body: JSON.stringify({ formId: formId, formName: formTitle }),
       })
 
       if (response.ok) {
@@ -119,14 +119,14 @@ export default function GoogleSheetsPage() {
       const response = await fetch("/api/google-sheets/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingFormId: formId }),
+        body: JSON.stringify({ formId: formId }),
       })
 
       if (response.ok) {
         const data = await response.json()
         toast({
           title: "تمت المزامنة بنجاح",
-          description: `تم مزامنة ${data.syncedCount} حجز`,
+          description: data.message || "تم مزامنة الحجوزات",
         })
       } else {
         const error = await response.json()
@@ -153,12 +153,57 @@ export default function GoogleSheetsPage() {
     setTimeout(() => setCopied(false), 2000)
     toast({
       title: "تم النسخ",
-      description: "تم نسخ البريد الإلكتروني",
+      description: "تم نسخ النص",
     })
   }
 
   const formsWithSheets = bookingForms.filter((f) => f.google_sheet_id)
   const formsWithoutSheets = bookingForms.filter((f) => !f.google_sheet_id)
+
+  const appsScriptCode = `function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+
+  // إنشاء Sheet جديد تلقائياً عند إنشاء نموذج
+  if (data.type === "create_form") {
+    const name = \`حجوزات - \${data.formName}\`;
+    const spreadsheet = SpreadsheetApp.create(name);
+    const sheet = spreadsheet.getActiveSheet();
+    
+    sheet.appendRow([
+      "رقم الحجز",
+      "الاسم",
+      "الهاتف",
+      "الخدمة",
+      "التاريخ",
+      "وقت الإرسال"
+    ]);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      sheetId: spreadsheet.getId(),
+      sheetUrl: spreadsheet.getUrl()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // إضافة حجز للـ Sheet المرتبط
+  if (data.type === "new_booking") {
+    const sheet = SpreadsheetApp
+      .openById(data.sheetId)
+      .getActiveSheet();
+    
+    sheet.appendRow([
+      Utilities.getUuid(),
+      data.name,
+      data.phone,
+      data.service,
+      data.date,
+      new Date()
+    ]);
+    
+    return ContentService.createTextOutput(
+      JSON.stringify({ success: true })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}`
 
   if (loading) {
     return (
@@ -173,7 +218,7 @@ export default function GoogleSheetsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">إعدادات Google Sheets</h1>
-          <p className="text-muted-foreground">إدارة ربط نماذج الحجز مع Google Sheets</p>
+          <p className="text-muted-foreground">إدارة ربط نماذج الحجز مع Google Sheets عبر Apps Script</p>
         </div>
       </div>
 
@@ -234,37 +279,36 @@ export default function GoogleSheetsPage() {
                 <Alert>
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
                   <AlertTitle>التهيئة مكتملة</AlertTitle>
-                  <AlertDescription>Google Sheets API مهيأ بشكل صحيح ويمكنك إنشاء وربط الشيتات.</AlertDescription>
+                  <AlertDescription>Apps Script مهيأ بشكل صحيح ويمكنك إنشاء وربط الشيتات تلقائياً.</AlertDescription>
                 </Alert>
               ) : (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>التهيئة غير مكتملة</AlertTitle>
-                  <AlertDescription>يرجى إضافة متغيرات البيئة المطلوبة لتفعيل Google Sheets API.</AlertDescription>
+                  <AlertDescription>يرجى إضافة رابط Apps Script لتفعيل الربط التلقائي.</AlertDescription>
                 </Alert>
               )}
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>حساب الخدمة (Service Account)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input value={config.serviceAccountEmail || "غير مهيأ"} readOnly className="font-mono text-sm" />
-                    {config.serviceAccountEmail && (
-                      <Button variant="outline" size="icon" onClick={() => copyToClipboard(config.serviceAccountEmail)}>
-                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      </Button>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    شارك هذا البريد مع مجلد Google Drive للسماح بإنشاء الشيتات
-                  </p>
+              <div className="p-4 bg-muted rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <Label>حالة Apps Script</Label>
+                  {config.isConfigured ? (
+                    <Badge variant="default" className="bg-green-500">
+                      <CheckCircle2 className="h-3 w-3 ml-1" />
+                      متصل
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive">
+                      <XCircle className="h-3 w-3 ml-1" />
+                      غير متصل
+                    </Badge>
+                  )}
                 </div>
-
-                <div className="space-y-2">
-                  <Label>معرف المجلد (Folder ID)</Label>
-                  <Input value={config.folderId || "غير محدد"} readOnly className="font-mono text-sm" />
-                  <p className="text-xs text-muted-foreground">المجلد الذي سيتم إنشاء الشيتات فيه</p>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  {config.isConfigured
+                    ? "الربط مع Google Sheets يعمل عبر Apps Script"
+                    : "أضف رابط Apps Script في الإعدادات"}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -400,72 +444,92 @@ export default function GoogleSheetsPage() {
         <TabsContent value="settings" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>إعدادات Google Sheets API</CardTitle>
-              <CardDescription>تهيئة الاتصال مع Google Sheets API</CardDescription>
+              <CardTitle>إعدادات Google Apps Script</CardTitle>
+              <CardDescription>تهيئة الاتصال مع Google Sheets عبر Apps Script</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>متغيرات البيئة المطلوبة</AlertTitle>
-                <AlertDescription>يجب إضافة المتغيرات التالية في إعدادات المشروع على Vercel:</AlertDescription>
-              </Alert>
-
-              <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
-                    <code className="text-sm font-mono">GOOGLE_SERVICE_ACCOUNT_EMAIL</code>
-                    {config.serviceAccountEmail ? (
-                      <Badge variant="default" className="bg-green-500">
-                        <CheckCircle2 className="h-3 w-3 ml-1" />
-                        مهيأ
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive">
-                        <XCircle className="h-3 w-3 ml-1" />
-                        غير مهيأ
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    البريد الإلكتروني لحساب الخدمة من Google Cloud Console
-                  </p>
+              {/* Current Status */}
+              <div className="p-4 bg-muted rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <code className="text-sm font-mono">GOOGLE_APPS_SCRIPT_URL</code>
+                  {config.isConfigured ? (
+                    <Badge variant="default" className="bg-green-500">
+                      <CheckCircle2 className="h-3 w-3 ml-1" />
+                      مهيأ
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive">
+                      <XCircle className="h-3 w-3 ml-1" />
+                      غير مهيأ
+                    </Badge>
+                  )}
                 </div>
-
-                <div className="p-4 bg-muted rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
-                    <code className="text-sm font-mono">GOOGLE_PRIVATE_KEY</code>
-                    <Badge variant="secondary">مطلوب</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">المفتاح الخاص لحساب الخدمة (Private Key)</p>
-                </div>
-
-                <div className="p-4 bg-muted rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
-                    <code className="text-sm font-mono">GOOGLE_FOLDER_ID</code>
-                    {config.folderId ? (
-                      <Badge variant="default" className="bg-green-500">
-                        <CheckCircle2 className="h-3 w-3 ml-1" />
-                        مهيأ
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">اختياري</Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">معرف مجلد Google Drive الذي سيتم إنشاء الشيتات فيه</p>
-                </div>
+                <p className="text-sm text-muted-foreground">رابط تطبيق الويب من Google Apps Script</p>
               </div>
 
               <div className="border-t pt-6">
-                <h3 className="font-semibold mb-4">خطوات التهيئة:</h3>
-                <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                  <li>انتقل إلى Google Cloud Console وأنشئ مشروع جديد</li>
-                  <li>فعّل Google Sheets API و Google Drive API</li>
-                  <li>أنشئ حساب خدمة (Service Account) وحمّل ملف المفاتيح JSON</li>
-                  <li>انسخ البريد الإلكتروني والمفتاح الخاص إلى متغيرات البيئة</li>
-                  <li>شارك مجلد Google Drive مع حساب الخدمة (صلاحية التحرير)</li>
-                  <li>انسخ معرف المجلد من رابط المجلد وأضفه للمتغيرات</li>
+                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <Code2 className="h-5 w-5" />
+                  خطوات التهيئة:
+                </h3>
+                <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground">
+                  <li>
+                    انتقل إلى{" "}
+                    <a
+                      href="https://script.google.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      Google Apps Script
+                    </a>{" "}
+                    وأنشئ مشروع جديد
+                  </li>
+                  <li>انسخ الكود التالي والصقه في المحرر:</li>
+                </ol>
+
+                {/* Code Block */}
+                <div className="mt-4 relative">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-2 left-2 z-10 bg-transparent"
+                    onClick={() => copyToClipboard(appsScriptCode)}
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                  <pre
+                    className="p-4 bg-slate-900 text-slate-50 rounded-lg overflow-x-auto text-xs leading-relaxed"
+                    dir="ltr"
+                  >
+                    <code>{appsScriptCode}</code>
+                  </pre>
+                </div>
+
+                <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground mt-4" start={3}>
+                  <li>اضغط على "نشر" → "عمليات النشر الجديدة"</li>
+                  <li>اختر "تطبيق ويب" كنوع النشر</li>
+                  <li>
+                    في "تنفيذ باسم" اختر "أنا" <br />
+                    في "من يمكنه الوصول" اختر "أي شخص"
+                  </li>
+                  <li>اضغط "نشر" وامنح الأذونات المطلوبة</li>
+                  <li>انسخ "عنوان URL لتطبيق الويب"</li>
+                  <li>
+                    أضف الرابط كمتغير بيئة في Vercel باسم{" "}
+                    <code className="bg-muted px-1 rounded">GOOGLE_APPS_SCRIPT_URL</code>
+                  </li>
                 </ol>
               </div>
+
+              <Alert>
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>ملاحظة مهمة</AlertTitle>
+                <AlertDescription>
+                  استخدام Apps Script أبسط من Service Account ولا يتطلب تهيئة Google Cloud Console. الشيتات ستُنشأ في
+                  حساب Google الخاص بك مباشرة.
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
         </TabsContent>
