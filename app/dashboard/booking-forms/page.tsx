@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, FileText, Star, X } from "lucide-react"
+import { Plus, FileText, Star, X, FileSpreadsheet, ExternalLink, Loader2 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import { ImagePicker } from "@/components/image-picker"
@@ -41,6 +41,8 @@ interface BookingForm {
   is_active: boolean
   is_main: boolean
   order_index: number
+  google_sheet_id?: string | null
+  google_sheet_url?: string | null
   custom_services?: CustomService[]
   booking_form_services?: Array<{
     service_id: string
@@ -55,6 +57,7 @@ export default function BookingFormsPage() {
   const [open, setOpen] = useState(false)
   const [editingForm, setEditingForm] = useState<BookingForm | null>(null)
   const [initializing, setInitializing] = useState(false)
+  const [creatingSheetForForm, setCreatingSheetForForm] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name_ar: "",
     name_en: "",
@@ -126,10 +129,33 @@ export default function BookingFormsPage() {
 
       if (response.ok) {
         const savedForm = await response.json()
+        const formId = savedForm.id || editingForm?.id
 
         const baseUrl = window.location.origin
-        const bookingUrl = `${baseUrl}/booking/${savedForm.id || editingForm?.id}`
+        const bookingUrl = `${baseUrl}/booking/${formId}`
         setFormUrl(bookingUrl)
+
+        if (!editingForm && formId) {
+          try {
+            const sheetResponse = await fetch("/api/google-sheets/create", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ formId, formName: formData.name_ar }),
+            })
+
+            if (sheetResponse.ok) {
+              const sheetData = await sheetResponse.json()
+              if (sheetData.success) {
+                toast({
+                  title: "تم إنشاء Google Sheet",
+                  description: "تم ربط الشيت بالنموذج تلقائياً",
+                })
+              }
+            }
+          } catch (sheetError) {
+            console.error("[v0] Error creating sheet:", sheetError)
+          }
+        }
 
         toast({
           title: editingForm ? "تم التحديث" : "تم الإنشاء",
@@ -352,6 +378,43 @@ export default function BookingFormsPage() {
     }
   }
 
+  const handleSheetCreated = (formId: string, sheetUrl: string) => {
+    setForms((prevForms) =>
+      prevForms.map((form) => (form.id === formId ? { ...form, google_sheet_url: sheetUrl } : form)),
+    )
+  }
+
+  const handleCreateSheetForForm = async (formId: string, formName: string) => {
+    setCreatingSheetForForm(formId)
+    try {
+      const response = await fetch("/api/google-sheets/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formId, formName }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        toast({
+          title: "تم بنجاح",
+          description: "تم إنشاء وربط Google Sheet بالنموذج",
+        })
+        handleSheetCreated(formId, data.sheetUrl)
+      } else {
+        throw new Error(data.error || "فشل في إنشاء الشيت")
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: error.message || "حدث خطأ أثناء إنشاء الشيت",
+      })
+    } finally {
+      setCreatingSheetForForm(null)
+    }
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-96">جاري التحميل...</div>
   }
@@ -522,6 +585,52 @@ export default function BookingFormsPage() {
                       </div>
                     </div>
 
+                    {editingForm && (
+                      <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+                        <h3 className="font-semibold text-sm text-muted-foreground flex items-center gap-2">
+                          <FileSpreadsheet className="h-4 w-4" />
+                          ربط Google Sheet
+                        </h3>
+
+                        {editingForm.google_sheet_url ? (
+                          <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
+                            <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                            <span className="text-sm text-green-800 flex-1">الشيت مرتبط بالنموذج</span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(editingForm.google_sheet_url!, "_blank")}
+                              className="gap-1"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              فتح الشيت
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                            <FileSpreadsheet className="h-5 w-5 text-amber-600" />
+                            <span className="text-sm text-amber-800 flex-1">لا يوجد شيت مرتبط</span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCreateSheetForForm(editingForm.id, editingForm.name_ar)}
+                              disabled={creatingSheetForForm === editingForm.id}
+                              className="gap-1"
+                            >
+                              {creatingSheetForForm === editingForm.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Plus className="h-4 w-4" />
+                              )}
+                              إنشاء شيت
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* الخدمات */}
                     <div className="bg-muted/50 rounded-lg p-4 space-y-4">
                       <h3 className="font-semibold text-sm text-muted-foreground">الخدمات المتاحة</h3>
@@ -666,12 +775,33 @@ export default function BookingFormsPage() {
                 )}
               </div>
 
+              <div className="flex items-center gap-2 text-sm">
+                <FileSpreadsheet
+                  className={`h-4 w-4 ${form.google_sheet_url ? "text-green-600" : "text-muted-foreground"}`}
+                />
+                <span className={form.google_sheet_url ? "text-green-600" : "text-muted-foreground"}>
+                  {form.google_sheet_url ? "مرتبط بـ Google Sheet" : "غير مرتبط"}
+                </span>
+                {form.google_sheet_url && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => window.open(form.google_sheet_url!, "_blank")}
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+
               <BookingFormActions
                 formId={form.id}
                 formName={form.name_ar}
+                googleSheetUrl={form.google_sheet_url}
                 onEdit={() => handleEdit(form)}
                 onDelete={() => handleDelete(form.id)}
                 onView={() => {}}
+                onSheetCreated={(sheetUrl) => handleSheetCreated(form.id, sheetUrl)}
               />
 
               {!form.is_main && (

@@ -200,6 +200,38 @@ export async function POST(request: Request) {
 
     console.log("[v0] Created booking:", booking)
 
+    if (body.booking_form_id) {
+      try {
+        const baseUrl =
+          process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+            ? `https://${process.env.VERCEL_URL}`
+            : "http://localhost:3000"
+
+        await fetch(`${baseUrl}/api/google-sheets/sync`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            formId: body.booking_form_id,
+            bookingData: {
+              bookingNumber: booking.id,
+              name: booking.patient_name,
+              phone: booking.phone,
+              service: body.service_name || body.service || "",
+              status: "جديد",
+              bookingDate: body.preferred_date || "",
+              notes: body.notes || "",
+              source: "الموقع",
+            },
+          }),
+        })
+        console.log("[v0] ✅ Synced booking to Google Sheet")
+      } catch (sheetError) {
+        console.error("[v0] ⚠️ Failed to sync to Google Sheet:", sheetError)
+        // Don't fail the booking if sheet sync fails
+      }
+    }
+
     return NextResponse.json({ booking })
   } catch (error: any) {
     console.error("[v0] Error creating booking:", error.message)

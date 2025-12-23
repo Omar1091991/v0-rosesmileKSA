@@ -14,15 +14,27 @@ export default function ArticlePage({ params }: { params: { id: string } }) {
   const { language, isArabic } = useLanguage()
   const [article, setArticle] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [mainBookingFormId, setMainBookingFormId] = useState<string>("")
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch(`/api/articles?id=${params.id}`)
-        const data = await response.json()
+        const [articleResponse, formsResponse] = await Promise.all([
+          fetch(`/api/articles?id=${params.id}`),
+          fetch("/api/booking-forms"),
+        ])
+
+        const data = await articleResponse.json()
         if (data.length > 0 && data[0].is_published) {
           setArticle(data[0])
         }
+
+        const formsData = await formsResponse.json()
+        const mainForm = formsData.find((f: any) => f.is_main)
+        if (mainForm) {
+          setMainBookingFormId(mainForm.id)
+        }
+
         setLoading(false)
       } catch (error) {
         console.error("Error fetching article:", error)
@@ -103,7 +115,9 @@ export default function ArticlePage({ params }: { params: { id: string } }) {
 
           <div className="mt-6 sm:mt-8 text-center">
             <Button asChild size="lg" className="w-full sm:w-auto">
-              <Link href="/#booking">{isArabic ? "احجز موعدك الآن" : "Book Your Appointment Now"}</Link>
+              <Link href={mainBookingFormId ? `/booking/${mainBookingFormId}` : "/booking"}>
+                {isArabic ? "احجز موعدك الآن" : "Book Your Appointment Now"}
+              </Link>
             </Button>
           </div>
         </div>
