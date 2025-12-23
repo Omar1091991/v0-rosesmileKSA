@@ -378,10 +378,13 @@ export default function BookingFormsPage() {
     }
   }
 
-  const handleSheetCreated = (formId: string, sheetUrl: string) => {
+  const handleSheetCreated = (formId: string | number, sheetUrl: string) => {
+    const formIdStr = String(formId)
     setForms((prevForms) =>
-      prevForms.map((form) => (form.id === formId ? { ...form, google_sheet_url: sheetUrl } : form)),
+      prevForms.map((form) => (String(form.id) === formIdStr ? { ...form, google_sheet_url: sheetUrl } : form)),
     )
+    // إعادة تحميل النماذج للتأكد من التحديث
+    fetchForms()
   }
 
   const handleCreateSheetForForm = async (formId: string, formName: string) => {
@@ -412,6 +415,22 @@ export default function BookingFormsPage() {
       })
     } finally {
       setCreatingSheetForForm(null)
+    }
+  }
+
+  const fetchBookingForms = async () => {
+    try {
+      const response = await fetch("/api/booking-forms")
+      if (response.ok) {
+        const data = await response.json()
+        setForms(data)
+      } else {
+        console.error("[v0] Failed to fetch forms")
+        setForms([])
+      }
+    } catch (error) {
+      console.error("[v0] Error fetching forms:", error)
+      setForms([])
     }
   }
 

@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface BookingFormActionsProps {
-  formId: string
+  formId: string | number
   formName: string
   googleSheetUrl?: string | null
   onEdit: () => void
@@ -28,7 +28,7 @@ export function BookingFormActions({
   const [isCopying, setIsCopying] = useState(false)
   const [isCreatingSheet, setIsCreatingSheet] = useState(false)
 
-  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/booking/${formId}`
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "")}/booking/${formId}`
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -52,6 +52,8 @@ export function BookingFormActions({
   const handleCreateSheet = async () => {
     try {
       setIsCreatingSheet(true)
+      console.log("[v0] Creating sheet for form:", formId, formName)
+
       const response = await fetch("/api/google-sheets/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,19 +61,21 @@ export function BookingFormActions({
       })
 
       const data = await response.json()
+      console.log("[v0] Create sheet response:", data)
 
       if (response.ok && data.success) {
         toast({
           title: "تم بنجاح",
           description: "تم إنشاء وربط Google Sheet بالنموذج",
         })
-        if (onSheetCreated) {
+        if (onSheetCreated && data.sheetUrl) {
           onSheetCreated(data.sheetUrl)
         }
       } else {
         throw new Error(data.error || "فشل في إنشاء الشيت")
       }
     } catch (error: any) {
+      console.error("[v0] Error creating sheet:", error)
       toast({
         variant: "destructive",
         title: "خطأ",

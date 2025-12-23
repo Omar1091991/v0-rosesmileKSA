@@ -26,7 +26,9 @@ import { useToast } from "@/hooks/use-toast"
 
 interface BookingForm {
   id: string
-  title: string
+  name_ar: string
+  name_en: string
+  title_ar: string
   title_en: string
   google_sheet_id: string | null
   google_sheet_url: string | null
@@ -63,6 +65,7 @@ export default function GoogleSheetsPage() {
       const formsResponse = await fetch("/api/booking-forms")
       if (formsResponse.ok) {
         const formsData = await formsResponse.json()
+        console.log("[v0] Fetched booking forms:", formsData)
         setBookingForms(formsData)
       }
 
@@ -78,34 +81,51 @@ export default function GoogleSheetsPage() {
     }
   }
 
-  const createGoogleSheet = async (formId: string, formTitle: string) => {
+  const createGoogleSheet = async (formId: string, formName: string) => {
+    console.log("[v0] Creating sheet for form:", { formId, formName })
+
+    if (!formName) {
+      toast({
+        title: "خطأ",
+        description: "اسم النموذج مطلوب",
+        variant: "destructive",
+      })
+      return
+    }
+
     setCreatingSheet(formId)
     try {
       const response = await fetch("/api/google-sheets/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ formId: formId, formName: formTitle }),
+        body: JSON.stringify({ formId: formId, formName: formName }),
       })
 
-      if (response.ok) {
-        const data = await response.json()
+      const data = await response.json()
+      console.log("[v0] Create sheet response:", data)
+
+      if (response.ok && data.success) {
         toast({
           title: "تم إنشاء الشيت بنجاح",
           description: "تم ربط Google Sheet بنموذج الحجز",
         })
-        fetchData()
+        setBookingForms((prev) =>
+          prev.map((form) =>
+            String(form.id) === String(formId)
+              ? { ...form, google_sheet_id: data.sheetId, google_sheet_url: data.sheetUrl }
+              : form,
+          ),
+        )
+        // إعادة جلب البيانات للتأكد من التحديث
+        await fetchData()
       } else {
-        const error = await response.json()
-        toast({
-          title: "خطأ",
-          description: error.error || "فشل في إنشاء الشيت",
-          variant: "destructive",
-        })
+        throw new Error(data.error || "فشل في إنشاء الشيت")
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("[v0] Error creating sheet:", error)
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء إنشاء الشيت",
+        description: error.message || "حدث خطأ أثناء إنشاء الشيت",
         variant: "destructive",
       })
     } finally {
@@ -155,6 +175,10 @@ export default function GoogleSheetsPage() {
       title: "تم النسخ",
       description: "تم نسخ النص",
     })
+  }
+
+  const getFormDisplayName = (form: BookingForm) => {
+    return form.name_ar || form.title_ar || "نموذج بدون اسم"
   }
 
   const formsWithSheets = bookingForms.filter((f) => f.google_sheet_id)
@@ -328,12 +352,12 @@ export default function GoogleSheetsPage() {
                   {formsWithoutSheets.map((form) => (
                     <div key={form.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                       <div>
-                        <p className="font-medium">{form.title}</p>
-                        <p className="text-sm text-muted-foreground">{form.title_en}</p>
+                        <p className="font-medium">{form.name_ar || form.title_ar}</p>
+                        <p className="text-sm text-muted-foreground">{form.name_en || form.title_en}</p>
                       </div>
                       <Button
                         size="sm"
-                        onClick={() => createGoogleSheet(form.id, form.title)}
+                        onClick={() => createGoogleSheet(form.id, form.name_ar || form.title_ar)}
                         disabled={creatingSheet === form.id || !config.isConfigured}
                       >
                         {creatingSheet === form.id ? (
@@ -372,8 +396,8 @@ export default function GoogleSheetsPage() {
                     <TableRow key={form.id}>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{form.title}</p>
-                          <p className="text-sm text-muted-foreground">{form.title_en}</p>
+                          <p className="font-medium">{form.name_ar || form.title_ar}</p>
+                          <p className="text-sm text-muted-foreground">{form.name_en || form.title_en}</p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -420,7 +444,7 @@ export default function GoogleSheetsPage() {
                           ) : (
                             <Button
                               size="sm"
-                              onClick={() => createGoogleSheet(form.id, form.title)}
+                              onClick={() => createGoogleSheet(form.id, form.name_ar || form.title_ar)}
                               disabled={creatingSheet === form.id || !config.isConfigured}
                             >
                               {creatingSheet === form.id ? (
