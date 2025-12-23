@@ -28,7 +28,13 @@ export function BookingFormActions({
   const [isCopying, setIsCopying] = useState(false)
   const [isCreatingSheet, setIsCreatingSheet] = useState(false)
 
-  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "")}/booking/${formId}`
+  const getBookingUrl = () => {
+    const baseUrl =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || ""
+    return `${baseUrl}/booking/${formId}`
+  }
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -47,6 +53,11 @@ export function BookingFormActions({
     } finally {
       setTimeout(() => setIsCopying(false), 1000)
     }
+  }
+
+  const handlePreview = () => {
+    const url = getBookingUrl()
+    window.open(url, "_blank")
   }
 
   const handleCreateSheet = async () => {
@@ -131,7 +142,7 @@ export function BookingFormActions({
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => copyToClipboard(bookingUrl, "رابط صفحة الحجز")}
+              onClick={() => copyToClipboard(getBookingUrl(), "رابط صفحة الحجز")}
               disabled={isCopying}
             >
               <Copy className="h-4 w-4" />
@@ -140,10 +151,9 @@ export function BookingFormActions({
           <TooltipContent>انسخ رابط صفحة الحجز</TooltipContent>
         </Tooltip>
 
-        {/* زر المعاينة */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onView}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePreview}>
               <Eye className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
