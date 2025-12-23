@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 const APPS_SCRIPT_URL =
-  process.env.GOOGLE_APPS_SCRIPT_URL ||
   "https://script.google.com/macros/s/AKfycbztWf9GvFqtZITkuc_5UeLO8GS8S3uW-fQFnDCu22_4gacrHTPtIk-5rsOnwiqOLM469w/exec"
 
 export async function GET() {
