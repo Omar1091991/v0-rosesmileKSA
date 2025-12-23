@@ -16,6 +16,7 @@ import {
   LucideComponent as ImageIconComponent,
   Newspaper,
   UserCircle,
+  Sheet,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
@@ -52,6 +53,13 @@ const menuItems = [
   { title: "العروض", href: "/dashboard/offers", icon: Tag, roles: ["admin"], color: "text-pink-500" },
   { title: "الأقسام", href: "/dashboard/departments", icon: Building2, roles: ["admin"], color: "text-indigo-500" },
   { title: "نماذج الحجز", href: "/dashboard/booking-forms", icon: FileText, roles: ["admin"], color: "text-cyan-500" },
+  {
+    title: "Google Sheets",
+    href: "/dashboard/google-sheets",
+    icon: Sheet,
+    roles: ["admin"],
+    color: "text-emerald-500",
+  },
   {
     title: "مكتبة الصور",
     href: "/dashboard/media",
