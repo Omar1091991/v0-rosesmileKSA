@@ -123,6 +123,7 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     console.log("[v0] Creating booking with data:", body)
+    console.log("[v0] Notes received:", body.notes)
 
     let result
     try {
@@ -202,6 +203,7 @@ export async function POST(request: Request) {
     const booking = result.rows[0]
 
     console.log("[v0] Created booking:", booking)
+    console.log("[v0] Booking notes from DB:", booking.notes)
 
     if (body.booking_form_id) {
       console.log("[v0] Checking for Google Sheet link for form:", body.booking_form_id)
@@ -218,28 +220,33 @@ export async function POST(request: Request) {
           console.log("[v0] Found linked Google Sheet:", sheetId)
           console.log("[v0] Sending booking to Apps Script...")
 
+          // الترتيب: A=وقت الإرسال، B=الاسم، C=الهاتف، D=الخدمة، E=ملاحظات العميل
+          const bookingData = {
+            type: "new_booking",
+            sheetId: sheetId,
+            // استخدام booking.notes بدلاً من body.notes للتأكد من إرسال القيمة الصحيحة
+            timestamp: new Date().toLocaleString("ar-SA", {
+              timeZone: "Asia/Riyadh",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            name: booking.patient_name,
+            phone: booking.phone,
+            service: booking.service_name || booking.service || body.service_name || "",
+            notes: booking.notes || body.notes || "",
+          }
+
+          console.log("[v0] Sending data to Apps Script:", JSON.stringify(bookingData))
+
           const sheetResponse = await fetch(APPS_SCRIPT_URL, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              type: "new_booking",
-              sheetId: sheetId,
-              // البيانات بالترتيب المطلوب
-              timestamp: new Date().toLocaleString("ar-SA", {
-                timeZone: "Asia/Riyadh",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-              name: booking.patient_name,
-              phone: booking.phone,
-              service: body.service_name || body.service || "",
-              notes: body.notes || "",
-            }),
+            body: JSON.stringify(bookingData),
           })
 
           console.log("[v0] Apps Script response status:", sheetResponse.status)
