@@ -207,7 +207,6 @@ export async function POST(request: Request) {
       console.log("[v0] Checking for Google Sheet link for form:", body.booking_form_id)
 
       try {
-        // Get sheet ID from booking form
         const formResult = await db.query("SELECT google_sheet_id, google_sheet_url FROM booking_forms WHERE id = $1", [
           body.booking_form_id,
         ])
@@ -219,7 +218,6 @@ export async function POST(request: Request) {
           console.log("[v0] Found linked Google Sheet:", sheetId)
           console.log("[v0] Sending booking to Apps Script...")
 
-          // Send directly to Apps Script
           const sheetResponse = await fetch(APPS_SCRIPT_URL, {
             method: "POST",
             headers: {
@@ -228,10 +226,19 @@ export async function POST(request: Request) {
             body: JSON.stringify({
               type: "new_booking",
               sheetId: sheetId,
+              // البيانات بالترتيب المطلوب
+              timestamp: new Date().toLocaleString("ar-SA", {
+                timeZone: "Asia/Riyadh",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
               name: booking.patient_name,
               phone: booking.phone,
               service: body.service_name || body.service || "",
-              date: body.preferred_date || new Date().toLocaleDateString("ar-SA"),
+              notes: body.notes || "",
             }),
           })
 
@@ -250,7 +257,6 @@ export async function POST(request: Request) {
         }
       } catch (sheetError: any) {
         console.error("[v0] Error syncing to Google Sheet:", sheetError.message)
-        // Don't fail the booking if sheet sync fails
       }
     }
 
